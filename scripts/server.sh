@@ -106,10 +106,7 @@ start_backend() {
   fi
 
   : > "$BACKEND_LOG"
-  (
-    cd "$BACKEND_DIR"
-    NODE_ENV=production ENV_FILE=.env.production npm start
-  ) >> "$BACKEND_LOG" 2>&1 &
+  nohup bash -lc "cd '$BACKEND_DIR' && exec env NODE_ENV=production ENV_FILE=.env.production npm start" > "$BACKEND_LOG" 2>&1 &
   echo $! > "$BACKEND_PID_FILE"
 
   sleep 2
@@ -129,10 +126,7 @@ start_frontend() {
   fi
 
   : > "$FRONTEND_LOG"
-  (
-    cd "$FRONTEND_DIR"
-    npm run preview -- --host 0.0.0.0 --port "$FRONTEND_PORT"
-  ) >> "$FRONTEND_LOG" 2>&1 &
+  nohup bash -lc "cd '$FRONTEND_DIR' && exec npm run preview -- --host 0.0.0.0 --port '$FRONTEND_PORT' --strictPort" > "$FRONTEND_LOG" 2>&1 &
   echo $! > "$FRONTEND_PID_FILE"
 
   sleep 2
