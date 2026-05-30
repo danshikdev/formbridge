@@ -14,6 +14,7 @@ BACKEND_PID_FILE="$PIDS_DIR/backend.pid"
 FRONTEND_PID_FILE="$PIDS_DIR/frontend.pid"
 BACKEND_LOG="$LOGS_DIR/backend.log"
 FRONTEND_LOG="$LOGS_DIR/frontend.log"
+BACKEND_PORT="${BACKEND_PORT:-4000}"
 FRONTEND_PORT="${FRONTEND_PORT:-5174}"
 
 mkdir -p "$LOGS_DIR" "$PIDS_DIR"
@@ -66,6 +67,34 @@ stop_one() {
   rm -f "$pid_file"
 }
 
+kill_port() {
+  local port="$1"
+  local name="$2"
+  local pids
+
+  pids="$(lsof -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null || true)"
+  if [ -z "$pids" ]; then
+    return
+  fi
+
+  warn "$name port $port is busy. Stopping PID(s): $pids"
+  kill $pids 2>/dev/null || true
+
+  for _ in 1 2 3 4 5; do
+    if [ -z "$(lsof -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null || true)" ]; then
+      ok "$name port $port released"
+      return
+    fi
+    sleep 1
+  done
+
+  pids="$(lsof -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null || true)"
+  if [ -n "$pids" ]; then
+    warn "$name port $port still busy, force killing PID(s): $pids"
+    kill -9 $pids 2>/dev/null || true
+  fi
+}
+
 restore_env() {
   if [ ! -f "$BACKEND_ENV_SOURCE" ]; then
     fail "Missing $BACKEND_ENV_SOURCE"
@@ -105,6 +134,7 @@ start_backend() {
     return
   fi
 
+  kill_port "$BACKEND_PORT" "Backend"
   : > "$BACKEND_LOG"
   nohup bash -lc "cd '$BACKEND_DIR' && exec env NODE_ENV=production ENV_FILE=.env.production npm start" > "$BACKEND_LOG" 2>&1 &
   echo $! > "$BACKEND_PID_FILE"
@@ -125,6 +155,7 @@ start_frontend() {
     return
   fi
 
+  kill_port "$FRONTEND_PORT" "Frontend"
   : > "$FRONTEND_LOG"
   nohup bash -lc "cd '$FRONTEND_DIR' && exec npm run preview -- --host 0.0.0.0 --port '$FRONTEND_PORT' --strictPort" > "$FRONTEND_LOG" 2>&1 &
   echo $! > "$FRONTEND_PID_FILE"
@@ -185,6 +216,7 @@ show_status() {
 
   info "Backend log:  $BACKEND_LOG"
   info "Frontend log: $FRONTEND_LOG"
+  info "Backend URL:  http://localhost:$BACKEND_PORT"
   info "Frontend URL: http://localhost:$FRONTEND_PORT"
 }
 
@@ -221,7 +253,7 @@ Usage:
   ./scripts/server.sh logs [backend|frontend|all]
 
 Environment:
-  FRONTEND_PORT=5174 ./scripts/server.sh start
+  BACKEND_PORT=4000 FRONTEND_PORT=5174 ./scripts/server.sh start
 EOF
 }
 
