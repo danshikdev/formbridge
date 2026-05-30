@@ -4,6 +4,7 @@ import pkg from "whatsapp-web.js";
 const { Client, LocalAuth } = pkg;
 
 let client = null;
+let qrDataUrl = null;
 // disconnected | connecting | qr_ready | connected | error
 let connectionStatus = "disconnected";
 
