@@ -73,11 +73,25 @@ export async function destroyClient() {
   connectionStatus = "disconnected";
 }
 
+function isDetachedBrowserError(error) {
+  return /detached frame|target closed|session closed|protocol error/i.test(error?.message || "");
+}
+
 export async function sendMessage(phoneNumber, text) {
   if (!client || connectionStatus !== "connected") {
     throw new Error("WhatsApp client is not connected");
   }
   const digits = String(phoneNumber).replace(/\D/g, "");
   const chatId = `${digits}@c.us`;
-  await client.sendMessage(chatId, text);
+  try {
+    await client.sendMessage(chatId, text);
+  } catch (error) {
+    if (isDetachedBrowserError(error)) {
+      connectionStatus = "error";
+      const staleClient = client;
+      client = null;
+      await staleClient.destroy().catch(() => {});
+    }
+    throw error;
+  }
 }
