@@ -165,7 +165,17 @@ export const translations = {
     waQrHint: "WhatsApp → Байланыстырылған құрылғылар → Құрылғы қосу",
     waConnecting: "Қосылуда...",
     waError: "Қосылу қатесі",
-    waNotConnected: "Қосылмаған"
+    waNotConnected: "Қосылмаған",
+    aiTitle: "AI талдау",
+    aiAnalyzeBtn: "AI талдау",
+    aiAnalyzing: "Талдануда...",
+    aiRefresh: "Жаңарту",
+    aiSummary: "Қысқаша",
+    aiCategory: "Санат",
+    aiPriority: "Басымдық",
+    aiRecommended: "Ұсыным",
+    aiError: "AI талдау уақытша қол жетімді емес. OPENAI_API_KEY тексеріңіз.",
+    aiErrorGeneral: "AI талдауда қате болды. Қайта көріңіз."
   },
   ru: {
     ...common,
@@ -321,7 +331,17 @@ export const translations = {
     waQrHint: "WhatsApp → Подключённые устройства → Добавить устройство",
     waConnecting: "Подключение...",
     waError: "Ошибка подключения",
-    waNotConnected: "Не подключен"
+    waNotConnected: "Не подключен",
+    aiTitle: "AI анализ",
+    aiAnalyzeBtn: "AI анализ",
+    aiAnalyzing: "Анализируется...",
+    aiRefresh: "Обновить анализ",
+    aiSummary: "Краткое описание",
+    aiCategory: "Категория",
+    aiPriority: "Приоритет",
+    aiRecommended: "Рекомендация",
+    aiError: "AI анализ временно недоступен. Проверьте OPENAI_API_KEY.",
+    aiErrorGeneral: "Ошибка AI анализа. Попробуйте ещё раз."
   },
   en: {
     ...common,
@@ -477,6 +497,16 @@ export const translations = {
     waQrHint: "WhatsApp → Linked Devices → Link a Device",
     waConnecting: "Connecting...",
     waError: "Connection error",
-    waNotConnected: "Not connected"
+    waNotConnected: "Not connected",
+    aiTitle: "AI Analysis",
+    aiAnalyzeBtn: "AI analysis",
+    aiAnalyzing: "Analyzing...",
+    aiRefresh: "Refresh analysis",
+    aiSummary: "Summary",
+    aiCategory: "Category",
+    aiPriority: "Priority",
+    aiRecommended: "Recommended action",
+    aiError: "AI analysis temporarily unavailable. Check OPENAI_API_KEY.",
+    aiErrorGeneral: "AI analysis failed. Please try again."
   }
 };

@@ -6,6 +6,7 @@ import { googleFormsRoutes } from "./routes/googleFormsRoutes.js";
 import { googleOAuthRoutes } from "./routes/googleOAuthRoutes.js";
 import { integrationsRoutes } from "./routes/integrationsRoutes.js";
 import { whatsappRoutes } from "./routes/whatsappRoutes.js";
+import { aiRoutes } from "./routes/aiRoutes.js";
 
 export const app = express();
 
@@ -27,3 +28,4 @@ app.use("/api/forms", googleFormsRoutes);
 app.use("/api/google", googleOAuthRoutes);
 app.use("/api/integrations", integrationsRoutes);
 app.use("/api/notifications/whatsapp", whatsappRoutes);
+app.use("/api/ai", aiRoutes);

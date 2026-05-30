@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 
-dotenv.config();
+const envFile = process.env.ENV_FILE || (process.env.NODE_ENV === "production" ? ".env.production" : ".env");
+dotenv.config({ path: envFile });
 
 function list(value, fallback) {
   return String(value || fallback || "")
@@ -26,7 +27,9 @@ export const env = {
     name: process.env.DB_NAME || "formbridge",
     user: process.env.DB_USER || "postgres",
     password: process.env.DB_PASSWORD || "postgres",
-    ssl: process.env.DB_SSL === "true" || process.env.NODE_ENV === "production",
+    ssl: process.env.DB_SSL
+      ? process.env.DB_SSL === "true"
+      : process.env.NODE_ENV === "production",
     syncAlter: process.env.DB_SYNC_ALTER === "true"
   },
   google: {

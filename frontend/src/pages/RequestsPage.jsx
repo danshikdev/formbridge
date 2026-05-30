@@ -143,6 +143,109 @@ function doExportJSON(filteredItems, t) {
 
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ─── AI Analysis Block ────────────────────────────────────────────────────────
+
+const PRIORITY_COLORS = { high: "#c0392b", medium: "#e67e22", low: "#27ae60" };
+
+function AIAnalysisBlock({ selected, lang, t }) {
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const item = selected?.item;
+
+  useEffect(() => {
+    setResult(null);
+    setError("");
+  }, [item?.id]);
+
+  if (!item) return null;
+
+  async function analyze() {
+    setLoading(true);
+    setError("");
+    setResult(null);
+    try {
+      const { data } = await api.post("/api/ai/analyze-request", {
+        formTitle: item.formTitle || "",
+        request: {
+          id: item.id,
+          submittedAt: item.submittedAt || item.createdAt || null,
+          respondentEmail: item.respondentEmail || null,
+          answers: item.answers || [],
+        },
+        lang: lang || "ru",
+      });
+      setResult(data);
+    } catch (err) {
+      const status = err.response?.status;
+      if (status === 503) {
+        setError(t.aiError);
+      } else {
+        setError(t.aiErrorGeneral);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className="ai-block">
+      <div className="ai-block-header">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4"/>
+          <path d="M5.5 8.5l1.8 1.8 3.2-3.6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        <span className="ai-block-title">{t.aiTitle}</span>
+      </div>
+
+      {!result && !loading && !error && (
+        <button className="official-link-btn ai-analyze-btn" onClick={analyze}>
+          {t.aiAnalyzeBtn}
+        </button>
+      )}
+
+      {loading && <p className="muted ai-loading">{t.aiAnalyzing}</p>}
+
+      {error && (
+        <div className="ai-error">
+          <p>{error}</p>
+          <button className="official-link-btn ai-analyze-btn" onClick={analyze}>{t.aiRefresh}</button>
+        </div>
+      )}
+
+      {result && (
+        <div className="ai-result">
+          <div className="ai-result-row">
+            <span className="ai-result-label">{t.aiSummary}</span>
+            <span className="ai-result-value">{result.summary}</span>
+          </div>
+          <div className="ai-result-row">
+            <span className="ai-result-label">{t.aiCategory}</span>
+            <span className="ai-result-value ai-badge">{result.category}</span>
+          </div>
+          <div className="ai-result-row">
+            <span className="ai-result-label">{t.aiPriority}</span>
+            <span
+              className="ai-result-value ai-badge"
+              style={{ color: PRIORITY_COLORS[result.priority] || "inherit" }}
+            >
+              {result.priority}
+            </span>
+          </div>
+          <div className="ai-result-row">
+            <span className="ai-result-label">{t.aiRecommended}</span>
+            <span className="ai-result-value">{result.recommendedAction}</span>
+          </div>
+          <button className="ai-refresh-btn" onClick={analyze} disabled={loading}>
+            {t.aiRefresh}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Notification Settings ────────────────────────────────────────────────────
 
 const NOTIF_MODES = ["every_submission", "threshold", "daily_summary"];
@@ -410,7 +513,7 @@ function AnalyticsBlock({ items, t }) {
 }
 
 export function RequestsPage() {
-  const { t } = useLocale();
+  const { t, lang } = useLocale();
   const [searchParams] = useSearchParams();
   const params = useParams();
   const formId = params.formId || "";
@@ -626,6 +729,8 @@ export function RequestsPage() {
                   </div>
                 ))}
               </div>
+
+              <AIAnalysisBlock selected={selected} lang={lang} t={t} />
 
               <details className="detail-tech-info">
                 <summary>{t.technicalInfo}</summary>
