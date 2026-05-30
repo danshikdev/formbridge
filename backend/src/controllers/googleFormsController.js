@@ -2,7 +2,19 @@ import { FormIntegration } from "../models/formIntegration.js";
 import { IntegrationEvent } from "../models/integrationEvent.js";
 import { NotificationSettings } from "../models/notificationSettings.js";
 import { Request } from "../models/request.js";
+import { env } from "../config/env.js";
 import { sendMessage } from "../services/whatsappService.js";
+
+function formRequestsUrl(formId, formTitle) {
+  const baseUrl = env.publicBaseUrl.replace(/\/$/, "");
+  if (!formId) return `${baseUrl}/forms`;
+
+  const params = formTitle
+    ? `?formTitle=${encodeURIComponent(formTitle)}`
+    : "";
+
+  return `${baseUrl}/forms/${encodeURIComponent(formId)}/requests${params}`;
+}
 
 async function dispatchWhatsappNotifications(formId, record) {
   try {
@@ -13,8 +25,13 @@ async function dispatchWhatsappNotifications(formId, record) {
     for (const s of settings) {
       if (!s.phoneNumber) continue;
       const title = record.formTitle || formId;
-      const email = record.respondentEmail ? ` От: ${record.respondentEmail}.` : "";
-      const text = `FormBridge: новая заявка в форме «${title}».${email}`;
+      const email = record.respondentEmail ? `\nОт: ${record.respondentEmail}` : "";
+      const text = [
+        "FormBridge: новая заявка",
+        `Форма: «${title}»${email}`,
+        "",
+        `Открыть заявки: ${formRequestsUrl(formId, title)}`
+      ].join("\n");
       try {
         await sendMessage(s.phoneNumber, text);
         console.log(`[WhatsApp] Sent to ${s.phoneNumber}`);
