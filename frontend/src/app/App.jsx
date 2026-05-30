@@ -91,7 +91,12 @@ export function App() {
   return (
     <div className="app-shell">
       <TopBar t={t} lang={lang || "en"} setLang={setLang} />
-      {toast ? <div className="toast"><span className="toast-dot" />{toast}</div> : null}
+      {toast ? (
+        <div className="toast" role="status" aria-live="polite">
+          <span className="toast-icon">✓</span>
+          <span>{toast}</span>
+        </div>
+      ) : null}
       <main className="page-wrap">
         {!hasLanguage ? (
           <LanguageGate setLang={setLang} text={t} />
