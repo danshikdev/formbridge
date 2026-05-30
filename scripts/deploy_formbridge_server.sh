@@ -12,6 +12,8 @@ FRONT_ENV="$APP_DIR/frontend/.env.production"
 FRONT_ENV_DEV="$APP_DIR/frontend/.env"
 SECRET_BACK_ENV="/opt/formbridge-secrets/backend.env.production"
 SECRET_FRONT_ENV="/opt/formbridge-secrets/frontend.env.production"
+APP_SECRET_BACK_ENV="$APP_DIR/secrets/backend.env.production"
+APP_SECRET_FRONT_ENV="$APP_DIR/secrets/frontend.env.production"
 
 echo "[1/9] Update code"
 cd "$APP_DIR"
@@ -25,12 +27,26 @@ test -f "$APP_DIR/backend/package.json" || { echo "Missing backend/package.json"
 test -f "$APP_DIR/frontend/package.json" || { echo "Missing frontend/package.json" >&2; exit 1; }
 
 echo "[3/9] Restore protected env files"
-test -f "$SECRET_BACK_ENV" || { echo "Missing $SECRET_BACK_ENV" >&2; exit 1; }
-test -f "$SECRET_FRONT_ENV" || { echo "Missing $SECRET_FRONT_ENV" >&2; exit 1; }
+if [ -f "$APP_SECRET_BACK_ENV" ]; then
+  SECRET_BACK_ENV="$APP_SECRET_BACK_ENV"
+fi
+
+if [ -f "$APP_SECRET_FRONT_ENV" ]; then
+  SECRET_FRONT_ENV="$APP_SECRET_FRONT_ENV"
+fi
+
+test -f "$SECRET_BACK_ENV" || { echo "Missing backend env: $SECRET_BACK_ENV" >&2; exit 1; }
+test -f "$SECRET_FRONT_ENV" || { echo "Missing frontend env: $SECRET_FRONT_ENV" >&2; exit 1; }
+grep -q "^PORT=" "$SECRET_BACK_ENV" || { echo "Backend env is invalid: missing PORT= in $SECRET_BACK_ENV" >&2; exit 1; }
+grep -q "^DB_HOST=" "$SECRET_BACK_ENV" || { echo "Backend env is invalid: missing DB_HOST= in $SECRET_BACK_ENV" >&2; exit 1; }
+grep -q "^OPENAI_API_KEY=" "$SECRET_BACK_ENV" || { echo "Backend env is invalid: missing OPENAI_API_KEY= in $SECRET_BACK_ENV" >&2; exit 1; }
+grep -q "^VITE_API_URL=" "$SECRET_FRONT_ENV" || { echo "Frontend env is invalid: missing VITE_API_URL= in $SECRET_FRONT_ENV" >&2; exit 1; }
 cp "$SECRET_BACK_ENV" "$BACK_ENV"
 cp "$SECRET_FRONT_ENV" "$FRONT_ENV"
 cp "$SECRET_FRONT_ENV" "$FRONT_ENV_DEV"
 chmod 600 "$BACK_ENV" "$FRONT_ENV" "$FRONT_ENV_DEV"
+echo "Backend env source:  $SECRET_BACK_ENV"
+echo "Frontend env source: $SECRET_FRONT_ENV"
 
 echo "[4/9] Backend install"
 cd "$APP_DIR/backend"
