@@ -77,14 +77,25 @@ function isDetachedBrowserError(error) {
   return /detached frame|target closed|session closed|protocol error/i.test(error?.message || "");
 }
 
+function normalizePhoneNumber(phoneNumber) {
+  const digits = String(phoneNumber).replace(/\D/g, "");
+  if (digits.length === 11 && digits.startsWith("8")) {
+    return `7${digits.slice(1)}`;
+  }
+  return digits;
+}
+
 export async function sendMessage(phoneNumber, text) {
   if (!client || connectionStatus !== "connected") {
     throw new Error("WhatsApp client is not connected");
   }
-  const digits = String(phoneNumber).replace(/\D/g, "");
-  const chatId = `${digits}@c.us`;
+  const digits = normalizePhoneNumber(phoneNumber);
   try {
-    await client.sendMessage(chatId, text);
+    const numberId = await client.getNumberId(digits);
+    if (!numberId?._serialized) {
+      throw new Error(`WhatsApp account not found for ${digits}`);
+    }
+    await client.sendMessage(numberId._serialized, text);
   } catch (error) {
     if (isDetachedBrowserError(error)) {
       connectionStatus = "error";
