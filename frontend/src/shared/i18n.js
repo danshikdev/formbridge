@@ -306,13 +306,14 @@ export const translations = {
     setupAutoInstruction4: "Іске қосу (Run) батырмасын басыңыз.",
     setupAutoInstruction5: "Google рұқсат сұраған кезде Рұқсат ету (Allow) батырмасын басыңыз.",
     setupAutoInstruction6: "FormBridge бетіне оралып, Триггерді тексеру батырмасын басыңыз.",
+    setupAutoShotRun: "installFormBridge таңдалғанын тексеріп, Run батырмасын басыңыз.",
+    setupAutoShotAuthorization: "Google рұқсат сұраса, Рұқсаттарды тексеру батырмасын басыңыз.",
+    setupAutoShotPermissions: "Барлық рұқсаттарды таңдап, жалғастырыңыз.",
     connectionReady: "Қосылым дайын",
     googleSheet: "Google Sheet",
     autoDelivery: "Автоматты жіберу",
-    testEvent: "Тест оқиғасы",
     setupMissingSheetReason: "Google Sheet байланыстырылмаған — 1-қадамды аяқтаңыз.",
     setupMissingDeliveryReason: "Автоматты жіберу бапталмаған — installFormBridge бір рет іске қосыңыз.",
-    setupMissingTestReason: "Тест жоқ — тест жауабын жіберіңіз немесе тест іске қосыңыз."
   },
   ru: {
     ...common,
@@ -609,13 +610,14 @@ export const translations = {
     setupAutoInstruction4: "Нажмите Запустить (Run).",
     setupAutoInstruction5: "Нажмите Разрешить (Allow) когда Google запросит права.",
     setupAutoInstruction6: "Вернитесь в FormBridge и нажмите Проверить триггер.",
+    setupAutoShotRun: "Проверьте, что выбрана функция installFormBridge, и нажмите Run.",
+    setupAutoShotAuthorization: "Если Google запросит авторизацию, нажмите Проверить разрешения.",
+    setupAutoShotPermissions: "Выберите все разрешения и продолжите.",
     connectionReady: "Подключение готово",
     googleSheet: "Google Sheet",
     autoDelivery: "Автоотправка",
-    testEvent: "Тестовое событие",
     setupMissingSheetReason: "Google Sheet не привязана — завершите шаг 1.",
-    setupMissingDeliveryReason: "Автоотправка не настроена — запустите installFormBridge один раз.",
-    setupMissingTestReason: "Тест не пройден — отправьте тестовый ответ или запустите тест."
+    setupMissingDeliveryReason: "Автоотправка не настроена — запустите installFormBridge один раз."
   },
   en: {
     ...common,
@@ -912,12 +914,13 @@ export const translations = {
     setupAutoInstruction4: "Click Run.",
     setupAutoInstruction5: "Click Allow when Google asks for permissions.",
     setupAutoInstruction6: "Return to FormBridge and click Check trigger.",
+    setupAutoShotRun: "Make sure installFormBridge is selected, then click Run.",
+    setupAutoShotAuthorization: "If Google asks for authorization, click Review permissions.",
+    setupAutoShotPermissions: "Select all permissions and continue.",
     connectionReady: "Connection ready",
     googleSheet: "Google Sheet",
     autoDelivery: "Auto delivery",
-    testEvent: "Test event",
     setupMissingSheetReason: "Google Sheet is missing — complete Step 1.",
-    setupMissingDeliveryReason: "Auto delivery is missing — run installFormBridge once.",
-    setupMissingTestReason: "Test is missing — submit a test response or run test."
+    setupMissingDeliveryReason: "Auto delivery is missing — run installFormBridge once."
   }
 };

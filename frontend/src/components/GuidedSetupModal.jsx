@@ -48,6 +48,21 @@ const SHEET_SETUP_SCREENSHOTS = [
   }
 ];
 
+const AUTO_DELIVERY_SCREENSHOTS = [
+  {
+    src: "/setup-screenshots/apps-script-run.png",
+    labelKey: "setupAutoShotRun"
+  },
+  {
+    src: "/setup-screenshots/apps-script-authorization.png",
+    labelKey: "setupAutoShotAuthorization"
+  },
+  {
+    src: "/setup-screenshots/apps-script-permissions.png",
+    labelKey: "setupAutoShotPermissions"
+  }
+];
+
 export function GuidedSetupModal({ formId, formTitle, integration: initialIntegration, googleEmail, onClose, onRefresh }) {
   const { t } = useLocale();
   const [integration, setIntegration] = useState(initialIntegration || null);
@@ -350,18 +365,12 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
                   <li>{t.setupAutoInstruction6}</li>
                 </ol>
                 <div className="setup-screenshot-grid">
-                  <div className="setup-screenshot-placeholder">
-                    <span className="screenshot-label">Screenshot: select installFormBridge</span>
-                    <span className="screenshot-hint">{t.addScreenshotLater}</span>
-                  </div>
-                  <div className="setup-screenshot-placeholder">
-                    <span className="screenshot-label">Screenshot: Run button</span>
-                    <span className="screenshot-hint">{t.addScreenshotLater}</span>
-                  </div>
-                  <div className="setup-screenshot-placeholder">
-                    <span className="screenshot-label">Screenshot: Allow permissions</span>
-                    <span className="screenshot-hint">{t.addScreenshotLater}</span>
-                  </div>
+                  {AUTO_DELIVERY_SCREENSHOTS.map((shot) => (
+                    <figure className="setup-screenshot-card" key={shot.src}>
+                      <img src={shot.src} alt={t[shot.labelKey]} loading="lazy" />
+                      <figcaption>{t[shot.labelKey]}</figcaption>
+                    </figure>
+                  ))}
                 </div>
               </div>
             )}
@@ -380,10 +389,6 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
               <div className={`setup-check-item${verifyResult.checklist?.webhookUrl ? " check-ok" : " check-missing"}`}>
                 <span>Webhook</span>
                 <span className="check-badge">{verifyResult.checklist?.webhookUrl ? "ok" : "missing"}</span>
-              </div>
-              <div className={`setup-check-item${verifyResult.checklist?.lastTest ? " check-ok" : " check-missing"}`}>
-                <span>{t.testEvent}</span>
-                <span className="check-badge">{verifyResult.checklist?.lastTest ? "ok" : "missing"}</span>
               </div>
             </div>
           )}
@@ -410,9 +415,6 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
               )}
               {(verifyResult.broken.includes("trigger") || verifyResult.broken.includes("scriptProject")) && (
                 <p>{t.setupMissingDeliveryReason}</p>
-              )}
-              {verifyResult.broken.includes("lastTest") && (
-                <p>{t.setupMissingTestReason}</p>
               )}
             </div>
           )}

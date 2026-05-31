@@ -49,6 +49,8 @@ Supported scenarios:
 - Guided setup should stay quiet: no "copy setup link" button in the main flow.
 - Step 2 is not complete just because Apps Script opened; it is complete only after the installer confirms trigger creation.
 - The Apps Script installer calls POST /api/integrations/forms/:id/setup-confirm after creating the trigger.
+- Guided setup Step 2 uses screenshots from frontend/public/setup-screenshots/apps-script-*.png.
+- Do not show "test event" in the main setup verification UI; keep setup checks focused on Sheet, trigger/auto delivery, and webhook.
 
 ## AI Direction
 
