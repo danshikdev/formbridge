@@ -159,6 +159,42 @@ Checks passed:
 
 Commit: f94c4ed
 
+## Recently Completed
+
+### Admin dashboard + Toast UX (2026-05-31)
+
+Files changed:
+- `backend/src/middleware/admin.js` — new: `requireAdmin` checks `process.env.ADMIN_EMAILS` (comma-separated) against `req.user.email`, returns 403 if not match
+- `backend/src/routes/adminRoutes.js` — new: GET `/api/admin/overview` (users/forms/requests/feedback/system), GET `/api/admin/feedback` (enriched with user email/name), PATCH `/api/admin/feedback/:id` (status: new/reviewed/done)
+- `backend/src/app.js` — registered `adminRoutes` at `/api/admin`
+- `backend/.env.example` — added `ADMIN_EMAILS=`
+- `frontend/src/app/App.jsx` — toast: added `toastClosing` state, 3s show + exit animation; `IconCheck` SVG instead of text; `/admin` route; "Developer" link in account dropdown
+- `frontend/src/pages/AdminPage.jsx` — new: admin dashboard with stat cards, system status, recent users table, feedback table with status update buttons
+- `frontend/src/shared/i18n.js` — added 17 admin keys in kk/ru/en
+- `frontend/src/shared/styles/global.css` — toast moved to bottom-right (desktop), bottom full-width (mobile); toastIn/toastOut animations; full admin styles
+
+Checks:
+- `node --check` on all backend files ✓
+- `npm run build` frontend ✓
+- `rg` secret scan: only boolean check + user-visible UI text, no values leaked ✓
+
+Commit: aa28875
+
+## Production deploy
+
+Add to `/opt/formbridge-secrets/backend.env.production`:
+```
+ADMIN_EMAILS=erdana.tursunov@gmail.com,tursunoverdana@gmail.com
+```
+
+Server commands:
+```
+cd /var/www/formbridge
+./scripts/deploy_formbridge_server.sh
+pm2 flush 7
+pm2 logs 7 --lines 30
+```
+
 ## Next Planned Task
 
 - Consider adapting scenario card icon colors via CSS colorClass
