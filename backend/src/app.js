@@ -7,6 +7,7 @@ import { googleOAuthRoutes } from "./routes/googleOAuthRoutes.js";
 import { integrationsRoutes } from "./routes/integrationsRoutes.js";
 import { whatsappRoutes } from "./routes/whatsappRoutes.js";
 import { aiRoutes } from "./routes/aiRoutes.js";
+import { adminRoutes } from "./routes/adminRoutes.js";
 
 export const app = express();
 
@@ -29,3 +30,4 @@ app.use("/api/google", googleOAuthRoutes);
 app.use("/api/integrations", integrationsRoutes);
 app.use("/api/notifications/whatsapp", whatsappRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/admin", adminRoutes);

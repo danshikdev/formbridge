@@ -6,6 +6,8 @@ import { ProfilePage } from "../pages/ProfilePage.jsx";
 import { RequestsPage } from "../pages/RequestsPage.jsx";
 import { MyFormsPage } from "../pages/MyFormsPage.jsx";
 import { IntegrationHealthPage } from "../pages/IntegrationHealthPage.jsx";
+import { AdminPage } from "../pages/AdminPage.jsx";
+import { IconCheck } from "../shared/icons.jsx";
 import { LANGUAGES } from "../shared/i18n";
 import { useLocale } from "../shared/useLocale";
 
@@ -63,6 +65,7 @@ function TopBar({ t, lang, setLang }) {
             {menuOpen ? (
               <div className="account-dropdown">
                 <Link to="/profile" onClick={() => setMenuOpen(false)}>{t.openProfile}</Link>
+                <Link to="/admin" onClick={() => setMenuOpen(false)}>{t.adminLink}</Link>
                 <button type="button" onClick={logout}><ArrowRightStartOnRectangleIcon className="icon-sm" />{t.logout}</button>
               </div>
             ) : null}
@@ -77,23 +80,34 @@ export function App() {
   const { lang, setLang, t, hasLanguage } = useLocale();
   const location = useLocation();
   const [toast, setToast] = useState("");
+  const [toastClosing, setToastClosing] = useState(false);
 
   useEffect(() => {
     const nextToast = sessionStorage.getItem("fb_toast");
     if (!nextToast) return;
 
     setToast(nextToast);
+    setToastClosing(false);
     sessionStorage.removeItem("fb_toast");
-    const timer = window.setTimeout(() => setToast(""), 3200);
-    return () => window.clearTimeout(timer);
+
+    const closeTimer = window.setTimeout(() => setToastClosing(true), 3000);
+    const clearTimer = window.setTimeout(() => {
+      setToast("");
+      setToastClosing(false);
+    }, 3320);
+
+    return () => {
+      window.clearTimeout(closeTimer);
+      window.clearTimeout(clearTimer);
+    };
   }, [location.pathname]);
 
   return (
     <div className="app-shell">
       <TopBar t={t} lang={lang || "en"} setLang={setLang} />
       {toast ? (
-        <div className="toast" role="status" aria-live="polite">
-          <span className="toast-icon">✓</span>
+        <div className={`toast${toastClosing ? " toast-closing" : ""}`} role="status" aria-live="polite">
+          <span className="toast-icon"><IconCheck size={14} /></span>
           <span>{toast}</span>
         </div>
       ) : null}
@@ -109,6 +123,7 @@ export function App() {
             <Route path="/requests" element={<Navigate to="/forms" replace />} />
             <Route path="/forms/:formId/requests" element={<ProtectedRoute><RequestsPage /></ProtectedRoute>} />
             <Route path="/health" element={<ProtectedRoute><IntegrationHealthPage /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/forms" replace />} />
           </Routes>
         )}
