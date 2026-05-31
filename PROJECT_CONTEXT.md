@@ -45,6 +45,7 @@ Supported scenarios:
 - Setup-in-progress forms must show "continue setup", not "open workspace".
 - Guided setup Step 1 explains that FormBridge created a Google Sheet and the user should select that prepared Sheet in Google Forms.
 - Step 1 uses screenshots from frontend/public/setup-screenshots.
+- Apps Script setup links should use script.google.com/home/projects/{scriptId}/edit and include the connected Google account.
 
 ## AI Direction
 

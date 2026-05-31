@@ -4363,6 +4363,24 @@ select {
   margin-bottom: 14px;
 }
 
+.setup-account-hint,
+.setup-link-helper {
+  margin: 0 0 10px;
+  padding-left: 34px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.setup-account-hint strong {
+  color: var(--brand);
+  font-weight: 800;
+}
+
+.setup-link-helper {
+  margin-top: -4px;
+}
+
 .setup-btn-primary {
   height: 34px;
   padding: 0 16px;
@@ -4623,6 +4641,8 @@ select {
 
   .setup-step-desc,
   .setup-actions,
+  .setup-account-hint,
+  .setup-link-helper,
   .setup-accordion,
   .setup-check-grid,
   .setup-ready-banner,

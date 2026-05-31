@@ -5,7 +5,15 @@ import { useLocale } from "../shared/useLocale";
 function accountAwareUrl(url, email) {
   if (!url) return null;
   if (!email) return url;
-  return `https://accounts.google.com/AccountChooser?Email=${encodeURIComponent(email)}&continue=${encodeURIComponent(url)}`;
+  const withAccount = new URL(url);
+  if (withAccount.hostname.endsWith("google.com")) {
+    withAccount.searchParams.set("authuser", email);
+  }
+  return `https://accounts.google.com/AccountChooser?Email=${encodeURIComponent(email)}&continue=${encodeURIComponent(withAccount.toString())}`;
+}
+
+function scriptEditorUrlFromId(scriptProjectId) {
+  return `https://script.google.com/home/projects/${scriptProjectId}/edit`;
 }
 
 function deriveStatuses(integration) {
@@ -127,7 +135,7 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
 
   function openGoogleSetup() {
     const base = scriptUrl
-      || (integration?.scriptProjectId ? `https://script.google.com/d/${integration.scriptProjectId}/edit` : null);
+      || (integration?.scriptProjectId ? scriptEditorUrlFromId(integration.scriptProjectId) : null);
     if (!base) return;
     const url = accountAwareUrl(base, googleEmail);
     window.open(url, "_blank", "noopener,noreferrer");
@@ -137,10 +145,10 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
 
   async function copySetupLink() {
     const base = scriptUrl
-      || (integration?.scriptProjectId ? `https://script.google.com/d/${integration.scriptProjectId}/edit` : "");
+      || (integration?.scriptProjectId ? scriptEditorUrlFromId(integration.scriptProjectId) : "");
     if (!base) return;
     try {
-      await navigator.clipboard.writeText(base);
+      await navigator.clipboard.writeText(accountAwareUrl(base, googleEmail) || base);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -296,34 +304,46 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
           <p className="setup-step-desc">{t.setupStepAutoDeliveryDesc}</p>
 
           {!step2Locked && (
-            <div className="setup-actions">
-              <button
-                className="setup-btn-primary"
-                type="button"
-                onClick={prepareSetup}
-                disabled={preparing}
-              >
-                {preparing ? t.checking : t.prepareSetup}
-              </button>
-              {hasScriptUrl && (
+            <>
+              {googleEmail && (
+                <p className="setup-account-hint">
+                  {t.openGoogleSetupAccountHint}: <strong>{googleEmail}</strong>
+                </p>
+              )}
+              <div className="setup-actions">
                 <button
                   className="setup-btn-primary"
                   type="button"
-                  onClick={openGoogleSetup}
+                  onClick={prepareSetup}
+                  disabled={preparing}
                 >
-                  {t.openGoogleSetup}
+                  {preparing ? t.checking : t.prepareSetup}
                 </button>
-              )}
+                {hasScriptUrl && (
+                  <button
+                    className="setup-btn-primary"
+                    type="button"
+                    onClick={openGoogleSetup}
+                  >
+                    {t.openGoogleSetup}
+                  </button>
+                )}
+                {hasScriptUrl && (
+                  <button
+                    className="setup-btn-secondary"
+                    type="button"
+                    onClick={copySetupLink}
+                  >
+                    {copied ? "Copied" : t.copySetupLink}
+                  </button>
+                )}
+              </div>
               {hasScriptUrl && (
-                <button
-                  className="setup-btn-secondary"
-                  type="button"
-                  onClick={copySetupLink}
-                >
-                  {copied ? "Copied" : t.copySetupLink}
-                </button>
+                <p className="setup-link-helper">
+                  {t.openGoogleSetupFallback}
+                </p>
               )}
-            </div>
+            </>
           )}
 
           <div className="setup-accordion">

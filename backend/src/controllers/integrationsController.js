@@ -25,7 +25,7 @@ function formUrlFromId(formId) {
 function scriptEditorUrl(scriptProjectId, account) {
   const preferredEmail = process.env.DEMO_GOOGLE_ACCOUNT_EMAIL || account?.email || "";
   const authUser = preferredEmail ? `?authuser=${encodeURIComponent(preferredEmail)}` : "";
-  return `https://script.google.com/d/${scriptProjectId}/edit${authUser}`;
+  return `https://script.google.com/home/projects/${scriptProjectId}/edit${authUser}`;
 }
 
 function generateSecret() {
