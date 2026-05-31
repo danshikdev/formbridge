@@ -7,7 +7,7 @@ import { Request } from "../models/request.js";
 export const aiRoutes = Router();
 
 aiRoutes.post("/form-chat", requireAuth, async (req, res) => {
-  const { formId, formTitle, scenario, message, lang } = req.body;
+  const { formId, formTitle, scenario, message, history, lang } = req.body;
   const userId = req.user?.id;
 
   if (!formId || !message || !String(message).trim()) {
@@ -27,11 +27,13 @@ aiRoutes.post("/form-chat", requireAuth, async (req, res) => {
   });
 
   try {
+    const nextHistory = Array.isArray(history) ? history : [];
     const reply = await formChat(
       formTitle || integration.formTitle || "",
       scenario || integration.scenario || "universal",
       requests.map((r) => r.toJSON()),
       String(message).trim(),
+      nextHistory,
       lang || "ru"
     );
     return res.json({ reply });

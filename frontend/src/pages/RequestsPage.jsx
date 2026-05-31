@@ -314,6 +314,14 @@ function AIChatBlock({ formId, formTitle, scenario, scenarioMeta, lang, t }) {
     if (!msg || loading) return;
 
     setInput("");
+    
+    const history = messages
+      .filter((m) => m.role === "user" || m.role === "ai")
+      .map((m) => ({
+        role: m.role === "ai" ? "assistant" : "user",
+        content: m.text
+      }));
+
     setMessages((prev) => [...prev, { role: "user", text: msg }]);
     setLoading(true);
 
@@ -323,6 +331,7 @@ function AIChatBlock({ formId, formTitle, scenario, scenarioMeta, lang, t }) {
         formTitle,
         scenario: scenario || "universal",
         message: msg,
+        history,
         lang: lang || "ru"
       });
       const reply = String(data.reply || "").trim();

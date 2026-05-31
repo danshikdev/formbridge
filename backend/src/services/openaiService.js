@@ -3,7 +3,7 @@ import { getScenario } from "../config/formScenarios.js";
 
 const LANG_LABELS = { kk: "казахском", ru: "русском", en: "английском" };
 
-function buildFormChatPrompt(formTitle, scenario, requests, userMessage, lang) {
+function buildSystemPrompt(formTitle, scenario, requests, lang) {
   const langLabel = LANG_LABELS[lang] || "русском";
   const scenarioMeta = getScenario(scenario);
   const rolePrompt = scenarioMeta.aiRolePrompt;
@@ -28,8 +28,6 @@ Respond in ${langLabel} language.
 Form responses data:
 ${requestsContext || "No responses available yet."}
 
-User question: ${userMessage}
-
 Instructions:
 - Answer based only on the provided form data above.
 - If there is not enough data, say so honestly.
@@ -38,7 +36,7 @@ Instructions:
 - Format your response clearly (use line breaks, lists if helpful).`;
 }
 
-export async function formChat(formTitle, scenario, requests, message, lang) {
+export async function formChat(formTitle, scenario, requests, message, history = [], lang) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     const err = new Error("OPENAI_API_KEY not configured");
@@ -49,16 +47,26 @@ export async function formChat(formTitle, scenario, requests, message, lang) {
   const model = process.env.OPENAI_MODEL || "gpt-5-nano";
   const client = new OpenAI({ apiKey });
 
+  // Limit conversation history to the last 10 messages (5 full turns) to maintain efficiency and stay within token context limits
+  const historyLimit = 10;
+  const slicedHistory = history.slice(-historyLimit).map((msg) => ({
+    role: msg.role === "assistant" || msg.role === "system" ? msg.role : "user",
+    content: String(msg.content || "").trim()
+  }));
+
+  const systemPrompt = buildSystemPrompt(formTitle, scenario, requests, lang);
+
+  const apiMessages = [
+    { role: "system", content: systemPrompt },
+    ...slicedHistory,
+    { role: "user", content: message }
+  ];
+
   let content;
   try {
     const completion = await client.chat.completions.create({
       model,
-      messages: [
-        {
-          role: "user",
-          content: buildFormChatPrompt(formTitle, scenario, requests, message, lang)
-        }
-      ]
+      messages: apiMessages
     });
     content = (completion.choices?.[0]?.message?.content || "").trim();
   } catch (err) {
