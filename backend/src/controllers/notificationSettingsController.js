@@ -1,4 +1,5 @@
 import { NotificationSettings } from "../models/notificationSettings.js";
+import { normalizeWhatsAppPhoneNumber } from "../services/whatsappService.js";
 
 export async function getNotificationSettings(req, res) {
   try {
@@ -44,9 +45,18 @@ export async function upsertNotificationSettings(req, res) {
       ? mode
       : "every_submission";
     const nextThresholdCount = Number.parseInt(thresholdCount, 10);
+    let normalizedPhoneNumber = "";
 
     if (nextEnabled && !nextPhoneNumber) {
       return res.status(400).json({ error: "WhatsApp number is required when notifications are enabled" });
+    }
+
+    if (nextPhoneNumber) {
+      try {
+        normalizedPhoneNumber = normalizeWhatsAppPhoneNumber(nextPhoneNumber);
+      } catch (err) {
+        return res.status(400).json({ error: err.message });
+      }
     }
 
     if (nextMode === "threshold" && (!Number.isFinite(nextThresholdCount) || nextThresholdCount < 1)) {
@@ -65,7 +75,7 @@ export async function upsertNotificationSettings(req, res) {
 
     await settings.update({
       enabled: nextEnabled,
-      phoneNumber: nextPhoneNumber || null,
+      phoneNumber: normalizedPhoneNumber || null,
       mode: nextMode,
       thresholdCount: nextMode === "threshold" ? nextThresholdCount : null
     });

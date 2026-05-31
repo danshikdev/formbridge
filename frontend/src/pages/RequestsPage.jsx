@@ -467,6 +467,17 @@ function FeedbackModal({ formId, t, onClose }) {
 
 const NOTIF_MODES = ["every_submission", "threshold", "daily_summary"];
 
+function normalizeWhatsAppPhoneInput(value) {
+  const digits = String(value || "").replace(/\D/g, "");
+
+  if (!digits) return "";
+  if (digits.length === 11 && digits.startsWith("8")) return `+7${digits.slice(1)}`;
+  if (digits.length === 11 && digits.startsWith("7")) return `+${digits}`;
+  if (digits.length === 10) return `+7${digits}`;
+
+  return null;
+}
+
 function NotificationSettingsBlock({ formId, formTitle, t }) {
   const [isOpen, setIsOpen] = useState(false);
   const [enabled, setEnabled] = useState(false);
@@ -495,20 +506,28 @@ function NotificationSettingsBlock({ formId, formTitle, t }) {
   }, [formId]);
 
   async function save() {
+    const normalizedPhone = normalizeWhatsAppPhoneInput(phoneNumber);
+
+    if (enabled && !normalizedPhone) {
+      setSaveError(t.notifPhoneInvalid);
+      return;
+    }
+
     setSaving(true);
     setSaveError("");
     setSaved(false);
     try {
-      await api.put(`/api/forms/${formId}/notification-settings`, {
+      const { data } = await api.put(`/api/forms/${formId}/notification-settings`, {
         enabled,
-        phoneNumber,
+        phoneNumber: normalizedPhone || "",
         mode,
         thresholdCount: mode === "threshold" ? Number(thresholdCount) : null
       });
+      setPhoneNumber(data.phoneNumber || normalizedPhone || "");
       setSaved(true);
       setTimeout(() => setSaved(false), 3000);
-    } catch {
-      setSaveError(t.notifFailedSave);
+    } catch (err) {
+      setSaveError(err.response?.data?.error || t.notifFailedSave);
     } finally {
       setSaving(false);
     }
@@ -575,7 +594,20 @@ function NotificationSettingsBlock({ formId, formTitle, t }) {
               <div className="notif-fields">
                 <label className="notif-field">
                   <span>{t.notifPhone}</span>
-                  <input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder={t.notifPhonePh} />
+                  <input
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(e) => {
+                      setPhoneNumber(e.target.value);
+                      setSaveError("");
+                    }}
+                    onBlur={() => {
+                      const normalized = normalizeWhatsAppPhoneInput(phoneNumber);
+                      if (normalized) setPhoneNumber(normalized);
+                    }}
+                    placeholder={t.notifPhonePh}
+                  />
+                  <small className="notif-field-hint">{t.notifPhoneHint}</small>
                 </label>
                 <label className="notif-field">
                   <span>{t.notifMode}</span>

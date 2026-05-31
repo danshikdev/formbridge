@@ -2223,6 +2223,13 @@ body {
   box-shadow: 0 0 0 3px rgba(18, 59, 47, 0.12);
 }
 
+.notif-field-hint {
+  color: #7a8782;
+  font-size: 0.74rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
 .notif-preview {
   grid-column: 1 / -1;
 }

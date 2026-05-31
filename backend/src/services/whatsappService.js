@@ -77,12 +77,32 @@ function isDetachedBrowserError(error) {
   return /detached frame|target closed|session closed|protocol error/i.test(error?.message || "");
 }
 
-function normalizePhoneNumber(phoneNumber) {
+export function normalizeWhatsAppPhoneNumber(phoneNumber) {
   const digits = String(phoneNumber).replace(/\D/g, "");
+
+  if (!digits) return "";
+
   if (digits.length === 11 && digits.startsWith("8")) {
-    return `7${digits.slice(1)}`;
+    return `+7${digits.slice(1)}`;
   }
-  return digits;
+
+  if (digits.length === 11 && digits.startsWith("7")) {
+    return `+${digits}`;
+  }
+
+  if (digits.length === 10) {
+    return `+7${digits}`;
+  }
+
+  throw new Error("Enter a valid Kazakhstan WhatsApp number, for example +7 777 123 45 67");
+}
+
+function normalizePhoneNumber(phoneNumber) {
+  const normalized = normalizeWhatsAppPhoneNumber(phoneNumber);
+  if (!normalized) {
+    throw new Error("WhatsApp number is required");
+  }
+  return normalized.replace(/\D/g, "");
 }
 
 export async function sendMessage(phoneNumber, text) {
