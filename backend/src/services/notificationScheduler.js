@@ -33,20 +33,19 @@ function getStatusLabelKK(status) {
 }
 
 function almatyParts(date = new Date()) {
-  const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Almaty",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false
-  }).formatToParts(date);
+  // Almaty is UTC+5. We calculate Almaty time by adding 5 hours to the UTC timestamp.
+  const almatyOffsetMs = 5 * 60 * 60 * 1000;
+  const almatyDate = new Date(date.getTime() + almatyOffsetMs);
 
-  const map = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  const year = almatyDate.getUTCFullYear();
+  const month = String(almatyDate.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(almatyDate.getUTCDate()).padStart(2, "0");
+  const hour = String(almatyDate.getUTCHours()).padStart(2, "0");
+  const minute = String(almatyDate.getUTCMinutes()).padStart(2, "0");
+
   return {
-    date: `${map.year}-${map.month}-${map.day}`,
-    time: `${map.hour}:${map.minute}`
+    date: `${year}-${month}-${day}`,
+    time: `${hour}:${minute}`
   };
 }
 
