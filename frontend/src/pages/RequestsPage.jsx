@@ -465,7 +465,7 @@ function FeedbackModal({ formId, t, onClose }) {
 
 // ─── Notification Settings Block ──────────────────────────────────────────────
 
-const NOTIF_MODES = ["every_submission", "threshold", "daily_summary"];
+const NOTIF_MODES = ["every_submission", "threshold"];
 
 function normalizeWhatsAppPhoneInput(value) {
   const digits = String(value || "").replace(/\D/g, "");

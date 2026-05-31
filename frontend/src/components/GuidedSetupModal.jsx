@@ -72,6 +72,11 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
 
   const initial = deriveStatuses(initialIntegration);
   const [step1Status, setStep1Status] = useState(initial.step1);
+  const [step1Confirmed, setStep1Confirmed] = useState(Boolean(
+    initialIntegration?.scriptProjectId
+      || initialIntegration?.status === "ready"
+      || initialIntegration?.healthStatus === "connected"
+  ));
   const [step2Status, setStep2Status] = useState(initial.step2);
 
   const [accordion1Open, setAccordion1Open] = useState(false);
@@ -99,7 +104,8 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
       setIntegration(item);
       const derived = deriveStatuses(item);
       setStep1Status(derived.step1);
-      setStep2Status(derived.step2);
+      setStep1Confirmed(false);
+      setStep2Status("locked");
       onRefresh?.();
     } catch (err) {
       setError(err.response?.data?.error || t.failedSetup);
@@ -118,9 +124,12 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
         setIntegration(found);
         const derived = deriveStatuses(found);
         setStep1Status(derived.step1);
+        if (derived.step1 === "found") {
+          setStep1Confirmed(true);
+        }
         if (derived.step2 === "done") {
           setStep2Status("done");
-        } else if (derived.step2 !== "locked" && step2Status === "locked") {
+        } else if (derived.step2 !== "locked") {
           setStep2Status(derived.step2);
         }
         onRefresh?.();
@@ -179,7 +188,7 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
     }
   }
 
-  const step2Locked = step1Status !== "found";
+  const step2Locked = step1Status !== "found" || !step1Confirmed;
   const hasScriptUrl = Boolean(scriptUrl || integration?.scriptProjectId);
   const setupComplete = step2Status === "done";
 
@@ -224,10 +233,15 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
           <p className="setup-step-desc">{t.setupStepSheetsDesc}</p>
 
           {step1Status === "found" && (
-            <div className="setup-sheet-callout">
-              <span>{t.preparedSheetLabel}</span>
-              <strong>{preparedSheetName}</strong>
-            </div>
+            <>
+              <div className="setup-sheet-callout">
+                <span>{t.preparedSheetLabel}</span>
+                <strong>{preparedSheetName}</strong>
+              </div>
+              {step1Confirmed && (
+                <p className="setup-step-ready-note">{t.sheetVerifiedContinue}</p>
+              )}
+            </>
           )}
 
           {!initLoading && (

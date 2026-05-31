@@ -361,6 +361,7 @@ Guided setup is now a 2-step UI:
 - Step 2: run Apps Script installer (`installFormBridge`) and verify trigger
 - No copy-link button in the main setup flow
 - No test-event card in the main setup verification
+- Step 2 must stay locked until the user clicks "Check" in Step 1 and sees the Sheet verified message.
 - Trigger readiness is confirmed via POST `/api/integrations/forms/:id/setup-confirm` callback from Apps Script
 - Step 2 is NOT done when Apps Script is opened; only done after trigger verify passes
 - Success celebration with checkmark pop + spark animation shown inside Step 2

@@ -4329,6 +4329,17 @@ select {
   text-align: right;
 }
 
+.setup-step-ready-note {
+  margin: -6px 0 14px 34px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(6, 95, 70, 0.08);
+  color: var(--success);
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1.4;
+}
+
 /* Status pills */
 .setup-status-pill {
   display: inline-flex;
@@ -4750,6 +4761,7 @@ select {
   .setup-ready-banner,
   .setup-success-celebration,
   .setup-sheet-callout,
+  .setup-step-ready-note,
   .setup-reason-list {
     padding-left: 20px;
   }
@@ -4758,6 +4770,10 @@ select {
     margin-left: 20px;
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .setup-step-ready-note {
+    margin-left: 20px;
   }
 
   .setup-sheet-callout strong {
