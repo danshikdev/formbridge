@@ -43,6 +43,8 @@ Supported scenarios:
 - A form is "ready/connected" only when delivery is actually ready.
 - A created integration record with missing trigger/webhook test is only "setup in progress".
 - Setup-in-progress forms must show "continue setup", not "open workspace".
+- Guided setup Step 1 explains that FormBridge created a Google Sheet and the user should select that prepared Sheet in Google Forms.
+- Step 1 uses screenshots from frontend/public/setup-screenshots.
 
 ## AI Direction
 

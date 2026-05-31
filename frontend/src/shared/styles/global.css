@@ -4136,7 +4136,7 @@ select {
   border-radius: var(--radius-card);
   box-shadow: var(--shadow);
   width: 100%;
-  max-width: 580px;
+  max-width: 1040px;
   max-height: calc(100vh - 40px);
   overflow-y: auto;
   padding: 0 0 24px;
@@ -4295,6 +4295,33 @@ select {
   padding-left: 34px;
 }
 
+.setup-sheet-callout {
+  margin: 0 0 14px 34px;
+  padding: 12px 14px;
+  border: 1px solid rgba(18, 59, 47, 0.16);
+  border-radius: var(--radius-control);
+  background: rgba(18, 59, 47, 0.045);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text);
+}
+
+.setup-sheet-callout span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.setup-sheet-callout strong {
+  color: var(--brand);
+  font-size: 0.9rem;
+  text-align: right;
+}
+
 /* Status pills */
 .setup-status-pill {
   display: inline-flex;
@@ -4443,8 +4470,8 @@ select {
 /* Screenshot placeholders */
 .setup-screenshot-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
 }
 
 .setup-screenshot-placeholder {
@@ -4470,6 +4497,32 @@ select {
   font-size: 0.68rem;
   color: rgba(98, 115, 108, 0.65);
   font-style: italic;
+}
+
+.setup-screenshot-card {
+  margin: 0;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  background: #fff;
+  box-shadow: 0 12px 28px rgba(18, 59, 47, 0.08);
+}
+
+.setup-screenshot-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
+  background: #f6f8f6;
+  border-bottom: 1px solid var(--border);
+}
+
+.setup-screenshot-card figcaption {
+  padding: 10px 12px 12px;
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 /* Verification checks */
@@ -4573,8 +4626,19 @@ select {
   .setup-accordion,
   .setup-check-grid,
   .setup-ready-banner,
+  .setup-sheet-callout,
   .setup-reason-list {
     padding-left: 20px;
+  }
+
+  .setup-sheet-callout {
+    margin-left: 20px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .setup-sheet-callout strong {
+    text-align: left;
   }
 
   .setup-screenshot-grid {
@@ -4595,4 +4659,3 @@ select {
     justify-content: center;
   }
 }
-

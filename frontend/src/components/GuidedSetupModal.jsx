@@ -21,9 +21,29 @@ function deriveStatuses(integration) {
   return { step1, step2, step3 };
 }
 
+const SHEET_SETUP_SCREENSHOTS = [
+  {
+    src: "/setup-screenshots/google-form-responses.png",
+    labelKey: "setupSheetShotResponses"
+  },
+  {
+    src: "/setup-screenshots/select-existing-sheet.png",
+    labelKey: "setupSheetShotExisting"
+  },
+  {
+    src: "/setup-screenshots/choose-formbridge-sheet.png",
+    labelKey: "setupSheetShotChoose"
+  },
+  {
+    src: "/setup-screenshots/insert-selected-sheet.png",
+    labelKey: "setupSheetShotInsert"
+  }
+];
+
 export function GuidedSetupModal({ formId, formTitle, integration: initialIntegration, googleEmail, onClose, onRefresh }) {
   const { t } = useLocale();
   const [integration, setIntegration] = useState(initialIntegration || null);
+  const preparedSheetName = integration?.sheetTitle || `FormBridge - ${formTitle}`;
 
   const initial = deriveStatuses(initialIntegration);
   const [step1Status, setStep1Status] = useState(initial.step1);
@@ -195,7 +215,14 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
           </div>
           <p className="setup-step-desc">{t.setupStepSheetsDesc}</p>
 
-          {step1Status !== "found" && !initLoading && (
+          {step1Status === "found" && (
+            <div className="setup-sheet-callout">
+              <span>{t.preparedSheetLabel}</span>
+              <strong>{preparedSheetName}</strong>
+            </div>
+          )}
+
+          {!initLoading && (
             <div className="setup-actions">
               {integration?.formUrl && (
                 <a
@@ -205,6 +232,16 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
                   rel="noopener noreferrer"
                 >
                   {t.openGoogleForm}
+                </a>
+              )}
+              {integration?.sheetUrl && (
+                <a
+                  className="setup-btn-secondary"
+                  href={accountAwareUrl(integration.sheetUrl, googleEmail)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {t.openPreparedSheet}
                 </a>
               )}
               <button className="setup-btn-primary" type="button" onClick={checkAgain} disabled={checking}>
@@ -227,23 +264,17 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
                 <ol className="setup-instructions">
                   <li>{t.setupSheetInstruction1}</li>
                   <li>{t.setupSheetInstruction2}</li>
-                  <li>{t.setupSheetInstruction3}</li>
+                  <li>{t.setupSheetInstruction3}: <strong>{preparedSheetName}</strong></li>
                   <li>{t.setupSheetInstruction4}</li>
                   <li>{t.setupSheetInstruction5}</li>
                 </ol>
                 <div className="setup-screenshot-grid">
-                  <div className="setup-screenshot-placeholder">
-                    <span className="screenshot-label">Screenshot: Responses tab</span>
-                    <span className="screenshot-hint">{t.addScreenshotLater}</span>
-                  </div>
-                  <div className="setup-screenshot-placeholder">
-                    <span className="screenshot-label">Screenshot: Link to Sheets button</span>
-                    <span className="screenshot-hint">{t.addScreenshotLater}</span>
-                  </div>
-                  <div className="setup-screenshot-placeholder">
-                    <span className="screenshot-label">Screenshot: Create spreadsheet</span>
-                    <span className="screenshot-hint">{t.addScreenshotLater}</span>
-                  </div>
+                  {SHEET_SETUP_SCREENSHOTS.map((shot) => (
+                    <figure className="setup-screenshot-card" key={shot.src}>
+                      <img src={shot.src} alt={t[shot.labelKey]} loading="lazy" />
+                      <figcaption>{t[shot.labelKey]}</figcaption>
+                    </figure>
+                  ))}
                 </div>
               </div>
             )}
@@ -258,7 +289,7 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
             {step2Locked
               ? <span className="setup-status-pill pill-locked">{t.stepLocked}</span>
               : step2Opened
-                ? <span className="setup-status-pill pill-ok">{t.linkedSheetFound}</span>
+                ? <span className="setup-status-pill pill-ok">{t.setupAutoPrepared}</span>
                 : null
             }
           </div>
