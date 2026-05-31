@@ -2,18 +2,19 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import { useLocale } from "../shared/useLocale";
+import { IconGrid, IconAcademic, IconUser, IconChart, IconMessage, IconCalendar } from "../shared/icons";
 
 // ─── Scenario definitions (mirrors backend) ───────────────────────────────────
 
 const SCENARIO_IDS = ["universal", "admissions", "hr", "survey", "client_requests", "event"];
 
 const SCENARIO_CARDS = {
-  universal:       { icon: "⊞", colorClass: "sc-universal" },
-  admissions:      { icon: "🎓", colorClass: "sc-admissions" },
-  hr:              { icon: "👤", colorClass: "sc-hr" },
-  survey:          { icon: "📊", colorClass: "sc-survey" },
-  client_requests: { icon: "💬", colorClass: "sc-client" },
-  event:           { icon: "📅", colorClass: "sc-event" }
+  universal:       { Icon: IconGrid,     colorClass: "sc-universal" },
+  admissions:      { Icon: IconAcademic, colorClass: "sc-admissions" },
+  hr:              { Icon: IconUser,     colorClass: "sc-hr" },
+  survey:          { Icon: IconChart,    colorClass: "sc-survey" },
+  client_requests: { Icon: IconMessage,  colorClass: "sc-client" },
+  event:           { Icon: IconCalendar, colorClass: "sc-event" }
 };
 
 const SCENARIO_LABELS_STATIC = {
@@ -220,7 +221,7 @@ function ScenarioSelectBanner({ formId, lang, t, onSelected }) {
               onClick={() => select(id)}
               disabled={Boolean(saving)}
             >
-              <span className="scenario-card-icon">{card.icon}</span>
+              <span className="scenario-card-icon"><card.Icon size={22} /></span>
               <span className="scenario-card-title">{label}</span>
               <span className="scenario-card-desc">{desc}</span>
               <span className="scenario-card-btn">
