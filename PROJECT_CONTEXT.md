@@ -195,7 +195,27 @@ pm2 flush 7
 pm2 logs 7 --lines 30
 ```
 
+## Recently Completed
+
+### Improve form workspace layout (2026-05-31)
+
+Files changed:
+- `frontend/src/pages/RequestsPage.jsx` — replaced `official-page-title` block with new `ws-header-card`; added `today`/`week` to stats useMemo; moved AnalyticsBlock to collapsible `<details>`; wrapped AI + WhatsApp in `ws-bottom-row` grid; added `isOpen` collapse state to `NotificationSettingsBlock` with chevron toggle
+- `frontend/src/shared/styles/global.css` — added `ws-header-card`, `ws-header-main`, `ws-title-row`, `ws-goal-text`, `ws-header-actions`, `ws-stats-row`, `ws-stat`, `ws-bottom-row`, `ws-analytics-section`, `ws-analytics-summary`, notif collapsible overrides; mobile responsive rules
+
+What changed:
+- Workspace header is now a dedicated card: form title + scenario badge + goal text, with "My Forms" and "Suggest improvement" buttons aligned right
+- Compact stats row (total / today / 7 days / new) displayed as 4 mini stat cards inside the header
+- AnalyticsBlock (status bars + popular answers) moved to collapsible `<details>` section between workspace and bottom row
+- AI chat and WhatsApp notifications placed side-by-side in a 2-column bottom row (AI wider at 1.65fr, WhatsApp at 1fr)
+- WhatsApp block collapses by default; toggle with chevron in the header
+- Responsive: stats row becomes 2-col on ≤980px; header actions stack on mobile; bottom row stacks on ≤860px
+
+Build: `npm run build` ✓
+
+Commit: daebbbc
+
 ## Next Planned Task
 
-- Consider adapting scenario card icon colors via CSS colorClass
 - Survey scenario analytics workspace improvements
+- Consider adapting scenario card icon colors via CSS colorClass
