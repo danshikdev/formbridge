@@ -251,6 +251,26 @@ Checks:
 
 Commit: 69d8bfa
 
+## Recently Completed
+
+### Flexible request date filter (2026-05-31)
+
+Files changed:
+- `frontend/src/pages/RequestsPage.jsx` — replaced `DATE_FILTERS = ["all","today","week"]` with 6 options `["all","today","yesterday","last7","last30","custom"]`; `isWithinDateRange` now accepts `(dateStr, range, from, to)` with yesterday/last7/last30/custom logic using startOfDay/endOfDay; added `dateFrom`/`dateTo` state; `filteredItems` memo updated to pass from/to; toolbar now shows `.toolbar-date-group` with conditional date inputs when custom is selected
+- `frontend/src/shared/i18n.js` — added 6 new keys in kk/ru/en: `dateFilterYesterday`, `dateFilterLast7`, `dateFilterLast30`, `dateFilterCustom`, `dateFrom`, `dateTo`
+- `frontend/src/shared/styles/global.css` — added `.toolbar-date-group`, `.toolbar-date-custom`, `.toolbar-date-input-label`, `.toolbar-date-sep`; updated toolbar grid last column to `minmax(180px, auto)`
+
+How to test:
+1. Open any form workspace `/forms/:formId/requests`
+2. Click the date dropdown — 6 options should appear
+3. Select "Yesterday" / "Last 7 days" / "Last 30 days" — table filters accordingly
+4. Select "Custom range" — two date inputs (From / To) appear below the select
+5. Enter a date range — table filters to only those dates
+6. Clear both inputs with "All" selected — all rows shown
+
+Build: `npm run build` ✓
+Commit: f41c9c4
+
 ## Next Planned Tasks
 
 - Survey scenario analytics workspace improvements
