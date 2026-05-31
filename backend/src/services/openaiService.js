@@ -55,7 +55,7 @@ export async function formChat(formTitle, scenario, requests, message, lang) {
       model,
       messages: [{ role: "user", content: buildFormChatPrompt(formTitle, scenario, requests, message, lang) }],
       temperature: 0.4,
-      max_tokens: 600
+      max_completion_tokens: 600
     });
     content = completion.choices[0]?.message?.content || "";
   } catch (err) {
