@@ -4340,6 +4340,78 @@ select {
   line-height: 1.4;
 }
 
+.setup-sheet-choice {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(240px, 0.85fr);
+  gap: 12px;
+  padding-left: 34px;
+  margin: 0 0 14px;
+}
+
+.setup-choice-card {
+  position: relative;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.setup-choice-card--recommended {
+  border-color: rgba(18, 59, 47, 0.28);
+  background: rgba(18, 59, 47, 0.045);
+}
+
+.setup-choice-label {
+  display: inline-flex;
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(18, 59, 47, 0.1);
+  color: var(--brand);
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.setup-choice-card h3 {
+  margin: 0 0 6px;
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.setup-choice-card p {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.setup-sheet-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.setup-sheet-input-row input {
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+  padding: 0 11px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-control);
+  background: #fff;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8rem;
+}
+
+.setup-sheet-input-row input:focus {
+  outline: none;
+  border-color: rgba(18, 59, 47, 0.55);
+  box-shadow: 0 0 0 3px rgba(18, 59, 47, 0.12);
+}
+
 /* Status pills */
 .setup-status-pill {
   display: inline-flex;
@@ -4762,8 +4834,17 @@ select {
   .setup-success-celebration,
   .setup-sheet-callout,
   .setup-step-ready-note,
+  .setup-sheet-choice,
   .setup-reason-list {
     padding-left: 20px;
+  }
+
+  .setup-sheet-choice {
+    grid-template-columns: 1fr;
+  }
+
+  .setup-sheet-input-row {
+    grid-template-columns: 1fr;
   }
 
   .setup-sheet-callout {

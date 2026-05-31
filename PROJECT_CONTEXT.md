@@ -43,7 +43,10 @@ Supported scenarios:
 - A form is "ready/connected" only when delivery is actually ready.
 - A created integration record with missing trigger/webhook test is only "setup in progress".
 - Setup-in-progress forms must show "continue setup", not "open workspace".
-- Guided setup Step 1 explains that FormBridge created a Google Sheet and the user should select that prepared Sheet in Google Forms.
+- Guided setup Step 1 must not create a new Sheet automatically on modal open.
+- Guided setup Step 1 supports two cases:
+  - If Google Forms already shows "View in Sheets" / "Посмотреть в Таблицах", user opens that existing linked Sheet and pastes its URL into FormBridge.
+  - If the form has no Sheet yet, user can ask FormBridge to create a new prepared Sheet.
 - Step 1 uses screenshots from frontend/public/setup-screenshots.
 - Apps Script setup links should use script.google.com/home/projects/{scriptId}/edit and include the connected Google account.
 - Guided setup should stay quiet: no "copy setup link" button in the main flow.

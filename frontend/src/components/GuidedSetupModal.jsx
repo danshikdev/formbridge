@@ -84,10 +84,13 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
   const [scriptUrl, setScriptUrl] = useState(null);
   const [verifyResult, setVerifyResult] = useState(null);
   const [preparing, setPreparing] = useState(false);
+  const [preparingSheet, setPreparingSheet] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [checking, setChecking] = useState(false);
   const [initLoading, setInitLoading] = useState(!initialIntegration);
   const [error, setError] = useState("");
+  const [existingSheetUrl, setExistingSheetUrl] = useState("");
+  const [attachingSheet, setAttachingSheet] = useState(false);
 
   useEffect(() => {
     if (!initialIntegration) {
@@ -99,7 +102,7 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
     setInitLoading(true);
     setError("");
     try {
-      const { data } = await api.post("/api/integrations/forms/setup-google", { formId, formTitle });
+      const { data } = await api.post("/api/integrations/forms/setup-google", { formId, formTitle, createSheet: false });
       const item = data.item;
       setIntegration(item);
       const derived = deriveStatuses(item);
@@ -111,6 +114,44 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
       setError(err.response?.data?.error || t.failedSetup);
     } finally {
       setInitLoading(false);
+    }
+  }
+
+  async function prepareSheet() {
+    if (!integration) return;
+    setPreparingSheet(true);
+    setError("");
+    try {
+      const { data } = await api.post(`/api/integrations/forms/${integration.id}/prepare-sheet`);
+      setIntegration(data.item);
+      setStep1Status("found");
+      setStep1Confirmed(false);
+      setStep2Status("locked");
+      onRefresh?.();
+    } catch (err) {
+      setError(err.response?.data?.error || t.failedSetup);
+    } finally {
+      setPreparingSheet(false);
+    }
+  }
+
+  async function attachSheet() {
+    if (!integration || !existingSheetUrl.trim()) return;
+    setAttachingSheet(true);
+    setError("");
+    try {
+      const { data } = await api.patch(`/api/integrations/forms/${integration.id}/sheet`, {
+        sheetUrl: existingSheetUrl.trim()
+      });
+      setIntegration(data.item);
+      setStep1Status("found");
+      setStep1Confirmed(false);
+      setStep2Status("locked");
+      onRefresh?.();
+    } catch (err) {
+      setError(err.response?.data?.error || t.invalidSheetUrl);
+    } finally {
+      setAttachingSheet(false);
     }
   }
 
@@ -231,6 +272,46 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
             </span>
           </div>
           <p className="setup-step-desc">{t.setupStepSheetsDesc}</p>
+
+          {step1Status !== "found" && !initLoading && (
+            <div className="setup-sheet-choice">
+              <div className="setup-choice-card setup-choice-card--recommended">
+                <span className="setup-choice-label">{t.recommended}</span>
+                <h3>{t.useExistingSheetTitle}</h3>
+                <p>{t.useExistingSheetDesc}</p>
+                <div className="setup-sheet-input-row">
+                  <input
+                    type="url"
+                    value={existingSheetUrl}
+                    onChange={(e) => setExistingSheetUrl(e.target.value)}
+                    placeholder={t.existingSheetUrlPlaceholder}
+                    aria-label={t.existingSheetUrlPlaceholder}
+                  />
+                  <button
+                    className="setup-btn-primary"
+                    type="button"
+                    onClick={attachSheet}
+                    disabled={attachingSheet || !existingSheetUrl.trim()}
+                  >
+                    {attachingSheet ? t.checking : t.useThisSheet}
+                  </button>
+                </div>
+              </div>
+
+              <div className="setup-choice-card">
+                <h3>{t.createFormBridgeSheetTitle}</h3>
+                <p>{t.createFormBridgeSheetDesc}</p>
+                <button
+                  className="setup-btn-secondary"
+                  type="button"
+                  onClick={prepareSheet}
+                  disabled={preparingSheet}
+                >
+                  {preparingSheet ? t.checking : t.createFormBridgeSheet}
+                </button>
+              </div>
+            </div>
+          )}
 
           {step1Status === "found" && (
             <>

@@ -2,6 +2,7 @@ import { Router } from "express";
 import { requireAuth } from "../middleware/auth.js";
 import {
   autoSetupIntegration,
+  attachExistingSheet,
   confirmSetupInstalled,
   createIntegration,
   deleteIntegration,
@@ -9,6 +10,7 @@ import {
   integrationEvents,
   integrationHealth,
   listIntegrations,
+  prepareIntegrationSheet,
   saveWebhook,
   setupGoogleIntegration,
   testIntegration,
@@ -27,6 +29,8 @@ integrationsRoutes.get("/health", integrationHealth);
 integrationsRoutes.get("/forms/:id/events", integrationEvents);
 integrationsRoutes.get("/forms/:id/setup-script", getSetupScript);
 integrationsRoutes.post("/forms/:id/auto-setup", autoSetupIntegration);
+integrationsRoutes.post("/forms/:id/prepare-sheet", prepareIntegrationSheet);
+integrationsRoutes.patch("/forms/:id/sheet", attachExistingSheet);
 integrationsRoutes.patch("/forms/:id/webhook", saveWebhook);
 integrationsRoutes.delete("/forms/:id", deleteIntegration);
 integrationsRoutes.post("/forms/:id/test", testIntegration);

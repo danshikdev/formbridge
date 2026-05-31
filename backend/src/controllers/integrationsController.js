@@ -18,8 +18,21 @@ function extractFormId(url) {
   return match ? match[1] : null;
 }
 
+function extractSheetId(value) {
+  if (!value) return null;
+  const text = String(value).trim();
+  const urlMatch = text.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/);
+  if (urlMatch) return urlMatch[1];
+  const idMatch = text.match(/^[-_a-zA-Z0-9]{20,}$/);
+  return idMatch ? idMatch[0] : null;
+}
+
 function formUrlFromId(formId) {
   return `https://docs.google.com/forms/d/${formId}/edit`;
+}
+
+function sheetUrlFromId(sheetId) {
+  return `https://docs.google.com/spreadsheets/d/${sheetId}/edit`;
 }
 
 function scriptEditorUrl(scriptProjectId, account) {
@@ -332,6 +345,7 @@ export async function createIntegration(req, res) {
 
 export async function setupGoogleIntegration(req, res) {
   const { formId, formTitle } = req.body;
+  const shouldCreateSheet = req.body.createSheet !== false;
   if (!formId) return res.status(400).json({ error: "formId is required" });
 
   const account = await getGoogleAccount(req.user.id);
@@ -352,7 +366,9 @@ export async function setupGoogleIntegration(req, res) {
   let resolvedTitle = formTitle || "Untitled form";
   let sheetId = null;
   let sheetUrl = null;
-  let setupNote = "OAuth setup prepared. Sheet created; Apps Script trigger installation is ready for the next Google Cloud step.";
+  let setupNote = shouldCreateSheet
+    ? "OAuth setup prepared. Sheet created; Apps Script trigger installation is ready for the next Google Cloud step."
+    : "OAuth setup draft created. Choose an existing linked Sheet or create a FormBridge Sheet.";
 
   try {
     const googleForm = await getGoogleForm(account, formId);
@@ -361,14 +377,16 @@ export async function setupGoogleIntegration(req, res) {
     await logIntegrationEvent({ type: "google_form_read", status: "error", message: err.message, payload: { formId } });
   }
 
-  try {
-    const spreadsheet = await createSpreadsheet(account, `FormBridge - ${resolvedTitle}`);
-    sheetId = spreadsheet.spreadsheetId;
-    sheetUrl = spreadsheet.spreadsheetUrl;
-    checklist.sheet = Boolean(sheetId);
-  } catch (err) {
-    setupNote = `OAuth connected, but Sheet creation failed: ${err.message}`;
-    await logIntegrationEvent({ type: "sheet_create", status: "error", message: err.message, payload: { formId } });
+  if (shouldCreateSheet) {
+    try {
+      const spreadsheet = await createSpreadsheet(account, `FormBridge - ${resolvedTitle}`);
+      sheetId = spreadsheet.spreadsheetId;
+      sheetUrl = spreadsheet.spreadsheetUrl;
+      checklist.sheet = Boolean(sheetId);
+    } catch (err) {
+      setupNote = `OAuth connected, but Sheet creation failed: ${err.message}`;
+      await logIntegrationEvent({ type: "sheet_create", status: "error", message: err.message, payload: { formId } });
+    }
   }
 
   const [record] = await FormIntegration.findOrCreate({
@@ -384,8 +402,8 @@ export async function setupGoogleIntegration(req, res) {
       webhookUrl,
       webhookSecret,
       setupMode: "oauth",
-      status: "configured",
-      healthStatus: checklist.sheet ? "needs_trigger" : "broken",
+      status: checklist.sheet ? "configured" : "draft",
+      healthStatus: checklist.sheet ? "needs_trigger" : "needs_sheet",
       setupChecklist: checklist,
       lastErrorReason: checklist.sheet ? null : setupNote,
       lastErrorAt: checklist.sheet ? null : new Date()
@@ -403,8 +421,8 @@ export async function setupGoogleIntegration(req, res) {
       webhookUrl,
       webhookSecret: record.webhookSecret || webhookSecret,
       setupMode: "oauth",
-      status: "configured",
-      healthStatus: checklist.sheet || record.sheetId ? "needs_trigger" : "broken",
+      status: checklist.sheet || record.sheetId ? "configured" : "draft",
+      healthStatus: checklist.sheet || record.sheetId ? "needs_trigger" : "needs_sheet",
       setupChecklist: { ...checklist, sheet: Boolean(record.sheetId || sheetId) }
     });
   }
@@ -418,6 +436,99 @@ export async function setupGoogleIntegration(req, res) {
   });
 
   return res.status(201).json({ item: publicIntegration(record), message: setupNote });
+}
+
+export async function prepareIntegrationSheet(req, res) {
+  const item = await FormIntegration.findByPk(req.params.id);
+  if (!item) return res.status(404).json({ error: "Integration not found" });
+
+  if (req.user?.id && item.userId && item.userId !== req.user.id) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  const account = await getGoogleAccount(req.user.id);
+  if (!account) return res.status(409).json({ error: "Connect Google account first" });
+
+  try {
+    const spreadsheet = await createSpreadsheet(account, `FormBridge - ${item.formTitle || item.formId}`);
+    item.googleAccountId = account.id;
+    item.sheetId = spreadsheet.spreadsheetId;
+    item.sheetUrl = spreadsheet.spreadsheetUrl;
+    item.setupMode = "oauth";
+    item.status = "configured";
+    item.healthStatus = "needs_trigger";
+    item.setupChecklist = {
+      ...(item.setupChecklist || {}),
+      googleAccount: true,
+      form: Boolean(item.formId),
+      sheet: true,
+      webhookUrl: Boolean(item.webhookUrl),
+      webhookSecret: Boolean(item.webhookSecret),
+      trigger: false,
+      lastTest: item.lastTestResult === "ok"
+    };
+    item.lastErrorReason = null;
+    await item.save();
+
+    await logIntegrationEvent({
+      integrationId: item.id,
+      type: "sheet_create",
+      status: "ok",
+      message: "Prepared a new FormBridge Sheet for this form.",
+      payload: { sheetId: item.sheetId }
+    });
+
+    return res.json({ item: publicIntegration(item) });
+  } catch (err) {
+    item.healthStatus = "broken";
+    item.lastErrorReason = `Sheet creation failed: ${err.message}`;
+    item.lastErrorAt = new Date();
+    await item.save();
+    await logIntegrationEvent({ integrationId: item.id, type: "sheet_create", status: "error", message: err.message });
+    return res.status(502).json({ error: `Sheet creation failed: ${err.message}` });
+  }
+}
+
+export async function attachExistingSheet(req, res) {
+  const item = await FormIntegration.findByPk(req.params.id);
+  if (!item) return res.status(404).json({ error: "Integration not found" });
+
+  if (req.user?.id && item.userId && item.userId !== req.user.id) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  const sheetId = extractSheetId(req.body.sheetUrl || req.body.sheetId);
+  if (!sheetId) {
+    return res.status(400).json({ error: "Valid Google Sheet URL is required" });
+  }
+
+  item.sheetId = sheetId;
+  item.sheetUrl = sheetUrlFromId(sheetId);
+  item.setupMode = "oauth_existing_sheet";
+  item.status = "configured";
+  item.healthStatus = "needs_trigger";
+  item.setupChecklist = {
+    ...(item.setupChecklist || {}),
+    googleAccount: Boolean(item.googleAccountId),
+    form: Boolean(item.formId),
+    sheet: true,
+    webhookUrl: Boolean(item.webhookUrl),
+    webhookSecret: Boolean(item.webhookSecret),
+    trigger: false,
+    lastTest: item.lastTestResult === "ok"
+  };
+  item.lastErrorReason = null;
+  await item.save();
+
+  await logIntegrationEvent({
+    integrationId: item.id,
+    type: "sheet_attach",
+    status: "ok",
+    message: "Existing linked Sheet attached to FormBridge setup.",
+    payload: { sheetId }
+  });
+
+  return res.json({ item: publicIntegration(item) });
 }
 
 export async function deleteIntegration(req, res) {
