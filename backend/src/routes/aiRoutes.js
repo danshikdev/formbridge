@@ -1,23 +1,44 @@
 import { Router } from "express";
 import { requireAuth } from "../middleware/auth.js";
-import { analyzeRequest } from "../services/openaiService.js";
+import { formChat } from "../services/openaiService.js";
+import { FormIntegration } from "../models/formIntegration.js";
+import { Request } from "../models/request.js";
 
 export const aiRoutes = Router();
 
-aiRoutes.post("/analyze-request", requireAuth, async (req, res) => {
-  const { formTitle, request, lang } = req.body;
+aiRoutes.post("/form-chat", requireAuth, async (req, res) => {
+  const { formId, formTitle, scenario, message, lang } = req.body;
+  const userId = req.user?.id;
 
-  if (!request || !Array.isArray(request.answers)) {
-    return res.status(400).json({ error: "request.answers array is required" });
+  if (!formId || !message || !String(message).trim()) {
+    return res.status(400).json({ error: "formId and message are required" });
   }
 
+  const integration = await FormIntegration.findOne({ where: { formId, userId } });
+  if (!integration) {
+    return res.status(404).json({ error: "Form not found or access denied" });
+  }
+
+  const requests = await Request.findAll({
+    where: { formId },
+    order: [["createdAt", "DESC"]],
+    limit: 50,
+    attributes: ["id", "status", "submittedAt", "createdAt", "respondentEmail", "answers"]
+  });
+
   try {
-    const result = await analyzeRequest(formTitle, request, lang || "ru");
-    return res.json(result);
+    const reply = await formChat(
+      formTitle || integration.formTitle || "",
+      scenario || integration.scenario || "universal",
+      requests.map((r) => r.toJSON()),
+      String(message).trim(),
+      lang || "ru"
+    );
+    return res.json({ reply });
   } catch (err) {
     const status = err.statusCode || 500;
     if (status === 503) {
-      return res.status(503).json({ error: "AI analysis unavailable: OPENAI_API_KEY is not configured on the server." });
+      return res.status(503).json({ error: "AI unavailable: OPENAI_API_KEY is not configured." });
     }
     if (status === 502) {
       return res.status(502).json({ error: "OpenAI API returned an error. Try again later." });

@@ -7,6 +7,7 @@ import "./models/formIntegration.js";
 import "./models/googleAccount.js";
 import "./models/integrationEvent.js";
 import "./models/notificationSettings.js";
+import "./models/formFeedback.js";
 import { initClient } from "./services/whatsappService.js";
 
 async function boot() {

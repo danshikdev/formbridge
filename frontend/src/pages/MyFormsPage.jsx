@@ -16,8 +16,22 @@ function integrationState(item, t) {
   return t.formPreparing;
 }
 
+const SCENARIO_LABELS = {
+  universal:       { kk: "Жалпылама", ru: "Универсальный", en: "Universal" },
+  admissions:      { kk: "Қабылдау", ru: "Приемная комиссия", en: "Admissions" },
+  hr:              { kk: "HR", ru: "HR / Рекрутинг", en: "HR" },
+  survey:          { kk: "Сауалнама", ru: "Опрос", en: "Survey" },
+  client_requests: { kk: "Клиент өтініштері", ru: "Клиентские заявки", en: "Client requests" },
+  event:           { kk: "Іс-шара", ru: "Мероприятие", en: "Event" }
+};
+
+function scenarioLabel(scenario, lang) {
+  const map = SCENARIO_LABELS[scenario] || SCENARIO_LABELS.universal;
+  return map[lang] || map.en;
+}
+
 export function MyFormsPage() {
-  const { t } = useLocale();
+  const { t, lang } = useLocale();
   const [googleStatus, setGoogleStatus] = useState(null);
   const [forms, setForms] = useState([]);
   const [integrations, setIntegrations] = useState([]);
@@ -181,6 +195,11 @@ export function MyFormsPage() {
                     <span className={`official-badge ${integration ? "status-done" : "status-new"}`}>
                       {integrationState(integration, t)}
                     </span>
+                    {integration?.scenarioConfiguredAt && (
+                      <span className="scenario-mini-badge">
+                        {scenarioLabel(integration.scenario, lang)}
+                      </span>
+                    )}
                     {integration ? (
                       <>
                         <Link

@@ -1,9 +1,11 @@
 import { FormIntegration } from "../models/formIntegration.js";
+import { FormFeedback } from "../models/formFeedback.js";
 import { IntegrationEvent } from "../models/integrationEvent.js";
 import { NotificationSettings } from "../models/notificationSettings.js";
 import { Request } from "../models/request.js";
 import { env } from "../config/env.js";
 import { sendMessage } from "../services/whatsappService.js";
+import { SCENARIO_IDS, getScenario } from "../config/formScenarios.js";
 
 function formRequestsUrl(formId, formTitle) {
   const baseUrl = env.publicBaseUrl.replace(/\/$/, "");
@@ -185,7 +187,13 @@ export async function getRequest(req, res) {
 
 export async function updateRequestStatus(req, res) {
   const { status } = req.body;
-  const allowed = ["new", "in_progress", "done", "test"];
+  const allowed = [
+    "new", "in_progress", "done", "test",
+    "contacted", "documents_needed", "accepted", "rejected",
+    "shortlisted", "interview", "hired",
+    "urgent", "waiting_client",
+    "confirmed", "waiting_payment", "cancelled", "attended"
+  ];
   if (!allowed.includes(status)) {
     return res.status(400).json({ error: `status must be one of: ${allowed.join(", ")}` });
   }
@@ -219,3 +227,123 @@ export async function debugLastRequests(_req, res) {
     }))
   });
 }
+
+// ─── Workspace ───────────────────────────────────────────────────────────────
+
+export async function getWorkspace(req, res) {
+  const { formId } = req.params;
+  const userId = req.user?.id;
+
+  const integration = await FormIntegration.findOne({ where: { formId, userId } });
+  if (!integration) {
+    return res.status(404).json({ error: "Form integration not found or access denied" });
+  }
+
+  const scenarioId = integration.scenario || "universal";
+  const scenarioMeta = getScenario(scenarioId);
+
+  const requests = await Request.findAll({
+    where: { formId },
+    order: [["createdAt", "DESC"]],
+    limit: 100,
+    attributes: ["id", "status", "submittedAt", "createdAt", "respondentEmail"]
+  });
+
+  const now = new Date();
+  const todayCount = requests.filter((r) => {
+    const d = new Date(r.submittedAt || r.createdAt);
+    return !Number.isNaN(d.getTime()) && d.toDateString() === now.toDateString();
+  }).length;
+  const weekCount = requests.filter((r) => {
+    const d = new Date(r.submittedAt || r.createdAt);
+    return !Number.isNaN(d.getTime()) && d >= new Date(now.getTime() - 7 * 86400000);
+  }).length;
+  const newCount = requests.filter((r) => r.status === "new").length;
+
+  return res.json({
+    form: {
+      id: integration.formId,
+      title: integration.formTitle,
+      status: integration.status,
+      healthStatus: integration.healthStatus,
+      lastEventAt: integration.lastEventAt
+    },
+    scenario: scenarioId,
+    scenarioConfiguredAt: integration.scenarioConfiguredAt,
+    scenarioMeta: {
+      id: scenarioMeta.id,
+      title: scenarioMeta.title,
+      shortDescription: scenarioMeta.shortDescription,
+      workspaceTitle: scenarioMeta.workspaceTitle,
+      primaryGoal: scenarioMeta.primaryGoal,
+      statusFlow: scenarioMeta.statusFlow,
+      suggestedQuestions: scenarioMeta.suggestedQuestions
+    },
+    stats: {
+      total: requests.length,
+      today: todayCount,
+      week: weekCount,
+      new: newCount
+    }
+  });
+}
+
+// ─── Scenario ─────────────────────────────────────────────────────────────────
+
+export async function updateScenario(req, res) {
+  const { formId } = req.params;
+  const { scenario } = req.body;
+  const userId = req.user?.id;
+
+  if (!scenario || !SCENARIO_IDS.includes(scenario)) {
+    return res.status(400).json({ error: `scenario must be one of: ${SCENARIO_IDS.join(", ")}` });
+  }
+
+  const integration = await FormIntegration.findOne({ where: { formId, userId } });
+  if (!integration) {
+    return res.status(404).json({ error: "Form integration not found or access denied" });
+  }
+
+  integration.scenario = scenario;
+  integration.scenarioConfiguredAt = new Date();
+  await integration.save();
+
+  return res.json({ scenario: integration.scenario, scenarioConfiguredAt: integration.scenarioConfiguredAt });
+}
+
+// ─── Feedback ─────────────────────────────────────────────────────────────────
+
+export async function createFeedback(req, res) {
+  const { formId } = req.params;
+  const { message } = req.body;
+  const userId = req.user?.id;
+
+  if (!message || !String(message).trim()) {
+    return res.status(400).json({ error: "message is required" });
+  }
+
+  const integration = await FormIntegration.findOne({ where: { formId, userId } });
+  if (!integration) {
+    return res.status(404).json({ error: "Form integration not found or access denied" });
+  }
+
+  const record = await FormFeedback.create({
+    userId,
+    formId,
+    scenario: integration.scenario || "universal",
+    message: String(message).trim().slice(0, 2000),
+    status: "new"
+  });
+
+  return res.status(201).json({ ok: true, id: record.id });
+}
+
+// ─── Allowed statuses (all scenarios) ─────────────────────────────────────────
+
+export const ALL_ALLOWED_STATUSES = [
+  "new", "in_progress", "done", "test",
+  "contacted", "documents_needed", "accepted", "rejected",
+  "shortlisted", "interview", "hired",
+  "urgent", "waiting_client",
+  "confirmed", "waiting_payment", "cancelled", "attended"
+];

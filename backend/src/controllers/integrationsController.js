@@ -186,6 +186,8 @@ function publicIntegration(item) {
     lastTestAt: item.lastTestAt,
     lastTestResult: item.lastTestResult,
     setupChecklist: item.setupChecklist,
+    scenario: item.scenario || "universal",
+    scenarioConfiguredAt: item.scenarioConfiguredAt || null,
     createdAt: item.createdAt,
     updatedAt: item.updatedAt,
     webhookSecretMasked: item.webhookSecret ? `${item.webhookSecret.slice(0, 6)}...${item.webhookSecret.slice(-4)}` : null

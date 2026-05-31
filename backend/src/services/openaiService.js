@@ -1,38 +1,44 @@
 import OpenAI from "openai";
+import { getScenario } from "../config/formScenarios.js";
 
 const LANG_LABELS = { kk: "казахском", ru: "русском", en: "английском" };
 
-function buildPrompt(formTitle, request, lang) {
+function buildFormChatPrompt(formTitle, scenario, requests, userMessage, lang) {
   const langLabel = LANG_LABELS[lang] || "русском";
-  const answers = (request.answers || [])
-    .map((a) => `- ${String(a.question || "?").trim()}: ${String(a.answer || "-").trim()}`)
-    .join("\n");
+  const scenarioMeta = getScenario(scenario);
+  const rolePrompt = scenarioMeta.aiRolePrompt;
 
-  return `Ты CRM-ассистент. Проанализируй заявку и ответь строго в JSON-формате на ${langLabel} языке.
+  const requestsContext = requests.slice(0, 50).map((r, i) => {
+    const answers = (r.answers || [])
+      .map((a) => `    ${String(a.question || "").trim()}: ${String(a.answer || "").trim()}`)
+      .join("\n");
+    return [
+      `[${i + 1}] ID: ${r.id} | Status: ${r.status} | Submitted: ${r.submittedAt || r.createdAt || "—"} | Email: ${r.respondentEmail || "—"}`,
+      answers ? `  Answers:\n${answers}` : "  Answers: —"
+    ].join("\n");
+  }).join("\n\n");
 
-Форма: ${formTitle || "—"}
-Дата подачи: ${request.submittedAt || "—"}
-Email: ${request.respondentEmail || "—"}
-Ответы:
-${answers || "—"}
+  return `${rolePrompt}
 
-Ответь ТОЛЬКО валидным JSON без markdown и комментариев:
-{
-  "summary": "...",
-  "category": "admissions | support | payment | general",
-  "priority": "low | medium | high",
-  "recommendedAction": "..."
+Form: ${formTitle || "—"}
+Scenario: ${scenario}
+Total responses in context: ${requests.length}
+Respond in ${langLabel} language.
+
+Form responses data:
+${requestsContext || "No responses available yet."}
+
+User question: ${userMessage}
+
+Instructions:
+- Answer based only on the provided form data above.
+- If there is not enough data, say so honestly.
+- Be concise but helpful.
+- Do not make up facts or data.
+- Format your response clearly (use line breaks, lists if helpful).`;
 }
 
-Правила:
-- summary: 1-2 предложения
-- category: одно из: admissions, support, payment, general
-- priority: одно из: low, medium, high
-- recommendedAction: краткое практичное действие (1 предложение)
-- Не придумывай факты. Если данных мало — напиши об этом в summary.`;
-}
-
-export async function analyzeRequest(formTitle, request, lang) {
+export async function formChat(formTitle, scenario, requests, message, lang) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     const err = new Error("OPENAI_API_KEY not configured");
@@ -40,37 +46,25 @@ export async function analyzeRequest(formTitle, request, lang) {
     throw err;
   }
 
-  const model = process.env.OPENAI_MODEL || "gpt-5-nano";
+  const model = process.env.OPENAI_MODEL || "gpt-5-nano-2025-08-07";
   const client = new OpenAI({ apiKey });
 
-  let raw;
+  let content;
   try {
     const completion = await client.chat.completions.create({
       model,
-      messages: [{ role: "user", content: buildPrompt(formTitle, request, lang) }],
-      temperature: 0.2,
-      max_tokens: 300,
+      messages: [{ role: "user", content: buildFormChatPrompt(formTitle, scenario, requests, message, lang) }],
+      temperature: 0.4,
+      max_tokens: 600
     });
-    raw = completion.choices[0]?.message?.content || "";
+    content = completion.choices[0]?.message?.content || "";
   } catch (err) {
+    console.error("[formChat] OpenAI error:", err.message);
     const apiErr = new Error("OpenAI API error");
     apiErr.statusCode = 502;
     apiErr.detail = err.message;
     throw apiErr;
   }
 
-  try {
-    const cleaned = raw.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
-    const parsed = JSON.parse(cleaned);
-    return {
-      summary: String(parsed.summary || ""),
-      category: String(parsed.category || "general"),
-      priority: String(parsed.priority || "medium"),
-      recommendedAction: String(parsed.recommendedAction || ""),
-    };
-  } catch {
-    const parseErr = new Error("Failed to parse AI response as JSON");
-    parseErr.statusCode = 502;
-    throw parseErr;
-  }
+  return content.trim();
 }

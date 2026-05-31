@@ -3,8 +3,40 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import { useLocale } from "../shared/useLocale";
 
-const STATUSES = ["", "new", "in_progress", "done", "test"];
+// ─── Scenario definitions (mirrors backend) ───────────────────────────────────
+
+const SCENARIO_IDS = ["universal", "admissions", "hr", "survey", "client_requests", "event"];
+
+const SCENARIO_CARDS = {
+  universal:       { icon: "⊞", colorClass: "sc-universal" },
+  admissions:      { icon: "🎓", colorClass: "sc-admissions" },
+  hr:              { icon: "👤", colorClass: "sc-hr" },
+  survey:          { icon: "📊", colorClass: "sc-survey" },
+  client_requests: { icon: "💬", colorClass: "sc-client" },
+  event:           { icon: "📅", colorClass: "sc-event" }
+};
+
+const SCENARIO_LABELS_STATIC = {
+  universal:       { kk: "Жалпылама режим", ru: "Универсальный режим", en: "Universal mode" },
+  admissions:      { kk: "Қабылдау комиссиясы", ru: "Приемная комиссия", en: "Admissions" },
+  hr:              { kk: "HR / Рекрутинг", ru: "HR / Рекрутинг", en: "HR / Recruiting" },
+  survey:          { kk: "Сауалнама", ru: "Опрос", en: "Survey" },
+  client_requests: { kk: "Клиент өтініштері", ru: "Клиентские заявки", en: "Client requests" },
+  event:           { kk: "Іс-шара тіркеу", ru: "Регистрация на мероприятие", en: "Event registration" }
+};
+
+const SCENARIO_DESC_STATIC = {
+  universal:       { kk: "Кез келген форма үшін стандартты режим", ru: "Стандартный режим для любой формы", en: "Standard mode for any form" },
+  admissions:      { kk: "Колледж/университет өтініштерін өңдеу", ru: "Обработка заявок на поступление", en: "College / university application processing" },
+  hr:              { kk: "Үміткерлерді іріктеу және рекрутинг", ru: "Отбор кандидатов и рекрутинг", en: "Candidate screening and recruiting" },
+  survey:          { kk: "Сауалнама және зерттеу нәтижелерін талдау", ru: "Анализ результатов опроса и исследования", en: "Survey and research results analysis" },
+  client_requests: { kk: "Клиент өтініштерін және тапсырыстарды өңдеу", ru: "Обработка клиентских заявок и обращений", en: "Client request and order processing" },
+  event:           { kk: "Іс-шараға қатысушыларды тіркеу", ru: "Управление регистрациями участников", en: "Manage event participant registrations" }
+};
+
 const DATE_FILTERS = ["all", "today", "week"];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function isWithinDateRange(dateStr, range) {
   if (range === "all") return true;
@@ -25,17 +57,31 @@ function formatDate(value) {
 }
 
 function statusLabel(status, t) {
-  if (status === "new") return t.new;
-  if (status === "in_progress") return t.inProgress;
-  if (status === "done") return t.done;
-  if (status === "test") return t.test;
-  return status;
+  const map = {
+    new: t.new,
+    in_progress: t.inProgress,
+    done: t.done,
+    test: t.test,
+    contacted: t.statusContacted,
+    documents_needed: t.statusDocumentsNeeded,
+    accepted: t.statusAccepted,
+    rejected: t.statusRejected,
+    shortlisted: t.statusShortlisted,
+    interview: t.statusInterview,
+    hired: t.statusHired,
+    urgent: t.statusUrgent,
+    waiting_client: t.statusWaitingClient,
+    confirmed: t.statusConfirmed,
+    waiting_payment: t.statusWaitingPayment,
+    cancelled: t.statusCancelled,
+    attended: t.statusAttended
+  };
+  return map[status] || status;
 }
 
 function cleanQuestionLabel(value, index, t) {
   const raw = String(value || "").trim();
   if (!raw) return `${t.question} ${index + 1}`;
-
   return raw
     .replace(/^Отметка времени$/i, t.submittedTime)
     .replace(/^Timestamp$/i, t.submittedTime)
@@ -64,15 +110,12 @@ function preview(item, t) {
 
 function requestSearchText(item, t) {
   return [
-    item.formTitle,
-    item.formId,
-    item.respondentEmail,
-    item.status,
-    ...answersForView(item.answers || [], t).flatMap((answer) => [answer.label, answer.value])
+    item.formTitle, item.formId, item.respondentEmail, item.status,
+    ...answersForView(item.answers || [], t).flatMap((a) => [a.label, a.value])
   ].join(" ").toLowerCase();
 }
 
-// ─── Export helpers ──────────────────────────────────────────────────────────
+// ─── Export helpers ────────────────────────────────────────────────────────────
 
 function buildFileName(ext) {
   const date = new Date().toISOString().slice(0, 10);
@@ -119,7 +162,7 @@ function doExportCSV(filteredItems, t) {
       item.formTitle || item.formId || "",
       item.respondentEmail || "",
       item.status || "",
-      ...questionLabels.map((q) => answerMap[q] || ""),
+      ...questionLabels.map((q) => answerMap[q] || "")
     ].map(csvCell).join(",");
   });
   const csv = [headers.map(csvCell).join(","), ...rows].join("\r\n");
@@ -135,118 +178,227 @@ function doExportJSON(filteredItems, t) {
       formTitle: item.formTitle || item.formId || "",
       respondentEmail: item.respondentEmail || "",
       status: item.status || "",
-      answers,
+      answers
     };
   });
   downloadBlob(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }), buildFileName("json"));
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Scenario Select Banner ───────────────────────────────────────────────────
 
-// ─── AI Analysis Block ────────────────────────────────────────────────────────
+function ScenarioSelectBanner({ formId, lang, t, onSelected }) {
+  const [saving, setSaving] = useState("");
 
-const PRIORITY_COLORS = { high: "#c0392b", medium: "#e67e22", low: "#27ae60" };
+  async function select(id) {
+    setSaving(id);
+    try {
+      await api.patch(`/api/forms/${encodeURIComponent(formId)}/scenario`, { scenario: id });
+      sessionStorage.setItem("fb_toast", t.scenarioConfigured);
+      onSelected(id);
+    } catch {
+      // ignore — user can try again
+    } finally {
+      setSaving("");
+    }
+  }
 
-function AIAnalysisBlock({ selected, lang, t }) {
-  const [result, setResult] = useState(null);
+  return (
+    <div className="scenario-banner">
+      <div className="scenario-banner-header">
+        <h2>{t.scenarioSelectTitle}</h2>
+        <p>{t.scenarioSelectSubtitle}</p>
+      </div>
+      <div className="scenario-cards-grid">
+        {SCENARIO_IDS.map((id) => {
+          const card = SCENARIO_CARDS[id];
+          const label = (SCENARIO_LABELS_STATIC[id] || {})[lang] || id;
+          const desc = (SCENARIO_DESC_STATIC[id] || {})[lang] || "";
+          return (
+            <button
+              key={id}
+              className={`scenario-card ${card.colorClass}`}
+              onClick={() => select(id)}
+              disabled={Boolean(saving)}
+            >
+              <span className="scenario-card-icon">{card.icon}</span>
+              <span className="scenario-card-title">{label}</span>
+              <span className="scenario-card-desc">{desc}</span>
+              <span className="scenario-card-btn">
+                {saving === id ? "..." : t.scenarioSelectBtn}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ─── AI Chat Block ────────────────────────────────────────────────────────────
+
+function AIChatBlock({ formId, formTitle, scenario, scenarioMeta, lang, t }) {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const messagesEndRef = useRef(null);
 
-  const item = selected?.item;
+  const suggestedQuestions = (scenarioMeta?.suggestedQuestions || {})[lang] || [];
 
   useEffect(() => {
-    setResult(null);
-    setError("");
-  }, [item?.id]);
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
-  if (!item) return null;
+  async function send(text) {
+    const msg = (text || input).trim();
+    if (!msg || loading) return;
 
-  async function analyze() {
+    setInput("");
+    setMessages((prev) => [...prev, { role: "user", text: msg }]);
     setLoading(true);
-    setError("");
-    setResult(null);
+
     try {
-      const { data } = await api.post("/api/ai/analyze-request", {
-        formTitle: item.formTitle || "",
-        request: {
-          id: item.id,
-          submittedAt: item.submittedAt || item.createdAt || null,
-          respondentEmail: item.respondentEmail || null,
-          answers: item.answers || [],
-        },
-        lang: lang || "ru",
+      const { data } = await api.post("/api/ai/form-chat", {
+        formId,
+        formTitle,
+        scenario: scenario || "universal",
+        message: msg,
+        lang: lang || "ru"
       });
-      setResult(data);
+      setMessages((prev) => [...prev, { role: "ai", text: data.reply || "" }]);
     } catch (err) {
       const status = err.response?.status;
-      if (status === 503) {
-        setError(t.aiError);
-      } else {
-        setError(t.aiErrorGeneral);
-      }
+      let errText = t.aiChatErrorGeneral;
+      if (status === 503) errText = t.aiChatError503;
+      else if (status === 502) errText = t.aiChatError502;
+      setMessages((prev) => [...prev, { role: "error", text: errText }]);
     } finally {
       setLoading(false);
     }
   }
 
+  function handleKey(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      send();
+    }
+  }
+
   return (
-    <div className="ai-block">
-      <div className="ai-block-header">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.4"/>
-          <path d="M5.5 8.5l1.8 1.8 3.2-3.6" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-        <span className="ai-block-title">{t.aiTitle}</span>
+    <div className="ai-chat-block">
+      <div className="ai-chat-header">
+        <span className="ai-chat-title">{t.aiChatTitle}</span>
+        {scenario && scenario !== "universal" && (
+          <span className="ai-chat-scenario-tag">
+            {(SCENARIO_LABELS_STATIC[scenario] || {})[lang] || scenario}
+          </span>
+        )}
       </div>
 
-      {!result && !loading && !error && (
-        <button className="official-link-btn ai-analyze-btn" onClick={analyze}>
-          {t.aiAnalyzeBtn}
+      {suggestedQuestions.length > 0 && messages.length === 0 && (
+        <div className="ai-chat-quick">
+          {suggestedQuestions.map((q, i) => (
+            <button key={i} className="ai-chat-quick-btn" onClick={() => send(q)} disabled={loading}>
+              {q}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {messages.length > 0 && (
+        <div className="ai-chat-messages">
+          {messages.map((msg, i) => (
+            <div key={i} className={`ai-chat-msg ai-chat-msg--${msg.role}`}>
+              <span className="ai-chat-msg-text">{msg.text}</span>
+            </div>
+          ))}
+          {loading && (
+            <div className="ai-chat-msg ai-chat-msg--ai ai-chat-msg--loading">
+              <span className="ai-chat-msg-text">{t.aiChatLoading}</span>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+      )}
+
+      <div className="ai-chat-input-row">
+        <textarea
+          className="ai-chat-input"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKey}
+          placeholder={t.aiChatPlaceholder}
+          rows={2}
+          disabled={loading}
+        />
+        <button
+          className="ai-chat-send-btn official-link-btn"
+          onClick={() => send()}
+          disabled={!input.trim() || loading}
+        >
+          {t.aiChatSend}
         </button>
-      )}
-
-      {loading && <p className="muted ai-loading">{t.aiAnalyzing}</p>}
-
-      {error && (
-        <div className="ai-error">
-          <p>{error}</p>
-          <button className="official-link-btn ai-analyze-btn" onClick={analyze}>{t.aiRefresh}</button>
-        </div>
-      )}
-
-      {result && (
-        <div className="ai-result">
-          <div className="ai-result-row">
-            <span className="ai-result-label">{t.aiSummary}</span>
-            <span className="ai-result-value">{result.summary}</span>
-          </div>
-          <div className="ai-result-row">
-            <span className="ai-result-label">{t.aiCategory}</span>
-            <span className="ai-result-value ai-badge">{result.category}</span>
-          </div>
-          <div className="ai-result-row">
-            <span className="ai-result-label">{t.aiPriority}</span>
-            <span
-              className="ai-result-value ai-badge"
-              style={{ color: PRIORITY_COLORS[result.priority] || "inherit" }}
-            >
-              {result.priority}
-            </span>
-          </div>
-          <div className="ai-result-row">
-            <span className="ai-result-label">{t.aiRecommended}</span>
-            <span className="ai-result-value">{result.recommendedAction}</span>
-          </div>
-          <button className="ai-refresh-btn" onClick={analyze} disabled={loading}>
-            {t.aiRefresh}
-          </button>
-        </div>
-      )}
+      </div>
     </div>
   );
 }
 
-// ─── Notification Settings ────────────────────────────────────────────────────
+// ─── Feedback Modal ───────────────────────────────────────────────────────────
+
+function FeedbackModal({ formId, t, onClose }) {
+  const [message, setMessage] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [done, setDone] = useState(false);
+  const [error, setError] = useState("");
+
+  async function submit() {
+    if (!message.trim()) return;
+    setSaving(true);
+    setError("");
+    try {
+      await api.post(`/api/forms/${encodeURIComponent(formId)}/feedback`, { message: message.trim() });
+      setDone(true);
+      setTimeout(() => {
+        sessionStorage.setItem("fb_toast", t.feedbackSuccess);
+        onClose();
+      }, 900);
+    } catch {
+      setError(t.feedbackError);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="feedback-modal-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="feedback-modal">
+        <h3>{t.feedbackTitle}</h3>
+        {done ? (
+          <p className="feedback-success-msg">{t.feedbackSuccess}</p>
+        ) : (
+          <>
+            <textarea
+              className="feedback-textarea"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              placeholder={t.feedbackPlaceholder}
+              rows={4}
+              disabled={saving}
+            />
+            {error && <p className="error" style={{ margin: "6px 0 0", fontSize: "0.84rem" }}>{error}</p>}
+            <div className="feedback-modal-actions">
+              <button className="official-link-btn" onClick={onClose} disabled={saving}>{t.all === "Все" ? "Отмена" : t.all === "Барлығы" ? "Болдырмау" : "Cancel"}</button>
+              <button className="primary-btn compact-action-btn" onClick={submit} disabled={saving || !message.trim()}>
+                {saving ? "..." : t.feedbackSubmit}
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Notification Settings Block ──────────────────────────────────────────────
 
 const NOTIF_MODES = ["every_submission", "threshold", "daily_summary"];
 
@@ -323,11 +475,7 @@ function NotificationSettingsBlock({ formId, formTitle, t }) {
       ) : (
         <div className="notif-body">
           <label className="notif-toggle-row">
-            <input
-              type="checkbox"
-              checked={enabled}
-              onChange={(e) => setEnabled(e.target.checked)}
-            />
+            <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
             <span>{t.notifEnabled}</span>
           </label>
 
@@ -335,39 +483,24 @@ function NotificationSettingsBlock({ formId, formTitle, t }) {
             <div className="notif-fields">
               <label className="notif-field">
                 <span>{t.notifPhone}</span>
-                <input
-                  type="tel"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder={t.notifPhonePh}
-                />
+                <input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder={t.notifPhonePh} />
               </label>
-
               <label className="notif-field">
                 <span>{t.notifMode}</span>
                 <select value={mode} onChange={(e) => setMode(e.target.value)}>
                   {NOTIF_MODES.map((m) => (
                     <option key={m} value={m}>
-                      {m === "every_submission" ? t.notifModeEvery
-                        : m === "threshold" ? t.notifModeThreshold
-                        : t.notifModeDaily}
+                      {m === "every_submission" ? t.notifModeEvery : m === "threshold" ? t.notifModeThreshold : t.notifModeDaily}
                     </option>
                   ))}
                 </select>
               </label>
-
               {mode === "threshold" && (
                 <label className="notif-field">
                   <span>{t.notifThreshold}</span>
-                  <input
-                    type="number"
-                    min="1"
-                    value={thresholdCount}
-                    onChange={(e) => setThresholdCount(e.target.value)}
-                  />
+                  <input type="number" min="1" value={thresholdCount} onChange={(e) => setThresholdCount(e.target.value)} />
                 </label>
               )}
-
               <div className="notif-preview">
                 <div className="notif-preview-label">{t.notifPreview}</div>
                 <div className="notif-preview-bubble">{previewMsg}</div>
@@ -388,7 +521,7 @@ function NotificationSettingsBlock({ formId, formTitle, t }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Analytics Block ──────────────────────────────────────────────────────────
 
 const STATUS_ORDER = ["new", "in_progress", "done", "test"];
 
@@ -407,12 +540,10 @@ function AnalyticsBlock({ items, t }) {
       (a, b) => new Date(b.submittedAt || b.createdAt) - new Date(a.submittedAt || a.createdAt)
     );
     const lastItem = sorted[0];
-
     const statusCounts = { new: 0, in_progress: 0, done: 0, test: 0 };
     for (const item of items) {
       if (item.status in statusCounts) statusCounts[item.status]++;
     }
-
     const answerMap = {};
     for (const item of items) {
       for (const ans of (item.answers || [])) {
@@ -425,14 +556,11 @@ function AnalyticsBlock({ items, t }) {
     }
     const popularQuestions = Object.entries(answerMap)
       .map(([q, answers]) => {
-        const top3 = Object.entries(answers)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 3);
+        const top3 = Object.entries(answers).sort((a, b) => b[1] - a[1]).slice(0, 3);
         return { question: q, top3 };
       })
       .filter((q) => q.top3.length >= 2 && q.top3[0][1] > 1)
       .slice(0, 3);
-
     return { todayCount, weekCount, lastItem, statusCounts, popularQuestions };
   }, [items]);
 
@@ -457,9 +585,7 @@ function AnalyticsBlock({ items, t }) {
         <div className="analytics-stat-card analytics-stat-card--wide">
           <span>{t.analyticsLastRequest}</span>
           <strong className="analytics-stat-date">
-            {analytics.lastItem
-              ? formatDate(analytics.lastItem.submittedAt || analytics.lastItem.createdAt)
-              : "—"}
+            {analytics.lastItem ? formatDate(analytics.lastItem.submittedAt || analytics.lastItem.createdAt) : "—"}
           </strong>
         </div>
       </div>
@@ -473,14 +599,9 @@ function AnalyticsBlock({ items, t }) {
               const pct = total > 0 ? Math.round((count / total) * 100) : 0;
               return (
                 <div key={status} className="analytics-status-row">
-                  <span className={`official-badge status-${status} analytics-status-label`}>
-                    {statusLabel(status, t)}
-                  </span>
+                  <span className={`official-badge status-${status} analytics-status-label`}>{statusLabel(status, t)}</span>
                   <div className="analytics-bar-track">
-                    <div
-                      className={`analytics-bar analytics-bar--${status}`}
-                      style={{ width: `${pct}%` }}
-                    />
+                    <div className={`analytics-bar analytics-bar--${status}`} style={{ width: `${pct}%` }} />
                   </div>
                   <span className="analytics-bar-count">{count}</span>
                 </div>
@@ -488,7 +609,6 @@ function AnalyticsBlock({ items, t }) {
             })}
           </div>
         </div>
-
         {analytics.popularQuestions.length > 0 && (
           <div className="analytics-section">
             <div className="analytics-section-title">{t.analyticsPopularAnswers}</div>
@@ -512,21 +632,30 @@ function AnalyticsBlock({ items, t }) {
   );
 }
 
+// ─── Main Page ────────────────────────────────────────────────────────────────
+
 export function RequestsPage() {
   const { t, lang } = useLocale();
   const [searchParams] = useSearchParams();
   const params = useParams();
   const formId = params.formId || "";
   const formTitle = searchParams.get("formTitle") || "";
+
+  const [workspace, setWorkspace] = useState(null);
+  const [scenario, setScenario] = useState(null);
+  const [scenarioMeta, setScenarioMeta] = useState(null);
+  const [scenarioConfiguredAt, setScenarioConfiguredAt] = useState(null);
+
   const [items, setItems] = useState([]);
   const [selected, setSelected] = useState(null);
-  const [status, setStatus] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [query, setQuery] = useState("");
   const [dateFilter, setDateFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [error, setError] = useState("");
   const [exportOpen, setExportOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const exportRef = useRef(null);
 
   useEffect(() => {
@@ -538,9 +667,22 @@ export function RequestsPage() {
     return () => document.removeEventListener("mousedown", onOutsideClick);
   }, [exportOpen]);
 
-  async function load() {
-    const params = { ...(status ? { status } : {}), ...(formId ? { formId } : {}) };
-    const { data } = await api.get("/api/forms/requests", { params });
+  async function loadWorkspace() {
+    if (!formId) return;
+    try {
+      const { data } = await api.get(`/api/forms/${encodeURIComponent(formId)}/workspace`);
+      setWorkspace(data);
+      setScenario(data.scenario || "universal");
+      setScenarioMeta(data.scenarioMeta || null);
+      setScenarioConfiguredAt(data.scenarioConfiguredAt || null);
+    } catch {
+      // workspace load failure is non-fatal — page still shows requests
+    }
+  }
+
+  async function loadRequests() {
+    const p = { ...(statusFilter ? { status: statusFilter } : {}), ...(formId ? { formId } : {}) };
+    const { data } = await api.get("/api/forms/requests", { params: p });
     setItems(data.items || []);
   }
 
@@ -549,7 +691,7 @@ export function RequestsPage() {
       setLoading(true);
       setError("");
       try {
-        await load();
+        await Promise.all([loadWorkspace(), loadRequests()]);
       } catch (err) {
         setError(err.response?.data?.error || t.failedRequests);
       } finally {
@@ -557,7 +699,12 @@ export function RequestsPage() {
       }
     }
     boot();
-  }, [status, formId]);
+  }, [formId]);
+
+  useEffect(() => {
+    if (loading) return;
+    loadRequests().catch(() => {});
+  }, [statusFilter]);
 
   async function openDetails(id) {
     setDetailsLoading(true);
@@ -569,6 +716,26 @@ export function RequestsPage() {
     } finally {
       setDetailsLoading(false);
     }
+  }
+
+  async function changeStatus(id, newStatus) {
+    try {
+      const { data } = await api.patch(`/api/forms/requests/${id}/status`, { status: newStatus });
+      setItems((prev) => prev.map((item) => item.id === id ? { ...item, status: newStatus } : item));
+      if (selected?.item?.id === id) {
+        setSelected((prev) => ({ ...prev, item: { ...prev.item, status: newStatus } }));
+      }
+      return data;
+    } catch {
+      // ignore
+    }
+  }
+
+  function handleScenarioSelected(newScenario) {
+    setScenario(newScenario);
+    setScenarioConfiguredAt(new Date().toISOString());
+    // Reload workspace to get updated scenarioMeta
+    loadWorkspace().catch(() => {});
   }
 
   const filteredItems = useMemo(() => {
@@ -586,20 +753,50 @@ export function RequestsPage() {
     done: items.filter((item) => item.status === "done").length
   }), [items]);
 
+  // Determine statuses to show in filter dropdown
+  const scenarioStatuses = useMemo(() => {
+    const base = ["new", "in_progress", "done"];
+    const flow = scenarioMeta?.statusFlow || [];
+    const combined = Array.from(new Set([...base, ...flow]));
+    return ["", ...combined];
+  }, [scenarioMeta]);
+
+  // Labels for scenario
+  const scenarioTitle = scenarioMeta?.title?.[lang] || scenarioMeta?.title?.ru || "";
+  const scenarioGoal = scenarioMeta?.primaryGoal?.[lang] || scenarioMeta?.primaryGoal?.ru || "";
+  const workspaceLabel = scenarioMeta?.workspaceTitle?.[lang] || scenarioMeta?.workspaceTitle?.ru || t.inbox;
+
+  const displayTitle = formTitle || workspace?.form?.title || t.requestsTitle;
+
   if (loading) return <section className="card"><p className="muted">{t.loadingRequests}</p></section>;
   if (error) return <section className="card"><p className="error">{error}</p></section>;
 
   const selectedAnswers = answersForView(selected?.item?.answers || [], t);
+  const showScenarioBanner = !scenarioConfiguredAt;
 
   return (
     <section className="official-requests-page">
+
+      {/* ── Page Header ── */}
       <div className="official-page-title">
         <div>
-          <h1>{formTitle || t.requestsTitle}</h1>
-          <p>{formId ? t.requestsSubtitle : t.requestsSubtitle}</p>
+          <div className="workspace-title-row">
+            <h1>{displayTitle}</h1>
+            {scenarioTitle && (
+              <span className="scenario-badge-pill">{scenarioTitle}</span>
+            )}
+          </div>
+          {scenarioGoal && (
+            <p className="workspace-goal-text">
+              <span className="workspace-goal-label">{t.workspaceGoal}:</span> {scenarioGoal}
+            </p>
+          )}
         </div>
         <div className="official-stats-line">
           <Link className="official-link-btn" to="/forms">{t.myForms}</Link>
+          <button className="official-link-btn feedback-trigger-btn" onClick={() => setFeedbackOpen(true)}>
+            {t.feedbackBtn}
+          </button>
           <span>{t.totalRequests}: <b>{stats.total}</b></span>
           <span>{t.newRequests}: <b>{stats.fresh}</b></span>
           <span>{t.inProgressRequests}: <b>{stats.inProgress}</b></span>
@@ -607,8 +804,20 @@ export function RequestsPage() {
         </div>
       </div>
 
+      {/* ── Scenario Selection Banner ── */}
+      {showScenarioBanner && (
+        <ScenarioSelectBanner
+          formId={formId}
+          lang={lang}
+          t={t}
+          onSelected={handleScenarioSelected}
+        />
+      )}
+
+      {/* ── Analytics ── */}
       <AnalyticsBlock items={items} t={t} />
 
+      {/* ── Toolbar ── */}
       <div className="official-toolbar">
         <label>
           {t.search}
@@ -616,8 +825,10 @@ export function RequestsPage() {
         </label>
         <label>
           {t.status}
-          <select value={status} onChange={(e) => setStatus(e.target.value)}>
-            {STATUSES.map((item) => <option key={item || "all"} value={item}>{item ? statusLabel(item, t) : t.all}</option>)}
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            {scenarioStatuses.map((s) => (
+              <option key={s || "all"} value={s}>{s ? statusLabel(s, t) : t.all}</option>
+            ))}
           </select>
         </label>
         <label>
@@ -632,10 +843,11 @@ export function RequestsPage() {
         </label>
       </div>
 
+      {/* ── Workspace (Table + Details) ── */}
       <div className="official-workspace">
         <div className="official-table-card">
           <div className="official-card-title">
-            <h2>{t.inbox}</h2>
+            <h2>{workspaceLabel}</h2>
             <div className="export-area">
               <span>{filteredItems.length} {t.requestsCount}</span>
               <div className="export-menu-wrap" ref={exportRef}>
@@ -645,7 +857,7 @@ export function RequestsPage() {
                   disabled={filteredItems.length === 0}
                 >
                   {t.exportBtn}
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </button>
                 {exportOpen && (
                   <div className="export-dropdown">
@@ -667,31 +879,32 @@ export function RequestsPage() {
               <thead>
                 <tr>
                   <th>{t.submitted}</th>
-                  <th>{t.formColumn}</th>
                   <th>{t.email}</th>
                   <th>{t.previewColumn}</th>
-                  <th></th>
+                  <th>{t.status}</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredItems.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="table-empty-cell">
+                    <td colSpan={4} className="table-empty-cell">
                       {items.length === 0 ? t.noRequestsForForm : t.noRequestsFound}
                     </td>
                   </tr>
                 ) : filteredItems.map((item) => (
-                  <tr key={item.id} className={selected?.item?.id === item.id ? "selected clickable-row" : "clickable-row"} onClick={() => openDetails(item.id)} tabIndex={0} onKeyDown={(e) => { if (e.key === "Enter") openDetails(item.id); }}>
+                  <tr
+                    key={item.id}
+                    className={selected?.item?.id === item.id ? "selected clickable-row" : "clickable-row"}
+                    onClick={() => openDetails(item.id)}
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === "Enter") openDetails(item.id); }}
+                  >
                     <td>{formatDate(item.submittedAt || item.createdAt)}</td>
-                    <td>
-                      <div className="form-cell-with-status">
-                        <span>{item.formTitle || item.formId || "-"}</span>
-                        <span className={`official-badge status-${item.status}`}>{statusLabel(item.status, t)}</span>
-                      </div>
-                    </td>
                     <td>{item.respondentEmail || t.noEmail}</td>
                     <td className="preview-cell">{preview(item, t)}</td>
-                    <td></td>
+                    <td>
+                      <span className={`official-badge status-${item.status}`}>{statusLabel(item.status, t)}</span>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -711,7 +924,7 @@ export function RequestsPage() {
             <>
               <div className="official-detail-head">
                 <div>
-                  <h3>{selected.item.formTitle || t.requestsTitle}</h3>
+                  <h3>{selected.item.formTitle || displayTitle}</h3>
                 </div>
                 <span className={`official-badge status-${selected.item.status}`}>{statusLabel(selected.item.status, t)}</span>
               </div>
@@ -719,6 +932,19 @@ export function RequestsPage() {
               <div className="official-detail-meta">
                 <div><span>{t.submitted}</span><b>{formatDate(selected.item.submittedAt || selected.item.createdAt)}</b></div>
                 <div><span>{t.email}</span><b>{selected.item.respondentEmail || "-"}</b></div>
+              </div>
+
+              {/* Status change */}
+              <div className="detail-status-row">
+                <select
+                  className="official-status-select"
+                  value={selected.item.status}
+                  onChange={(e) => changeStatus(selected.item.id, e.target.value)}
+                >
+                  {scenarioStatuses.filter(Boolean).map((s) => (
+                    <option key={s} value={s}>{statusLabel(s, t)}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="official-answers">
@@ -730,8 +956,6 @@ export function RequestsPage() {
                 ))}
               </div>
 
-              <AIAnalysisBlock selected={selected} lang={lang} t={t} />
-
               <details className="detail-tech-info">
                 <summary>{t.technicalInfo}</summary>
                 <p>{t.responseIdLabel}: <code>{selected.item.responseId}</code></p>
@@ -741,7 +965,25 @@ export function RequestsPage() {
         </aside>
       </div>
 
-      <NotificationSettingsBlock formId={formId} formTitle={formTitle} t={t} />
+      {/* ── AI Chat ── */}
+      {formId && (
+        <AIChatBlock
+          formId={formId}
+          formTitle={displayTitle}
+          scenario={scenario}
+          scenarioMeta={scenarioMeta}
+          lang={lang}
+          t={t}
+        />
+      )}
+
+      {/* ── Notification Settings ── */}
+      <NotificationSettingsBlock formId={formId} formTitle={displayTitle} t={t} />
+
+      {/* ── Feedback Modal ── */}
+      {feedbackOpen && (
+        <FeedbackModal formId={formId} t={t} onClose={() => setFeedbackOpen(false)} />
+      )}
     </section>
   );
 }
