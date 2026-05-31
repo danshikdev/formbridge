@@ -143,6 +143,22 @@ Notes:
 - ✓ in App.jsx toast is a text character, not emoji — left as-is
 - Frontend build verified successfully after the icon replacement
 
+## Recently Completed
+
+### Fix AI chat — switch to Chat Completions API (2026-05-31)
+
+Files changed:
+- `backend/src/services/openaiService.js` — replaced `client.responses.create` with `client.chat.completions.create`; removed `reasoning`, `max_output_tokens`; fallback model changed to `"gpt-5-nano"`; empty response logs `[formChat] OpenAI returned empty chat completion` without logging prompt/data
+- `backend/.env.example` — `OPENAI_MODEL=gpt-5-nano`
+- `openai-nano-demo/` — deleted (was untracked, was only a local test reference)
+
+Checks passed:
+- `node --check` on all backend JS files ✓
+- `npm run build` frontend ✓
+- `rg` found zero matches for `responses.create|max_output_tokens|max_completion_tokens|max_tokens|temperature|reasoning` in openaiService.js ✓
+
+Commit: f94c4ed
+
 ## Next Planned Task
 
 - Consider adapting scenario card icon colors via CSS colorClass
