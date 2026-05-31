@@ -472,6 +472,267 @@ function FeedbackModal({ formId, t, onClose }) {
   );
 }
 
+// ─── Report & Export Helpers ──────────────────────────────────────────────────
+
+function generateWordReport(formTitle, scenario, items, t, lang) {
+  const now = new Date();
+  const todayCount = items.filter((item) => {
+    const d = new Date(item.submittedAt || item.createdAt);
+    return !Number.isNaN(d.getTime()) && d.toDateString() === now.toDateString();
+  }).length;
+  
+  const statusCounts = {};
+  for (const item of items) {
+    statusCounts[item.status] = (statusCounts[item.status] || 0) + 1;
+  }
+  
+  const questionLabels = collectAllQuestions(items, t);
+
+  const rowsHtml = items.map((item) => {
+    const answerMap = {};
+    for (const { label, value } of answersForView(item.answers || [], t)) {
+      answerMap[label] = value;
+    }
+    
+    const answersHtml = questionLabels.map((q) => {
+      return `<td>${answerMap[q] || "-"}</td>`;
+    }).join("");
+
+    return `
+      <tr>
+        <td>${formatDate(item.submittedAt || item.createdAt)}</td>
+        <td>${item.respondentEmail || "-"}</td>
+        <td><b>${statusLabel(item.status, t)}</b></td>
+        ${answersHtml}
+      </tr>
+    `;
+  }).join("");
+
+  const headersHtml = [t.submitted, t.email, t.status, ...questionLabels]
+    .map(h => `<th>${h}</th>`).join("");
+
+  const statusListHtml = Object.entries(statusCounts)
+    .map(([status, count]) => `<li><b>${statusLabel(status, t)}:</b> ${count}</li>`)
+    .join("");
+
+  return `
+    <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+    <head>
+      <title>${formTitle || "FormBridge Report"}</title>
+      <!--[if gte mso 9]>
+      <xml>
+        <w:WordDocument>
+          <w:View>Print</w:View>
+          <w:Zoom>100</w:Zoom>
+          <w:DoNotOptimizeForBrowser/>
+        </w:WordDocument>
+      </xml>
+      <![endif]-->
+      <style>
+        body {
+          font-family: 'Arial', sans-serif;
+          color: #1a2f26;
+          margin: 1in;
+        }
+        h1 {
+          color: #123b2f;
+          font-size: 24pt;
+          border-bottom: 2px solid #123b2f;
+          padding-bottom: 6px;
+          margin-bottom: 12pt;
+        }
+        h2 {
+          color: #66746f;
+          font-size: 14pt;
+          text-transform: uppercase;
+          border-bottom: 1px solid #edf1ee;
+          padding-bottom: 4px;
+          margin-top: 24pt;
+          margin-bottom: 8pt;
+        }
+        p {
+          font-size: 10.5pt;
+          line-height: 1.5;
+          margin-bottom: 8pt;
+        }
+        ul {
+          margin-top: 0;
+          margin-bottom: 8pt;
+          padding-left: 20pt;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 12pt;
+          margin-bottom: 12pt;
+        }
+        th, td {
+          border: 1px solid #edf1ee;
+          padding: 8pt;
+          text-align: left;
+          font-size: 9.5pt;
+          vertical-align: top;
+        }
+        th {
+          background-color: #f8faf8;
+          color: #475851;
+          font-weight: bold;
+        }
+      </style>
+    </head>
+    <body>
+      <h1>${formTitle || "FormBridge Report"}</h1>
+      <p><b>${t.reportGeneratedAt}:</b> ${new Date().toLocaleString()}</p>
+      <p><b>${t.totalRequests}:</b> ${items.length} | <b>${t.analyticsToday}:</b> ${todayCount}</p>
+      
+      <h2>${t.analyticsStatusDist}</h2>
+      <ul>
+        ${statusListHtml || "<li>-</li>"}
+      </ul>
+
+      <h2>${scenario === "survey" ? t.surveyResponsesLabel : t.requestsTitle}</h2>
+      <table>
+        <thead>
+          <tr>
+            ${headersHtml}
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+      </table>
+    </body>
+    </html>
+  `;
+}
+
+function ReportPreviewModal({ isOpen, onClose, reportType, items, formTitle, scenario, t, lang }) {
+  if (!isOpen) return null;
+
+  const now = new Date();
+  const todayCount = useMemo(() => {
+    return items.filter((item) => {
+      const d = new Date(item.submittedAt || item.createdAt);
+      return !Number.isNaN(d.getTime()) && d.toDateString() === now.toDateString();
+    }).length;
+  }, [items]);
+
+  const statusCounts = useMemo(() => {
+    const counts = {};
+    for (const item of items) {
+      counts[item.status] = (counts[item.status] || 0) + 1;
+    }
+    return counts;
+  }, [items]);
+
+  const questionLabels = useMemo(() => collectAllQuestions(items, t), [items, t]);
+
+  const sortedStatuses = Object.entries(statusCounts).sort((a, b) => b[1] - a[1]);
+
+  function handleDownload() {
+    if (reportType === "pdf") {
+      window.print();
+    } else {
+      const docHtml = generateWordReport(formTitle, scenario, items, t, lang);
+      const blob = new Blob(["\uFEFF" + docHtml], { type: "application/msword;charset=utf-8;" });
+      const date = new Date().toISOString().slice(0, 10);
+      downloadBlob(blob, `formbridge-report-${date}.doc`);
+      onClose();
+    }
+  }
+
+  return (
+    <div className="report-preview-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="report-preview-modal">
+        <div className="report-preview-modal-header">
+          <h3>{t.reportPreviewTitle} ({reportType === "pdf" ? "PDF" : "Word"})</h3>
+          <button className="official-link-btn" style={{ padding: "4px 8px", fontSize: "0.8rem" }} onClick={onClose}>✕</button>
+        </div>
+        <div className="report-preview-modal-body">
+          <div className="report-sheet">
+            <div className="report-sheet-header">
+              <div className="report-sheet-header-left">
+                <h1>{formTitle || "FormBridge Workspace"}</h1>
+                <span>{(SCENARIO_LABELS_STATIC[scenario] || {})[lang] || scenario}</span>
+              </div>
+              <div className="report-sheet-header-right">
+                <strong>FormBridge Report</strong>
+                <div>{t.reportGeneratedAt}: {now.toLocaleDateString()}</div>
+              </div>
+            </div>
+
+            <div className="report-section">
+              <div className="report-section-title">{t.totalRequests} &amp; {t.analyticsStatusDist}</div>
+              <div className="report-stats-grid">
+                <div className="report-stat-card">
+                  <span>{t.totalRequests}</span>
+                  <strong>{items.length}</strong>
+                </div>
+                <div className="report-stat-card">
+                  <span>{t.analyticsToday}</span>
+                  <strong>{todayCount}</strong>
+                </div>
+                {sortedStatuses.slice(0, 2).map(([status, count]) => (
+                  <div key={status} className="report-stat-card">
+                    <span>{statusLabel(status, t)}</span>
+                    <strong>{count}</strong>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="report-section">
+              <div className="report-section-title">{scenario === "survey" ? t.surveyResponsesLabel : t.requestsTitle}</div>
+              <div style={{ overflowX: "auto" }}>
+                <table className="report-table">
+                  <thead>
+                    <tr>
+                      <th>{t.submitted}</th>
+                      <th>{t.email}</th>
+                      <th>{t.status}</th>
+                      <th>{t.previewColumn}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {items.slice(0, 25).map((item) => (
+                      <tr key={item.id}>
+                        <td style={{ whiteSpace: "nowrap" }}>{formatDate(item.submittedAt || item.createdAt).split(",")[0]}</td>
+                        <td>{item.respondentEmail || "-"}</td>
+                        <td><b>{statusLabel(item.status, t)}</b></td>
+                        <td>
+                          <div className="report-table-answers">
+                            {answersForView(item.answers || [], t).slice(0, 3).map((ans, idx) => (
+                              <div key={idx}>
+                                <span>{ans.label}:</span> {ans.value}
+                              </div>
+                            ))}
+                            {item.answers?.length > 3 && <div style={{ fontSize: "0.75rem", color: "#66746f" }}>+{item.answers.length - 3} {t.question.toLowerCase()}</div>}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {items.length > 25 && (
+                  <div style={{ textAlign: "center", padding: "12px", fontSize: "0.8rem", color: "#66746f", borderTop: "1px solid #edf1ee" }}>
+                    Showing top 25 of {items.length} responses. Export covers full dataset.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="report-preview-modal-actions">
+          <button className="official-link-btn" onClick={onClose}>{t.all === "Все" ? "Отмена" : t.all === "Барлығы" ? "Болдырмау" : "Cancel"}</button>
+          <button className="primary-btn compact-action-btn" onClick={handleDownload}>
+            {t.downloadReport} {reportType === "pdf" ? "PDF" : "Word"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Notification Settings Block ──────────────────────────────────────────────
 
 const NOTIF_MODES = ["every_submission", "threshold", "daily_summary"];
@@ -889,6 +1150,8 @@ export function RequestsPage() {
   const [error, setError] = useState("");
   const [exportOpen, setExportOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [reportModalOpen, setReportModalOpen] = useState(false);
+  const [reportType, setReportType] = useState("pdf"); // "pdf" | "word"
   const [menuOpen, setMenuOpen] = useState(false);
   const exportRef = useRef(null);
   const menuRef = useRef(null);
@@ -1222,6 +1485,14 @@ export function RequestsPage() {
                       <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 4.5C3 3.12 4.12 2 5.5 2h3C9.88 2 11 3.12 11 4.5v5c0 1.38-1.12 2.5-2.5 2.5h-3C4.12 12 3 10.88 3 9.5v-5z" stroke="currentColor" strokeWidth="1.4"/><path d="M5 5.5h4M5 8h2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
                       JSON
                     </button>
+                    <button onClick={() => { setReportType("pdf"); setReportModalOpen(true); setExportOpen(false); }}>
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10h10V2zM8 5.5L6.5 7 5 5.5M6.5 2v5"/></svg>
+                      {t.exportPDF}
+                    </button>
+                    <button onClick={() => { setReportType("word"); setReportModalOpen(true); setExportOpen(false); }}>
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10h10V2zM4 6h6M4 8h6M4 4h3"/></svg>
+                      {t.exportWord}
+                    </button>
                   </div>
                 )}
               </div>
@@ -1356,6 +1627,20 @@ export function RequestsPage() {
       {/* ── Feedback Modal ── */}
       {feedbackOpen && (
         <FeedbackModal formId={formId} t={t} onClose={() => setFeedbackOpen(false)} />
+      )}
+
+      {/* ── Report Preview Modal ── */}
+      {reportModalOpen && (
+        <ReportPreviewModal
+          isOpen={reportModalOpen}
+          onClose={() => setReportModalOpen(false)}
+          reportType={reportType}
+          items={filteredItems}
+          formTitle={displayTitle}
+          scenario={scenario}
+          t={t}
+          lang={lang}
+        />
       )}
     </section>
   );

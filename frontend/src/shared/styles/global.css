@@ -4975,3 +4975,257 @@ select {
   margin-top: 2px;
   padding-top: 11px;
 }
+
+/* ─── Premium PDF & Word Export Preview styles ────────────────────────────── */
+
+.report-preview-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+  background: rgba(18, 59, 47, 0.45);
+  backdrop-filter: blur(8px);
+  display: grid;
+  place-items: center;
+  padding: 20px;
+}
+
+.report-preview-modal {
+  width: min(840px, 100%);
+  max-height: 90vh;
+  background: #fdfdfd;
+  border-radius: 20px;
+  border: 1px solid #d9e2dc;
+  box-shadow: 0 20px 50px rgba(18, 59, 47, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalScaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes modalScaleIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.report-preview-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #edf1ee;
+  background: #ffffff;
+}
+
+.report-preview-modal-header h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  color: #123b2f;
+}
+
+.report-preview-modal-body {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+  background: #f7f9f8;
+}
+
+/* Document sheet styling */
+.report-sheet {
+  background: #ffffff;
+  border: 1px solid #e1e8e4;
+  box-shadow: 0 4px 16px rgba(18, 59, 47, 0.04);
+  padding: 40px;
+  font-family: inherit;
+  color: #1a2f26;
+  max-width: 100%;
+}
+
+.report-sheet-header {
+  border-bottom: 2px solid #123b2f;
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.report-sheet-header-left h1 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #123b2f;
+  margin: 0 0 6px;
+}
+
+.report-sheet-header-left span {
+  font-size: 0.72rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  background: #dfeee5;
+  color: #123b2f;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.report-sheet-header-right {
+  text-align: right;
+  font-size: 0.8rem;
+  color: #66746f;
+}
+
+.report-sheet-header-right div {
+  margin-top: 3px;
+}
+
+.report-section {
+  margin-bottom: 30px;
+}
+
+.report-section-title {
+  font-size: 0.8rem;
+  font-weight: 900;
+  color: #66746f;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  border-bottom: 1px solid #edf1ee;
+  padding-bottom: 6px;
+  margin-bottom: 12px;
+}
+
+/* Report stats row */
+.report-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+.report-stat-card {
+  border: 1px solid #e3ebe6;
+  border-radius: 12px;
+  padding: 12px;
+  background: #fbfcfb;
+}
+
+.report-stat-card span {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #66746f;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.report-stat-card strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #123b2f;
+}
+
+/* Report table */
+.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.report-table th,
+.report-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #edf1ee;
+  text-align: left;
+  vertical-align: top;
+}
+
+.report-table th {
+  background: #f8faf8;
+  color: #475851;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 800;
+}
+
+.report-table td {
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.report-table-answers {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.report-table-answers div {
+  font-size: 0.8rem;
+}
+
+.report-table-answers span {
+  font-weight: 700;
+  color: #66746f;
+}
+
+.report-preview-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-top: 1px solid #edf1ee;
+  background: #ffffff;
+}
+
+/* Print Styles */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .report-preview-backdrop,
+  .report-preview-backdrop * {
+    visibility: visible;
+  }
+  .report-preview-backdrop {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: auto;
+    background: transparent;
+    backdrop-filter: none;
+    padding: 0;
+  }
+  .report-preview-modal {
+    width: 100%;
+    max-height: none;
+    height: auto;
+    border: none;
+    box-shadow: none;
+    background: transparent;
+  }
+  .report-preview-modal-header,
+  .report-preview-modal-actions {
+    display: none !important;
+  }
+  .report-preview-modal-body {
+    padding: 0;
+    background: transparent;
+  }
+  .report-sheet {
+    border: none;
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .report-section {
+    page-break-inside: avoid;
+  }
+  .report-table tr {
+    page-break-inside: avoid;
+  }
+}
