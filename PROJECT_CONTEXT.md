@@ -342,44 +342,11 @@ Files changed:
 
 ## Recently Completed
 
-### Guided Google Forms setup modal (2026-05-31)
+### Guided Google Forms setup modal (superseded by 2-step flow, 2026-05-31)
 
 Files changed:
-- `frontend/src/components/GuidedSetupModal.jsx` — new component; 3-step guided setup modal
-- `frontend/src/pages/MyFormsPage.jsx` — imports modal; "Connect" button replaces "Add to FormBridge"; connected forms show "Open workspace" link; modal state passed with formId/formTitle/googleEmail
-- `frontend/src/shared/i18n.js` — 44 new keys in kk/ru/en (connectForm, openWorkspace, connectGoogleForm, setupIntro, all step/instruction/screenshot keys)
-- `frontend/src/shared/styles/global.css` — 480+ lines added for setup modal styles
-
-#### Modal UX flow:
-1. User clicks "Connect" on any unconnected Google Form
-2. Modal opens → silently calls `POST /api/integrations/forms/setup-google` (creates integration + tries to create Google Sheet)
-3. **Step 1** — if `sheetId` returned → "Sheet linked"; else shows "Open Google Form" + "Check again"
-4. **Step 2** — unlocked when Step 1 is "found"; "Prepare setup" calls `POST /api/integrations/forms/:id/auto-setup` → returns `scriptUrl`; "Open Google setup" opens Apps Script with AccountChooser URL; locked state if Step 1 not done
-5. **Step 3** — unlocked when Step 2 prepared/opened; "Verify connection" calls `POST /api/integrations/forms/:id/verify`; shows checklist cards (Sheet/AutoDelivery/Webhook/Test); shows "Connection ready" + "Open workspace" on success
-
-#### What is real vs placeholder:
-- **Real**: all 3 endpoints (`setup-google`, `auto-setup`, `verify`), account-aware AccountChooser URLs, step locking logic, integration state derivation
-- **Placeholder**: 9 screenshot slots (dashed border, "Add screenshot later" text) — visually rendered but no actual images
-
-#### Screenshot placeholders locations:
-- Step 1 accordion: "Screenshot: Responses tab", "Screenshot: Link to Sheets button", "Screenshot: Create spreadsheet"
-- Step 2 accordion: "Screenshot: select installFormBridge", "Screenshot: Run button", "Screenshot: Allow permissions"
-
-#### How to test with a new Google account:
-1. Log in to FormBridge, connect Google account via `/forms`
-2. Click "Connect" on any form
-3. Modal opens; it auto-calls `setup-google` — if Google Drive API works, Step 1 should show "Sheet linked" immediately
-4. If Step 1 missing: open the Google Form, go to Responses → Link to Sheets → Create new spreadsheet, then "Check again"
-5. Step 2: click "Prepare setup" — requires Google Apps Script API enabled; returns scriptUrl
-6. Click "Open Google setup" → opens Apps Script with your Google account; run `installFormBridge`
-7. Return to modal, click "Verify connection"
-
-#### CSS classes added:
-`.setup-modal-backdrop`, `.setup-modal`, `.setup-header`, `.setup-step`, `.setup-step-locked`, `.setup-step--done`, `.setup-status-pill`, `.pill-ok/missing/checking/locked`, `.setup-actions`, `.setup-btn-primary/secondary`, `.setup-accordion`, `.setup-screenshot-grid`, `.setup-screenshot-placeholder`, `.setup-check-grid`, `.setup-check-item`, `.setup-ready-banner`, `.setup-reason-list`
-
-Build: `npm run build` ✓
-No emoji found ✓
-Commit: bd77f23
+- Original modal was introduced here, but its old 3-step description is superseded by the current 2-step MVP flow below.
+- Do not reintroduce a separate Step 3, copy-link button, placeholder screenshots, or test-event card in the main setup flow.
 
 ## Recently Completed
 
