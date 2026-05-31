@@ -38,6 +38,23 @@ Instructions:
 - Format your response clearly (use line breaks, lists if helpful).`;
 }
 
+function extractResponseText(response) {
+  if (typeof response.output_text === "string" && response.output_text.trim()) {
+    return response.output_text.trim();
+  }
+
+  const chunks = [];
+  for (const item of response.output || []) {
+    for (const content of item.content || []) {
+      if (content.type === "output_text" && content.text) {
+        chunks.push(content.text);
+      }
+    }
+  }
+
+  return chunks.join("").trim();
+}
+
 export async function formChat(formTitle, scenario, requests, message, lang) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -51,12 +68,12 @@ export async function formChat(formTitle, scenario, requests, message, lang) {
 
   let content;
   try {
-    const completion = await client.chat.completions.create({
+    const response = await client.responses.create({
       model,
-      messages: [{ role: "user", content: buildFormChatPrompt(formTitle, scenario, requests, message, lang) }],
-      max_completion_tokens: 600
+      input: buildFormChatPrompt(formTitle, scenario, requests, message, lang),
+      max_output_tokens: 600
     });
-    content = completion.choices[0]?.message?.content || "";
+    content = extractResponseText(response);
   } catch (err) {
     console.error("[formChat] OpenAI error:", err.message);
     const apiErr = new Error("OpenAI API error");
@@ -65,5 +82,12 @@ export async function formChat(formTitle, scenario, requests, message, lang) {
     throw apiErr;
   }
 
-  return content.trim();
+  if (!content) {
+    console.error("[formChat] OpenAI returned an empty response");
+    const emptyErr = new Error("OpenAI returned an empty response");
+    emptyErr.statusCode = 502;
+    throw emptyErr;
+  }
+
+  return content;
 }

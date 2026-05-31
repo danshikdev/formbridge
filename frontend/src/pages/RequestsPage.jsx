@@ -265,7 +265,11 @@ function AIChatBlock({ formId, formTitle, scenario, scenarioMeta, lang, t }) {
         message: msg,
         lang: lang || "ru"
       });
-      setMessages((prev) => [...prev, { role: "ai", text: data.reply || "" }]);
+      const reply = String(data.reply || "").trim();
+      setMessages((prev) => [...prev, reply
+        ? { role: "ai", text: reply }
+        : { role: "error", text: t.aiChatErrorGeneral }
+      ]);
     } catch (err) {
       const status = err.response?.status;
       let errText = t.aiChatErrorGeneral;
