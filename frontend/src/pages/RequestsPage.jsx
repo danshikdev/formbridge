@@ -35,18 +35,38 @@ const SCENARIO_DESC_STATIC = {
   event:           { kk: "Іс-шараға қатысушыларды тіркеу", ru: "Управление регистрациями участников", en: "Manage event participant registrations" }
 };
 
-const DATE_FILTERS = ["all", "today", "week"];
+const DATE_FILTERS = ["all", "today", "yesterday", "last7", "last30", "custom"];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function isWithinDateRange(dateStr, range) {
+function isWithinDateRange(dateStr, range, from, to) {
   if (range === "all") return true;
   if (!dateStr) return false;
   const d = new Date(dateStr);
   if (Number.isNaN(d.getTime())) return false;
   const now = new Date();
   if (range === "today") return d.toDateString() === now.toDateString();
-  if (range === "week") return d >= new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  if (range === "yesterday") {
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    return d.toDateString() === yesterday.toDateString();
+  }
+  if (range === "last7") return d >= new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  if (range === "last30") return d >= new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+  if (range === "custom") {
+    if (!from && !to) return true;
+    if (from) {
+      const fromDate = new Date(from);
+      fromDate.setHours(0, 0, 0, 0);
+      if (d < fromDate) return false;
+    }
+    if (to) {
+      const toDate = new Date(to);
+      toDate.setHours(23, 59, 59, 999);
+      if (d > toDate) return false;
+    }
+    return true;
+  }
   return true;
 }
 
@@ -673,6 +693,8 @@ export function RequestsPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [query, setQuery] = useState("");
   const [dateFilter, setDateFilter] = useState("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [loading, setLoading] = useState(true);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -764,9 +786,9 @@ export function RequestsPage() {
     let result = items;
     const needle = query.trim().toLowerCase();
     if (needle) result = result.filter((item) => requestSearchText(item, t).includes(needle));
-    if (dateFilter !== "all") result = result.filter((item) => isWithinDateRange(item.submittedAt || item.createdAt, dateFilter));
+    if (dateFilter !== "all") result = result.filter((item) => isWithinDateRange(item.submittedAt || item.createdAt, dateFilter, dateFrom, dateTo));
     return result;
-  }, [items, query, t, dateFilter]);
+  }, [items, query, t, dateFilter, dateFrom, dateTo]);
 
   const stats = useMemo(() => {
     const now = new Date();
@@ -877,16 +899,36 @@ export function RequestsPage() {
             ))}
           </select>
         </label>
-        <label>
-          {t.dateRange}
-          <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}>
-            {DATE_FILTERS.map((f) => (
-              <option key={f} value={f}>
-                {f === "all" ? t.all : f === "today" ? t.dateFilterToday : t.dateFilterWeek}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="toolbar-date-group">
+          <label>
+            {t.dateRange}
+            <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}>
+              {DATE_FILTERS.map((f) => (
+                <option key={f} value={f}>
+                  {f === "all" ? t.all
+                    : f === "today" ? t.dateFilterToday
+                    : f === "yesterday" ? t.dateFilterYesterday
+                    : f === "last7" ? t.dateFilterLast7
+                    : f === "last30" ? t.dateFilterLast30
+                    : t.dateFilterCustom}
+                </option>
+              ))}
+            </select>
+          </label>
+          {dateFilter === "custom" && (
+            <div className="toolbar-date-custom">
+              <label className="toolbar-date-input-label">
+                <span>{t.dateFrom}</span>
+                <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+              </label>
+              <span className="toolbar-date-sep">—</span>
+              <label className="toolbar-date-input-label">
+                <span>{t.dateTo}</span>
+                <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+              </label>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── Workspace (Table + Details) ── */}
