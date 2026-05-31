@@ -139,6 +139,17 @@ Recent commits:
 
 ## Recently Completed
 
+### Robust, scenario-aware WhatsApp daily summaries (2026-05-31)
+
+Files changed:
+- `backend/src/services/notificationScheduler.js` — imported `getScenario`; defined `STATUS_LABELS_KK` and `getStatusLabelKK` to support all 17 system statuses; rewrote `buildDailySummaryMessage` to load all requests from today, group them by status, and output active status counts in order of the active scenario's `statusFlow`; updated `runDailySummaryTick` to check `dailyTime` with `{ [Op.lte]: now.time }` for robust time tracking against scheduler drift or restarts.
+
+Checks passed:
+- `node --check` backend scheduler ✓
+- `git diff` validated ✓
+
+## Recently Completed
+
 ### Replace emoji icons with SVG components (2026-05-31)
 
 Files changed:

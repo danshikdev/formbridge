@@ -4,8 +4,33 @@ import { FormIntegration } from "../models/formIntegration.js";
 import { NotificationSettings } from "../models/notificationSettings.js";
 import { Request } from "../models/request.js";
 import { sendMessage } from "./whatsappService.js";
+import { getScenario } from "../config/formScenarios.js";
 
 let schedulerStarted = false;
+
+const STATUS_LABELS_KK = {
+  new: "Жаңа",
+  in_progress: "Өңделуде",
+  done: "Аяқталды",
+  test: "Тест",
+  contacted: "Байланысылды",
+  documents_needed: "Құжат керек",
+  accepted: "Қабылданды",
+  rejected: "Қабылданбады",
+  shortlisted: "Іріктелді",
+  interview: "Сұхбат",
+  hired: "Жұмысқа алынды",
+  urgent: "Шұғыл",
+  waiting_client: "Клиент күтілуде",
+  confirmed: "Расталды",
+  waiting_payment: "Төлем күтілуде",
+  cancelled: "Бас тартылды",
+  attended: "Қатысты"
+};
+
+function getStatusLabelKK(status) {
+  return STATUS_LABELS_KK[status] || (String(status).charAt(0).toUpperCase() + String(status).slice(1).replace(/_/g, " "));
+}
 
 function almatyParts(date = new Date()) {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -41,26 +66,50 @@ function formRequestsUrl(formId, formTitle) {
 async function buildDailySummaryMessage(setting, today) {
   const integration = await FormIntegration.findOne({ where: { formId: setting.formId } });
   const title = integration?.formTitle || setting.formId;
+  const scenarioId = integration?.scenario || "universal";
+  const scenario = getScenario(scenarioId);
+  const statusFlow = scenario?.statusFlow || ["new", "in_progress", "done"];
+
   const where = {
     formId: setting.formId,
     createdAt: { [Op.between]: [today.start, today.end] }
   };
 
-  const [total, fresh, inProgress, done] = await Promise.all([
-    Request.count({ where }),
-    Request.count({ where: { ...where, status: "new" } }),
-    Request.count({ where: { ...where, status: "in_progress" } }),
-    Request.count({ where: { ...where, status: "done" } })
-  ]);
+  const requests = await Request.findAll({
+    where,
+    attributes: ["status"]
+  });
 
-  return [
-    `FormBridge: бүгін «${title}» формасына ${total} өтініш түсті.`,
-    `Жаңа: ${fresh}`,
-    `Өңделуде: ${inProgress}`,
-    `Аяқталды: ${done}`,
-    "",
-    `Ашу: ${formRequestsUrl(setting.formId, title)}`
-  ].join("\n");
+  const total = requests.length;
+
+  const statusCounts = {};
+  for (const r of requests) {
+    statusCounts[r.status] = (statusCounts[r.status] || 0) + 1;
+  }
+
+  const lines = [
+    `FormBridge: бүгін «${title}» формасына ${total} өтініш түсті.`
+  ];
+
+  // Order statuses by scenario flow first, then append any remaining active statuses
+  const displayStatuses = [...statusFlow];
+  for (const status of Object.keys(statusCounts)) {
+    if (!displayStatuses.includes(status)) {
+      displayStatuses.push(status);
+    }
+  }
+
+  for (const status of displayStatuses) {
+    const count = statusCounts[status] || 0;
+    if (count > 0) {
+      lines.push(`${getStatusLabelKK(status)}: ${count}`);
+    }
+  }
+
+  lines.push("");
+  lines.push(`Ашу: ${formRequestsUrl(setting.formId, title)}`);
+
+  return lines.join("\n");
 }
 
 async function runDailySummaryTick() {
@@ -72,7 +121,7 @@ async function runDailySummaryTick() {
       channel: "whatsapp",
       enabled: true,
       mode: "daily_summary",
-      dailyTime: now.time,
+      dailyTime: { [Op.lte]: now.time },
       phoneNumber: { [Op.ne]: null },
       [Op.or]: [
         { lastDailySummaryDate: null },
