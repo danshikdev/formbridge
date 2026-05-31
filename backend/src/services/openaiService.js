@@ -38,23 +38,6 @@ Instructions:
 - Format your response clearly (use line breaks, lists if helpful).`;
 }
 
-function extractResponseText(response) {
-  if (typeof response.output_text === "string" && response.output_text.trim()) {
-    return response.output_text.trim();
-  }
-
-  const chunks = [];
-  for (const item of response.output || []) {
-    for (const content of item.content || []) {
-      if (content.type === "output_text" && content.text) {
-        chunks.push(content.text);
-      }
-    }
-  }
-
-  return chunks.join("").trim();
-}
-
 export async function formChat(formTitle, scenario, requests, message, lang) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -63,25 +46,21 @@ export async function formChat(formTitle, scenario, requests, message, lang) {
     throw err;
   }
 
-  const model = process.env.OPENAI_MODEL || "gpt-5-nano-2025-08-07";
+  const model = process.env.OPENAI_MODEL || "gpt-5-nano";
   const client = new OpenAI({ apiKey });
 
   let content;
   try {
-    const response = await client.responses.create({
+    const completion = await client.chat.completions.create({
       model,
-      input: buildFormChatPrompt(formTitle, scenario, requests, message, lang),
-      reasoning: { effort: "minimal" },
-      max_output_tokens: 1200
+      messages: [
+        {
+          role: "user",
+          content: buildFormChatPrompt(formTitle, scenario, requests, message, lang)
+        }
+      ]
     });
-    content = extractResponseText(response);
-    if (!content) {
-      console.error("[formChat] Empty OpenAI response:", {
-        status: response.status,
-        incompleteReason: response.incomplete_details?.reason || null,
-        outputTypes: (response.output || []).map((item) => item.type).join(",") || "none"
-      });
-    }
+    content = (completion.choices?.[0]?.message?.content || "").trim();
   } catch (err) {
     console.error("[formChat] OpenAI error:", err.message);
     const apiErr = new Error("OpenAI API error");
@@ -91,6 +70,7 @@ export async function formChat(formTitle, scenario, requests, message, lang) {
   }
 
   if (!content) {
+    console.error("[formChat] OpenAI returned empty chat completion");
     const emptyErr = new Error("OpenAI returned an empty response");
     emptyErr.statusCode = 502;
     throw emptyErr;
