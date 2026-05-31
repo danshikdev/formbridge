@@ -408,6 +408,7 @@ function FeedbackModal({ formId, t, onClose }) {
 const NOTIF_MODES = ["every_submission", "threshold", "daily_summary"];
 
 function NotificationSettingsBlock({ formId, formTitle, t }) {
+  const [isOpen, setIsOpen] = useState(false);
   const [enabled, setEnabled] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [mode, setMode] = useState("every_submission");
@@ -459,68 +460,84 @@ function NotificationSettingsBlock({ formId, formTitle, t }) {
 
   return (
     <div className="notif-block">
-      <div className="notif-header">
+      <div
+        className={`notif-header notif-collapsible-header${isOpen ? " notif-is-open" : ""}`}
+        role="button"
+        tabIndex={0}
+        onClick={() => setIsOpen((o) => !o)}
+        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setIsOpen((o) => !o); }}
+      >
         <div className="notif-icon">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M9 1.5C4.86 1.5 1.5 4.86 1.5 9c0 1.44.39 2.79 1.07 3.95L1.5 16.5l3.62-1.14A7.47 7.47 0 0 0 9 16.5c4.14 0 7.5-3.36 7.5-7.5S13.14 1.5 9 1.5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
             <path d="M6 9h6M6 6.5h3.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
           </svg>
         </div>
-        <div>
+        <div className="notif-header-text">
           <div className="notif-title">{t.notifTitle}</div>
-          <div className="notif-subtitle">{t.notifSubtitle}</div>
-        </div>
-        <span className="notif-mock-badge">WhatsApp</span>
-      </div>
-
-      {loading ? (
-        <p className="muted">{t.loading}</p>
-      ) : loadError ? (
-        <p className="error">{loadError}</p>
-      ) : (
-        <div className="notif-body">
-          <label className="notif-toggle-row">
-            <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
-            <span>{t.notifEnabled}</span>
-          </label>
-
-          {enabled && (
-            <div className="notif-fields">
-              <label className="notif-field">
-                <span>{t.notifPhone}</span>
-                <input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder={t.notifPhonePh} />
-              </label>
-              <label className="notif-field">
-                <span>{t.notifMode}</span>
-                <select value={mode} onChange={(e) => setMode(e.target.value)}>
-                  {NOTIF_MODES.map((m) => (
-                    <option key={m} value={m}>
-                      {m === "every_submission" ? t.notifModeEvery : m === "threshold" ? t.notifModeThreshold : t.notifModeDaily}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              {mode === "threshold" && (
-                <label className="notif-field">
-                  <span>{t.notifThreshold}</span>
-                  <input type="number" min="1" value={thresholdCount} onChange={(e) => setThresholdCount(e.target.value)} />
-                </label>
-              )}
-              <div className="notif-preview">
-                <div className="notif-preview-label">{t.notifPreview}</div>
-                <div className="notif-preview-bubble">{previewMsg}</div>
-              </div>
-            </div>
-          )}
-
-          <div className="notif-actions">
-            <button className="official-link-btn" onClick={save} disabled={saving}>
-              {saving ? t.loading : t.notifSave}
-            </button>
-            {saved && <span className="notif-saved-msg">{t.notifSaved}</span>}
-            {saveError && <span className="error">{saveError}</span>}
+          <div className="notif-subtitle">
+            {!loading && !loadError && enabled ? t.notifEnabled : t.notifSubtitle}
           </div>
         </div>
+        <span className="notif-mock-badge">WhatsApp</span>
+        <svg
+          className={`notif-chevron${isOpen ? " notif-chevron--open" : ""}`}
+          width="14" height="14" viewBox="0 0 14 14" fill="none"
+        >
+          <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </div>
+
+      {isOpen && (
+        loading ? (
+          <p className="muted" style={{ padding: "4px 0 0" }}>{t.loading}</p>
+        ) : loadError ? (
+          <p className="error" style={{ padding: "4px 0 0" }}>{loadError}</p>
+        ) : (
+          <div className="notif-body">
+            <label className="notif-toggle-row">
+              <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
+              <span>{t.notifEnabled}</span>
+            </label>
+
+            {enabled && (
+              <div className="notif-fields">
+                <label className="notif-field">
+                  <span>{t.notifPhone}</span>
+                  <input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder={t.notifPhonePh} />
+                </label>
+                <label className="notif-field">
+                  <span>{t.notifMode}</span>
+                  <select value={mode} onChange={(e) => setMode(e.target.value)}>
+                    {NOTIF_MODES.map((m) => (
+                      <option key={m} value={m}>
+                        {m === "every_submission" ? t.notifModeEvery : m === "threshold" ? t.notifModeThreshold : t.notifModeDaily}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {mode === "threshold" && (
+                  <label className="notif-field">
+                    <span>{t.notifThreshold}</span>
+                    <input type="number" min="1" value={thresholdCount} onChange={(e) => setThresholdCount(e.target.value)} />
+                  </label>
+                )}
+                <div className="notif-preview">
+                  <div className="notif-preview-label">{t.notifPreview}</div>
+                  <div className="notif-preview-bubble">{previewMsg}</div>
+                </div>
+              </div>
+            )}
+
+            <div className="notif-actions">
+              <button className="official-link-btn" onClick={save} disabled={saving}>
+                {saving ? t.loading : t.notifSave}
+              </button>
+              {saved && <span className="notif-saved-msg">{t.notifSaved}</span>}
+              {saveError && <span className="error">{saveError}</span>}
+            </div>
+          </div>
+        )
       )}
     </div>
   );
@@ -751,12 +768,23 @@ export function RequestsPage() {
     return result;
   }, [items, query, t, dateFilter]);
 
-  const stats = useMemo(() => ({
-    total: items.length,
-    fresh: items.filter((item) => item.status === "new").length,
-    inProgress: items.filter((item) => item.status === "in_progress").length,
-    done: items.filter((item) => item.status === "done").length
-  }), [items]);
+  const stats = useMemo(() => {
+    const now = new Date();
+    return {
+      total: items.length,
+      fresh: items.filter((item) => item.status === "new").length,
+      inProgress: items.filter((item) => item.status === "in_progress").length,
+      done: items.filter((item) => item.status === "done").length,
+      today: items.filter((item) => {
+        const d = new Date(item.submittedAt || item.createdAt);
+        return !Number.isNaN(d.getTime()) && d.toDateString() === now.toDateString();
+      }).length,
+      week: items.filter((item) => {
+        const d = new Date(item.submittedAt || item.createdAt);
+        return !Number.isNaN(d.getTime()) && d >= new Date(now - 7 * 86400000);
+      }).length
+    };
+  }, [items]);
 
   // Determine statuses to show in filter dropdown
   const scenarioStatuses = useMemo(() => {
@@ -782,30 +810,46 @@ export function RequestsPage() {
   return (
     <section className="official-requests-page">
 
-      {/* ── Page Header ── */}
-      <div className="official-page-title">
-        <div>
-          <div className="workspace-title-row">
-            <h1>{displayTitle}</h1>
-            {scenarioTitle && (
-              <span className="scenario-badge-pill">{scenarioTitle}</span>
+      {/* ── Workspace Header ── */}
+      <div className="ws-header-card">
+        <div className="ws-header-main">
+          <div className="ws-title-block">
+            <div className="ws-title-row">
+              <h1>{displayTitle}</h1>
+              {scenarioTitle && (
+                <span className="scenario-badge-pill">{scenarioTitle}</span>
+              )}
+            </div>
+            {scenarioGoal && (
+              <p className="ws-goal-text">
+                <span className="ws-goal-label">{t.workspaceGoal}:</span> {scenarioGoal}
+              </p>
             )}
           </div>
-          {scenarioGoal && (
-            <p className="workspace-goal-text">
-              <span className="workspace-goal-label">{t.workspaceGoal}:</span> {scenarioGoal}
-            </p>
-          )}
+          <div className="ws-header-actions">
+            <Link className="official-link-btn" to="/forms">{t.myForms}</Link>
+            <button className="official-link-btn feedback-trigger-btn" onClick={() => setFeedbackOpen(true)}>
+              {t.feedbackBtn}
+            </button>
+          </div>
         </div>
-        <div className="official-stats-line">
-          <Link className="official-link-btn" to="/forms">{t.myForms}</Link>
-          <button className="official-link-btn feedback-trigger-btn" onClick={() => setFeedbackOpen(true)}>
-            {t.feedbackBtn}
-          </button>
-          <span>{t.totalRequests}: <b>{stats.total}</b></span>
-          <span>{t.newRequests}: <b>{stats.fresh}</b></span>
-          <span>{t.inProgressRequests}: <b>{stats.inProgress}</b></span>
-          <span>{t.doneRequests}: <b>{stats.done}</b></span>
+        <div className="ws-stats-row">
+          <div className="ws-stat">
+            <span>{t.totalRequests}</span>
+            <b>{stats.total}</b>
+          </div>
+          <div className="ws-stat">
+            <span>{t.analyticsToday}</span>
+            <b>{stats.today}</b>
+          </div>
+          <div className="ws-stat">
+            <span>{t.analyticsWeek}</span>
+            <b>{stats.week}</b>
+          </div>
+          <div className="ws-stat">
+            <span>{t.newRequests}</span>
+            <b>{stats.fresh}</b>
+          </div>
         </div>
       </div>
 
@@ -818,9 +862,6 @@ export function RequestsPage() {
           onSelected={handleScenarioSelected}
         />
       )}
-
-      {/* ── Analytics ── */}
-      <AnalyticsBlock items={items} t={t} />
 
       {/* ── Toolbar ── */}
       <div className="official-toolbar">
@@ -939,7 +980,6 @@ export function RequestsPage() {
                 <div><span>{t.email}</span><b>{selected.item.respondentEmail || "-"}</b></div>
               </div>
 
-              {/* Status change */}
               <div className="detail-status-row">
                 <select
                   className="official-status-select"
@@ -970,20 +1010,28 @@ export function RequestsPage() {
         </aside>
       </div>
 
-      {/* ── AI Chat ── */}
-      {formId && (
-        <AIChatBlock
-          formId={formId}
-          formTitle={displayTitle}
-          scenario={scenario}
-          scenarioMeta={scenarioMeta}
-          lang={lang}
-          t={t}
-        />
+      {/* ── Analytics (collapsible) ── */}
+      {items.length > 0 && (
+        <details className="ws-analytics-section">
+          <summary className="ws-analytics-summary">{t.analyticsStatusDist}</summary>
+          <AnalyticsBlock items={items} t={t} />
+        </details>
       )}
 
-      {/* ── Notification Settings ── */}
-      <NotificationSettingsBlock formId={formId} formTitle={displayTitle} t={t} />
+      {/* ── Bottom Row: AI + WhatsApp ── */}
+      <div className="ws-bottom-row">
+        {formId && (
+          <AIChatBlock
+            formId={formId}
+            formTitle={displayTitle}
+            scenario={scenario}
+            scenarioMeta={scenarioMeta}
+            lang={lang}
+            t={t}
+          />
+        )}
+        <NotificationSettingsBlock formId={formId} formTitle={displayTitle} t={t} />
+      </div>
 
       {/* ── Feedback Modal ── */}
       {feedbackOpen && (
