@@ -20,13 +20,15 @@ function deriveStatuses(integration) {
   const step1 = integration?.sheetId ? "found" : "missing";
   let step2 = "locked";
   if (step1 === "found") {
-    step2 = integration?.scriptProjectId ? "prepared" : "ready";
+    if (integration?.healthStatus === "connected" || integration?.status === "ready") {
+      step2 = "done";
+    } else if (integration?.scriptProjectId) {
+      step2 = "prepared";
+    } else {
+      step2 = "ready";
+    }
   }
-  let step3 = "locked";
-  if (step2 === "prepared") {
-    step3 = integration?.healthStatus === "connected" || integration?.status === "ready" ? "ok" : "ready";
-  }
-  return { step1, step2, step3 };
+  return { step1, step2 };
 }
 
 const SHEET_SETUP_SCREENSHOTS = [
@@ -71,7 +73,6 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
   const initial = deriveStatuses(initialIntegration);
   const [step1Status, setStep1Status] = useState(initial.step1);
   const [step2Status, setStep2Status] = useState(initial.step2);
-  const [step3Status, setStep3Status] = useState(initial.step3);
 
   const [accordion1Open, setAccordion1Open] = useState(false);
   const [accordion2Open, setAccordion2Open] = useState(false);
@@ -99,7 +100,6 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
       const derived = deriveStatuses(item);
       setStep1Status(derived.step1);
       setStep2Status(derived.step2);
-      setStep3Status(derived.step3);
       onRefresh?.();
     } catch (err) {
       setError(err.response?.data?.error || t.failedSetup);
@@ -118,8 +118,11 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
         setIntegration(found);
         const derived = deriveStatuses(found);
         setStep1Status(derived.step1);
-        if (derived.step2 !== "locked" && step2Status === "locked") setStep2Status(derived.step2);
-        if (derived.step3 !== "locked" && step3Status === "locked") setStep3Status(derived.step3);
+        if (derived.step2 === "done") {
+          setStep2Status("done");
+        } else if (derived.step2 !== "locked" && step2Status === "locked") {
+          setStep2Status(derived.step2);
+        }
         onRefresh?.();
       }
     } catch (err) {
@@ -138,7 +141,6 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
       setIntegration(data.item);
       if (data.scriptUrl) setScriptUrl(data.scriptUrl);
       setStep2Status("prepared");
-      setStep3Status("ready");
       onRefresh?.();
     } catch (err) {
       setError(err.response?.data?.error || t.failedSetup);
@@ -153,8 +155,6 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
     if (!base) return;
     const url = accountAwareUrl(base, googleEmail);
     window.open(url, "_blank", "noopener,noreferrer");
-    setStep2Status("opened");
-    setStep3Status("ready");
   }
 
   async function verifyConnection() {
@@ -166,14 +166,14 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
       setIntegration(data.item);
       setVerifyResult(data);
       if (!data.broken?.length) {
-        setStep3Status("ok");
+        setStep2Status("done");
       } else {
-        setStep3Status("failed");
+        setStep2Status("failed");
       }
       onRefresh?.();
     } catch (err) {
       setError(t.failedLoad);
-      setStep3Status("failed");
+      setStep2Status("failed");
     } finally {
       setVerifying(false);
     }
@@ -181,7 +181,7 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
 
   const step2Locked = step1Status !== "found";
   const hasScriptUrl = Boolean(scriptUrl || integration?.scriptProjectId);
-  const setupComplete = step3Status === "ok";
+  const setupComplete = step2Status === "done";
 
   function handleBackdropClick(e) {
     if (e.target === e.currentTarget) onClose();
@@ -408,7 +408,7 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
             </div>
           )}
 
-          {step3Status === "failed" && verifyResult?.broken?.length > 0 && (
+          {step2Status === "failed" && verifyResult?.broken?.length > 0 && (
             <div className="setup-reason-list">
               {verifyResult.broken.includes("sheet") && (
                 <p>{t.setupMissingSheetReason}</p>

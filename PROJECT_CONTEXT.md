@@ -381,9 +381,30 @@ Build: `npm run build` ✓
 No emoji found ✓
 Commit: bd77f23
 
+## Recently Completed
+
+### Polish guided setup to clean 2-step MVP (2026-05-31)
+
+Files changed:
+- `frontend/src/components/GuidedSetupModal.jsx` — removed step3 concept; verification folded into step2; opening Apps Script no longer marks step as done; step2 states: locked/ready/prepared/done/failed; `setupComplete = step2Status === "done"`
+- `frontend/src/shared/i18n.js` — setupIntro: "3" changed to "2" in kk/ru/en; setupAutoPrepared: changed from "ready/дайын/готов" to "prepared/дайындалды/подготовлен"
+
+Guided setup is now a 2-step UI:
+- Step 1: choose the prepared Sheet inside Google Forms
+- Step 2: run Apps Script installer (`installFormBridge`) and verify trigger
+- No copy-link button in the main setup flow
+- No test-event card in the main setup verification
+- Trigger readiness is confirmed via POST `/api/integrations/forms/:id/setup-confirm` callback from Apps Script
+- Step 2 is NOT done when Apps Script is opened; only done after trigger verify passes
+- Success celebration with checkmark pop + spark animation shown inside Step 2
+
+Checks:
+- `npm run build` frontend pass
+- `node --check` all backend JS pass
+- `rg` confirms zero matches for: step3, "3 steps", copy link, test event in active UI
+
 ## Next Planned Tasks
 
-- Add actual screenshots to GuidedSetupModal placeholders
 - Check production deploy with updated CSS
 - Consider PDF/Word export report
 - Consider adapting scenario card icon colors via CSS colorClass
