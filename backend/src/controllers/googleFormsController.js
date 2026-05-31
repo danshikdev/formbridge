@@ -26,6 +26,7 @@ async function dispatchWhatsappNotifications(formId, record) {
 
     for (const s of settings) {
       if (!s.phoneNumber) continue;
+      if (s.mode === "daily_summary") continue;
       const title = record.formTitle || formId;
       const email = record.respondentEmail ? `\nОт: ${record.respondentEmail}` : "";
       const text = [

@@ -465,7 +465,7 @@ function FeedbackModal({ formId, t, onClose }) {
 
 // ─── Notification Settings Block ──────────────────────────────────────────────
 
-const NOTIF_MODES = ["every_submission", "threshold"];
+const NOTIF_MODES = ["every_submission", "threshold", "daily_summary"];
 
 function normalizeWhatsAppPhoneInput(value) {
   const digits = String(value || "").replace(/\D/g, "");
@@ -484,6 +484,7 @@ function NotificationSettingsBlock({ formId, formTitle, t }) {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [mode, setMode] = useState("every_submission");
   const [thresholdCount, setThresholdCount] = useState(5);
+  const [dailyTime, setDailyTime] = useState("18:00");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -500,6 +501,7 @@ function NotificationSettingsBlock({ formId, formTitle, t }) {
         setPhoneNumber(data.phoneNumber || "");
         setMode(data.mode || "every_submission");
         setThresholdCount(data.thresholdCount ?? 5);
+        setDailyTime(data.dailyTime || "18:00");
       })
       .catch(() => setLoadError(t.notifFailedLoad))
       .finally(() => setLoading(false));
@@ -521,7 +523,8 @@ function NotificationSettingsBlock({ formId, formTitle, t }) {
         enabled,
         phoneNumber: normalizedPhone || "",
         mode,
-        thresholdCount: mode === "threshold" ? Number(thresholdCount) : null
+        thresholdCount: mode === "threshold" ? Number(thresholdCount) : null,
+        dailyTime: mode === "daily_summary" ? dailyTime : null
       });
       setPhoneNumber(data.phoneNumber || normalizedPhone || "");
       setSaved(true);
@@ -533,7 +536,8 @@ function NotificationSettingsBlock({ formId, formTitle, t }) {
     }
   }
 
-  const previewMsg = (t.notifPreviewMsg || "").replace("{form}", formTitle || formId || "...");
+  const previewTemplate = mode === "daily_summary" ? t.notifDailyPreviewMsg : t.notifPreviewMsg;
+  const previewMsg = (previewTemplate || "").replace("{form}", formTitle || formId || "...");
 
   if (!formId) return null;
 
@@ -623,6 +627,13 @@ function NotificationSettingsBlock({ formId, formTitle, t }) {
                   <label className="notif-field">
                     <span>{t.notifThreshold}</span>
                     <input type="number" min="1" value={thresholdCount} onChange={(e) => setThresholdCount(e.target.value)} />
+                  </label>
+                )}
+                {mode === "daily_summary" && (
+                  <label className="notif-field">
+                    <span>{t.notifDailyTime}</span>
+                    <input type="time" value={dailyTime} onChange={(e) => setDailyTime(e.target.value)} />
+                    <small className="notif-field-hint">{t.notifDailyHint}</small>
                   </label>
                 )}
                 <div className="notif-preview">

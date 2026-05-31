@@ -16,6 +16,7 @@ export async function getNotificationSettings(req, res) {
         phoneNumber: "",
         mode: "every_submission",
         thresholdCount: null,
+        dailyTime: "18:00",
         channel: "whatsapp"
       });
     }
@@ -26,6 +27,7 @@ export async function getNotificationSettings(req, res) {
       phoneNumber: settings.phoneNumber || "",
       mode: settings.mode,
       thresholdCount: settings.thresholdCount,
+      dailyTime: settings.dailyTime || "18:00",
       channel: settings.channel
     });
   } catch (err) {
@@ -38,13 +40,21 @@ export async function upsertNotificationSettings(req, res) {
   try {
     const { formId } = req.params;
     const userId = req.user.id;
-    const { enabled, phoneNumber, mode, thresholdCount } = req.body;
+    const { enabled, phoneNumber, mode, thresholdCount, dailyTime } = req.body;
     const nextEnabled = Boolean(enabled);
     const nextPhoneNumber = phoneNumber ? String(phoneNumber).trim() : "";
     const nextMode = ["every_submission", "threshold", "daily_summary"].includes(mode)
       ? mode
       : "every_submission";
     const nextThresholdCount = Number.parseInt(thresholdCount, 10);
+    const dailyTimeValue = String(dailyTime || "");
+    const [, dailyHour, dailyMinute] = dailyTimeValue.match(/^(\d{2}):(\d{2})$/) || [];
+    const nextDailyTime = Number(dailyHour) >= 0
+      && Number(dailyHour) <= 23
+      && Number(dailyMinute) >= 0
+      && Number(dailyMinute) <= 59
+      ? dailyTimeValue
+      : "18:00";
     let normalizedPhoneNumber = "";
 
     if (nextEnabled && !nextPhoneNumber) {
@@ -69,7 +79,8 @@ export async function upsertNotificationSettings(req, res) {
         enabled: false,
         phoneNumber: null,
         mode: "every_submission",
-        thresholdCount: null
+        thresholdCount: null,
+        dailyTime: "18:00"
       }
     });
 
@@ -77,7 +88,8 @@ export async function upsertNotificationSettings(req, res) {
       enabled: nextEnabled,
       phoneNumber: normalizedPhoneNumber || null,
       mode: nextMode,
-      thresholdCount: nextMode === "threshold" ? nextThresholdCount : null
+      thresholdCount: nextMode === "threshold" ? nextThresholdCount : null,
+      dailyTime: nextMode === "daily_summary" ? nextDailyTime : settings.dailyTime || "18:00"
     });
 
     res.json({
@@ -86,6 +98,7 @@ export async function upsertNotificationSettings(req, res) {
       phoneNumber: settings.phoneNumber || "",
       mode: settings.mode,
       thresholdCount: settings.thresholdCount,
+      dailyTime: settings.dailyTime || "18:00",
       channel: settings.channel
     });
   } catch (err) {

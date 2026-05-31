@@ -130,6 +130,8 @@ Recent commits:
 - Survey scenario still needs a more analytics-focused workspace.
 - HR/admissions scenarios need better quick actions later.
 - WhatsApp notifications exist as MVP but should later adapt to scenarios.
+- WhatsApp phone numbers are normalized to Kazakhstan format (`+7XXXXXXXXXX`) from common inputs such as `8...`, `77...`, or `+7...`.
+- WhatsApp daily summary mode is real MVP behavior: user chooses a send time, backend scheduler checks every minute in Asia/Almaty time, and sends today's form request counts once per day.
 - Export should later support PDF/Word/Excel reports.
 
 ## Recently Completed

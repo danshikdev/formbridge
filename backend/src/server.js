@@ -9,6 +9,7 @@ import "./models/integrationEvent.js";
 import "./models/notificationSettings.js";
 import "./models/formFeedback.js";
 import { initClient } from "./services/whatsappService.js";
+import { startNotificationScheduler } from "./services/notificationScheduler.js";
 
 async function boot() {
   try {
@@ -18,6 +19,7 @@ async function boot() {
     app.listen(env.port, () => {
       console.log(`Backend running on http://localhost:${env.port}`);
       initClient(); // запускает WhatsApp в фоне, QR появится в терминале
+      startNotificationScheduler();
     });
   } catch (error) {
     console.error("Boot failed:", error.message);
