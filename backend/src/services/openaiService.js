@@ -71,9 +71,17 @@ export async function formChat(formTitle, scenario, requests, message, lang) {
     const response = await client.responses.create({
       model,
       input: buildFormChatPrompt(formTitle, scenario, requests, message, lang),
-      max_output_tokens: 600
+      reasoning: { effort: "minimal" },
+      max_output_tokens: 1200
     });
     content = extractResponseText(response);
+    if (!content) {
+      console.error("[formChat] Empty OpenAI response:", {
+        status: response.status,
+        incompleteReason: response.incomplete_details?.reason || null,
+        outputTypes: (response.output || []).map((item) => item.type).join(",") || "none"
+      });
+    }
   } catch (err) {
     console.error("[formChat] OpenAI error:", err.message);
     const apiErr = new Error("OpenAI API error");
@@ -83,7 +91,6 @@ export async function formChat(formTitle, scenario, requests, message, lang) {
   }
 
   if (!content) {
-    console.error("[formChat] OpenAI returned an empty response");
     const emptyErr = new Error("OpenAI returned an empty response");
     emptyErr.statusCode = 502;
     throw emptyErr;
