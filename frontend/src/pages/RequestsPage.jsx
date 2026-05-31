@@ -529,49 +529,63 @@ function generateWordReport(formTitle, scenario, items, t, lang) {
       </xml>
       <![endif]-->
       <style>
+        @page Section1 {
+          size: 11in 8.5in;
+          margin: 0.5in;
+          mso-header-margin: 0.5in;
+          mso-footer-margin: 0.5in;
+          mso-paper-source: 0;
+        }
+        div.Section1 {
+          page: Section1;
+        }
         body {
           font-family: 'Arial', sans-serif;
           color: #1a2f26;
-          margin: 1in;
         }
         h1 {
           color: #123b2f;
-          font-size: 24pt;
+          font-size: 22pt;
           border-bottom: 2px solid #123b2f;
           padding-bottom: 6px;
           margin-bottom: 12pt;
         }
         h2 {
           color: #66746f;
-          font-size: 14pt;
+          font-size: 13pt;
           text-transform: uppercase;
           border-bottom: 1px solid #edf1ee;
           padding-bottom: 4px;
-          margin-top: 24pt;
+          margin-top: 20pt;
           margin-bottom: 8pt;
         }
         p {
-          font-size: 10.5pt;
-          line-height: 1.5;
-          margin-bottom: 8pt;
+          font-size: 10pt;
+          line-height: 1.4;
+          margin-bottom: 6pt;
         }
         ul {
           margin-top: 0;
           margin-bottom: 8pt;
           padding-left: 20pt;
+          font-size: 10pt;
         }
         table {
           width: 100%;
           border-collapse: collapse;
           margin-top: 12pt;
           margin-bottom: 12pt;
+          table-layout: auto;
         }
         th, td {
-          border: 1px solid #edf1ee;
-          padding: 8pt;
+          border: 1px solid #d9e2dc;
+          padding: 6pt 8pt;
           text-align: left;
-          font-size: 9.5pt;
+          font-size: 8.5pt;
           vertical-align: top;
+          word-wrap: break-word;
+          word-break: break-word;
+          overflow-wrap: break-word;
         }
         th {
           background-color: #f8faf8;
@@ -581,26 +595,28 @@ function generateWordReport(formTitle, scenario, items, t, lang) {
       </style>
     </head>
     <body>
-      <h1>${formTitle || "FormBridge Report"}</h1>
-      <p><b>${t.reportGeneratedAt}:</b> ${new Date().toLocaleString()}</p>
-      <p><b>${t.totalRequests}:</b> ${items.length} | <b>${t.analyticsToday}:</b> ${todayCount}</p>
-      
-      <h2>${t.analyticsStatusDist}</h2>
-      <ul>
-        ${statusListHtml || "<li>-</li>"}
-      </ul>
+      <div class="Section1">
+        <h1>${formTitle || "FormBridge Report"}</h1>
+        <p><b>${t.reportGeneratedAt}:</b> ${new Date().toLocaleString()}</p>
+        <p><b>${t.totalRequests}:</b> ${items.length} | <b>${t.analyticsToday}:</b> ${todayCount}</p>
+        
+        <h2>${t.analyticsStatusDist}</h2>
+        <ul>
+          ${statusListHtml || "<li>-</li>"}
+        </ul>
 
-      <h2>${scenario === "survey" ? t.surveyResponsesLabel : t.requestsTitle}</h2>
-      <table>
-        <thead>
-          <tr>
-            ${headersHtml}
-          </tr>
-        </thead>
-        <tbody>
-          ${rowsHtml}
-        </tbody>
-      </table>
+        <h2>${scenario === "survey" ? t.surveyResponsesLabel : t.requestsTitle}</h2>
+        <table>
+          <thead>
+            <tr>
+              ${headersHtml}
+            </tr>
+          </thead>
+          <tbody>
+            ${rowsHtml}
+          </tbody>
+        </table>
+      </div>
     </body>
     </html>
   `;
