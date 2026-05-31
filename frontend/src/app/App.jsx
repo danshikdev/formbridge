@@ -86,9 +86,13 @@ export function App() {
     const nextToast = sessionStorage.getItem("fb_toast");
     if (!nextToast) return;
 
-    setToast(nextToast);
     setToastClosing(false);
+    setToast(nextToast);
     sessionStorage.removeItem("fb_toast");
+  }, [location.key, location.pathname]);
+
+  useEffect(() => {
+    if (!toast) return undefined;
 
     const closeTimer = window.setTimeout(() => setToastClosing(true), 3000);
     const clearTimer = window.setTimeout(() => {
@@ -100,7 +104,7 @@ export function App() {
       window.clearTimeout(closeTimer);
       window.clearTimeout(clearTimer);
     };
-  }, [location.pathname]);
+  }, [toast]);
 
   return (
     <div className="app-shell">
