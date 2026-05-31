@@ -1,16 +1,39 @@
 @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 
+/* ── Design tokens ───────────────────────────────────────────────────────────
+   Brand: FormBridge — official, minimal, green-based.
+   All variables defined once here; brand-refresh block below overrides.
+─────────────────────────────────────────────────────────────────────────── */
 :root {
-  --bg: #f5f7fb;
-  --surface: #ffffff;
-  --surface-soft: #ffffff;
-  --text: #0f172a;
-  --muted: #64748b;
-  --accent: #2563eb;
-  --accent-hover: #1d4ed8;
-  --danger: #dc2626;
-  --border: #cbd5e1;
-  --ring: rgba(37, 99, 235, 0.2);
+  --brand:          #123b2f;
+  --brand-hover:    #0b2a21;
+  --brand-soft:     #dfeee5;
+
+  --bg:             #f0f4f0;
+  --surface:        #ffffff;
+  --surface-muted:  #f8faf8;
+  --surface-soft:   #f8fbf6;
+
+  --text:           #10231d;
+  --muted:          #62736c;
+  --border:         rgba(18, 59, 47, 0.16);
+  --ring:           rgba(18, 59, 47, 0.18);
+
+  --accent:         #123b2f;
+  --accent-hover:   #0b2a21;
+  --accent-soft:    #dfeee5;
+  --gold:           #d7b56d;
+
+  --danger:         #b42318;
+  --success:        #065f46;
+  --warning:        #8a5a00;
+
+  --shadow-card:    0 8px 22px rgba(18, 59, 47, 0.06);
+  --shadow-float:   0 18px 48px rgba(18, 59, 47, 0.12);
+  --shadow:         0 24px 70px rgba(18, 59, 47, 0.16);
+
+  --radius-card:    16px;
+  --radius-control: 8px;
 }
 
 * {
@@ -21,10 +44,7 @@ body {
   margin: 0;
   font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   color: var(--text);
-  background:
-    radial-gradient(1200px 700px at 0% -20%, rgba(37, 99, 235, 0.06), transparent),
-    radial-gradient(800px 480px at 100% -10%, rgba(14, 165, 233, 0.05), transparent),
-    var(--bg);
+  background: var(--bg);
   min-height: 100vh;
 }
 
@@ -654,21 +674,9 @@ summary {
   background: var(--border);
 }
 
-/* Brand refresh: FormBridge green system */
+/* Brand override — ensures correct tokens everywhere */
 :root {
-  --bg: #eef3ee;
   --surface: rgba(255, 255, 250, 0.94);
-  --surface-soft: #f8fbf6;
-  --text: #10231d;
-  --muted: #62736c;
-  --accent: #123b2f;
-  --accent-hover: #0b2a21;
-  --accent-soft: #dfeee5;
-  --gold: #d7b56d;
-  --danger: #b42318;
-  --border: rgba(18, 59, 47, 0.16);
-  --ring: rgba(18, 59, 47, 0.18);
-  --shadow: 0 24px 70px rgba(18, 59, 47, 0.16);
 }
 
 body {
@@ -3266,7 +3274,7 @@ body {
 
 .admin-table td {
   padding: 10px 14px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid #edf1ee;
   vertical-align: top;
   color: var(--text);
 }
@@ -3316,9 +3324,10 @@ body {
 .admin-badge {
   display: inline-block;
   padding: 3px 9px;
-  border-radius: 8px;
+  border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .admin-badge-new { background: #fef3c7; color: #92400e; }
@@ -3538,3 +3547,310 @@ body {
     width: 100%;
   }
 }
+
+/* ─── Scenario-specific status badge colors ─────────────────────────────────
+   Covers all scenario status values from formScenarios.js statusFlow arrays.
+─────────────────────────────────────────────────────────────────────────── */
+
+/* HR / Admissions */
+.status-hired {
+  background: #d1fae5;
+  color: #065f46;
+}
+.status-rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+.status-shortlisted {
+  background: #dbeafe;
+  color: #1e40af;
+}
+.status-interview {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+.status-documents_needed {
+  background: #fef3c7;
+  color: #8a5a00;
+}
+.status-accepted {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+/* Client requests */
+.status-contacted {
+  background: #dbeafe;
+  color: #1e40af;
+}
+.status-urgent {
+  background: #fee2e2;
+  color: #991b1b;
+}
+.status-waiting_client {
+  background: #fef3c7;
+  color: #8a5a00;
+}
+.status-closed {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* Event / Survey */
+.status-confirmed {
+  background: #d1fae5;
+  color: #065f46;
+}
+.status-waiting_payment {
+  background: #fef3c7;
+  color: #8a5a00;
+}
+.status-cancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+.status-attended {
+  background: #dcfce7;
+  color: #166534;
+}
+.status-registered {
+  background: #dbeafe;
+  color: #1e40af;
+}
+.status-no_show {
+  background: #f1f5f9;
+  color: #475569;
+}
+.status-completed {
+  background: #d1fae5;
+  color: #065f46;
+}
+.status-archived {
+  background: #f1f5f9;
+  color: #475569;
+}
+.status-in_review {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+/* ─── Focus-visible: global keyboard navigation polish ───────────────────────
+   All interactive elements get a consistent green ring on keyboard focus.
+─────────────────────────────────────────────────────────────────────────── */
+
+.primary-btn:focus-visible,
+.ghost-btn:focus-visible,
+.official-link-btn:focus-visible,
+.export-btn:focus-visible,
+.wa-disconnect-btn:focus-visible,
+.admin-action-btn:focus-visible,
+.scenario-card:focus-visible,
+.ai-chat-quick-btn:focus-visible,
+.ai-chat-send-btn:focus-visible,
+.feedback-trigger-btn:focus-visible,
+.account-icon-btn:focus-visible,
+.account-dropdown a:focus-visible,
+.account-dropdown button:focus-visible,
+.forms-toolbar input:focus,
+.forms-toolbar select:focus,
+.official-toolbar input:focus,
+.official-toolbar select:focus,
+.official-status-select:focus {
+  outline: 2px solid #123b2f;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(18, 59, 47, 0.14);
+}
+
+/* Remove outline for mouse users only (already have hover states) */
+.primary-btn:focus:not(:focus-visible),
+.ghost-btn:focus:not(:focus-visible),
+.official-link-btn:focus:not(:focus-visible),
+.export-btn:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+
+/* ─── Button cursor:pointer consistency ──────────────────────────────────────*/
+
+button,
+.official-link-btn,
+.account-icon-btn,
+.export-btn,
+.scenario-card,
+.ai-chat-quick-btn,
+.wa-disconnect-btn,
+.admin-action-btn,
+.google-auth-btn {
+  cursor: pointer;
+}
+
+button:disabled,
+.primary-btn:disabled,
+.ghost-btn:disabled,
+.official-link-btn:disabled,
+.export-btn:disabled,
+.ai-chat-quick-btn:disabled,
+.ai-chat-send-btn:disabled {
+  cursor: not-allowed;
+}
+
+/* ─── Topbar mobile polish ───────────────────────────────────────────────────*/
+
+@media (max-width: 600px) {
+  .topbar {
+    margin: 8px auto 0;
+    width: calc(100% - 20px);
+    border-radius: 14px;
+    padding: 11px 14px;
+  }
+
+  .brand {
+    font-size: 0.96rem;
+  }
+
+  .lang-control {
+    padding: 6px 8px;
+  }
+
+  .account-icon-btn {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* ─── Forms toolbar: consistent focus ring on select ─────────────────────────*/
+
+.forms-toolbar select:focus {
+  outline: none;
+  border-color: #123b2f;
+  box-shadow: 0 0 0 3px rgba(18, 59, 47, 0.12);
+}
+
+/* ─── Official toolbar: focus ring on select ──────────────────────────────────*/
+
+.official-toolbar select:focus,
+.official-status-select:focus {
+  outline: none;
+  border-color: #123b2f;
+  box-shadow: 0 0 0 3px rgba(18, 59, 47, 0.12);
+}
+
+/* ─── Admin table hover rows ─────────────────────────────────────────────────*/
+
+.admin-table tbody tr:hover td {
+  background: #f3f7f4;
+}
+
+/* ─── Admin section: collapse gap at top ─────────────────────────────────────*/
+
+.admin-page .admin-section-title:first-of-type {
+  margin-top: 0;
+}
+
+/* ─── My Forms page header — card-like ───────────────────────────────────────*/
+
+.official-page-title h1 {
+  letter-spacing: -0.04em;
+}
+
+/* ─── Form-row: long names don't overflow ────────────────────────────────────*/
+
+.form-management-row h3 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 580px;
+}
+
+/* ─── Preview cell: no horizontal scroll leak ────────────────────────────────*/
+
+.preview-cell {
+  max-width: min(210px, 28vw);
+}
+
+/* ─── Detail answer long-text wrapping ───────────────────────────────────────*/
+
+.official-answer-row b {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* ─── Topbar: extra-small screen no nav overflow ─────────────────────────────*/
+
+@media (max-width: 420px) {
+  .topbar-actions {
+    gap: 6px;
+  }
+
+  .brand span:last-child {
+    font-size: 0.9rem;
+  }
+
+  .lang-control {
+    display: none;
+  }
+}
+
+/* ─── admin-page: mobile padding ─────────────────────────────────────────────*/
+
+@media (max-width: 720px) {
+  .admin-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-table-wrap {
+    font-size: 0.8rem;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    padding: 8px 10px;
+  }
+
+  .admin-cell-message {
+    max-width: 180px;
+  }
+}
+
+/* ─── Profile page: primary-btn as link ──────────────────────────────────────*/
+
+a.primary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+/* ─── Requests page: ws-header card mobile ───────────────────────────────────*/
+
+@media (max-width: 480px) {
+  .ws-stats-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ws-header-actions {
+    flex-wrap: wrap;
+  }
+}
+
+/* ─── Scenario banner: mobile single column ──────────────────────────────────*/
+
+@media (max-width: 480px) {
+  .scenario-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Empty states: consistent centering ────────────────────────────────────*/
+
+.table-empty-cell {
+  padding: 40px 16px;
+}
+
+/* ─── Select elements: native appearance normalized ──────────────────────────*/
+
+select {
+  -webkit-appearance: auto;
+  appearance: auto;
+}
+
