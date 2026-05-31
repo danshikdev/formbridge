@@ -54,7 +54,6 @@ export async function formChat(formTitle, scenario, requests, message, lang) {
     const completion = await client.chat.completions.create({
       model,
       messages: [{ role: "user", content: buildFormChatPrompt(formTitle, scenario, requests, message, lang) }],
-      temperature: 0.4,
       max_completion_tokens: 600
     });
     content = completion.choices[0]?.message?.content || "";
