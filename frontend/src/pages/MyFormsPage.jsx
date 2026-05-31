@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import { useLocale } from "../shared/useLocale";
+import { GuidedSetupModal } from "../components/GuidedSetupModal";
 
 function formatShortDate(value) {
   if (!value) return null;
@@ -41,6 +42,7 @@ export function MyFormsPage() {
   const [message, setMessage] = useState("");
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("all");
+  const [setupModal, setSetupModal] = useState(null); // { formId, formTitle, integration, googleEmail }
 
   async function loadIntegrations() {
     const { data } = await api.get("/api/integrations/forms");
@@ -203,10 +205,10 @@ export function MyFormsPage() {
                     {integration ? (
                       <>
                         <Link
-                          className="official-link-btn"
+                          className="primary-btn compact-action-btn"
                           to={`/forms/${encodeURIComponent(form.id)}/requests?formTitle=${encodeURIComponent(form.name)}`}
                         >
-                          {t.viewRequests}
+                          {t.openWorkspace}
                         </Link>
                         <button
                           className="official-link-btn danger-btn"
@@ -221,10 +223,14 @@ export function MyFormsPage() {
                       <button
                         className="primary-btn compact-action-btn"
                         type="button"
-                        onClick={() => addForm(form)}
-                        disabled={actionId === form.id}
+                        onClick={() => setSetupModal({
+                          formId: form.id,
+                          formTitle: form.name,
+                          integration: null,
+                          googleEmail: googleStatus?.account?.email || null
+                        })}
                       >
-                        {actionId === form.id ? t.preparing : t.addToFormBridge}
+                        {t.connectForm}
                       </button>
                     )}
                   </div>
@@ -233,6 +239,17 @@ export function MyFormsPage() {
             })}
           </div>
         </div>
+      )}
+
+      {setupModal && (
+        <GuidedSetupModal
+          formId={setupModal.formId}
+          formTitle={setupModal.formTitle}
+          integration={setupModal.integration}
+          googleEmail={setupModal.googleEmail}
+          onClose={() => setSetupModal(null)}
+          onRefresh={loadIntegrations}
+        />
       )}
     </section>
   );
