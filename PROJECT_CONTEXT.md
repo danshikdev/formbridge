@@ -40,6 +40,9 @@ Supported scenarios:
   - account menu
 - Main navigation should be through /forms.
 - One form workspace should show only requests/responses for that form.
+- A form is "ready/connected" only when delivery is actually ready.
+- A created integration record with missing trigger/webhook test is only "setup in progress".
+- Setup-in-progress forms must show "continue setup", not "open workspace".
 
 ## AI Direction
 

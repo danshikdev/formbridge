@@ -13,8 +13,22 @@ function formatShortDate(value) {
 
 function integrationState(item, t) {
   if (!item) return t.notAdded;
-  if (item.status === "ready" || item.healthStatus === "connected") return t.formReady;
+  if (isIntegrationReady(item)) return t.formReady;
   return t.formPreparing;
+}
+
+function isIntegrationReady(item) {
+  return item?.status === "ready" || item?.healthStatus === "connected";
+}
+
+function integrationBadgeClass(item) {
+  if (!item) return "status-new";
+  return isIntegrationReady(item) ? "status-done" : "status-in_progress";
+}
+
+function integrationConnectionLabel(item, t) {
+  if (!item) return t.notAdded;
+  return isIntegrationReady(item) ? t.added : t.formPreparing;
 }
 
 const SCENARIO_LABELS = {
@@ -131,7 +145,7 @@ export function MyFormsPage() {
       const needle = search.trim().toLowerCase();
       result = result.filter((f) => f.name.toLowerCase().includes(needle));
     }
-    if (filterType === "connected") result = result.filter((f) => integrationByFormId.has(f.id));
+    if (filterType === "connected") result = result.filter((f) => isIntegrationReady(integrationByFormId.get(f.id)));
     if (filterType === "not_connected") result = result.filter((f) => !integrationByFormId.has(f.id));
     return result;
   }, [forms, search, filterType, integrationByFormId]);
@@ -181,20 +195,21 @@ export function MyFormsPage() {
               </p>
             ) : filteredForms.map((form) => {
               const integration = integrationByFormId.get(form.id);
+              const ready = isIntegrationReady(integration);
               const dateStr = formatShortDate(form.modifiedTime);
               return (
                 <article key={form.id} className="form-management-row">
                   <div className="form-row-info">
                     <h3>{form.name}</h3>
                     <p>
-                      <span className={integration ? "form-status-connected" : "form-status-disconnected"}>
-                        {integration ? t.added : t.notAdded}
+                      <span className={ready ? "form-status-connected" : "form-status-disconnected"}>
+                        {integrationConnectionLabel(integration, t)}
                       </span>
                       {dateStr ? <span className="form-modified-date">{t.modifiedAt}: {dateStr}</span> : null}
                     </p>
                   </div>
                   <div className="form-row-actions">
-                    <span className={`official-badge ${integration ? "status-done" : "status-new"}`}>
+                    <span className={`official-badge ${integrationBadgeClass(integration)}`}>
                       {integrationState(integration, t)}
                     </span>
                     {integration?.scenarioConfiguredAt && (
@@ -202,7 +217,7 @@ export function MyFormsPage() {
                         {scenarioLabel(integration.scenario, lang)}
                       </span>
                     )}
-                    {integration ? (
+                    {ready ? (
                       <>
                         <Link
                           className="primary-btn compact-action-btn"
@@ -210,6 +225,29 @@ export function MyFormsPage() {
                         >
                           {t.openWorkspace}
                         </Link>
+                        <button
+                          className="official-link-btn danger-btn"
+                          type="button"
+                          onClick={() => removeIntegration(integration.id)}
+                          disabled={actionId === integration.id}
+                        >
+                          {t.remove}
+                        </button>
+                      </>
+                    ) : integration ? (
+                      <>
+                        <button
+                          className="primary-btn compact-action-btn"
+                          type="button"
+                          onClick={() => setSetupModal({
+                            formId: form.id,
+                            formTitle: form.name,
+                            integration,
+                            googleEmail: googleStatus?.account?.email || null
+                          })}
+                        >
+                          {t.continueSetup}
+                        </button>
                         <button
                           className="official-link-btn danger-btn"
                           type="button"
