@@ -35,6 +35,24 @@ const SCENARIO_DESC_STATIC = {
   event:           { kk: "Іс-шараға қатысушыларды тіркеу", ru: "Управление регистрациями участников", en: "Manage event participant registrations" }
 };
 
+const SCENARIO_QUICK_ACTIONS = {
+  admissions:      ["contacted", "documents_needed", "accepted", "rejected"],
+  hr:              ["shortlisted", "interview", "hired", "rejected"],
+  client_requests: ["urgent", "in_progress", "waiting_client", "done"],
+  event:           ["confirmed", "waiting_payment", "attended", "cancelled"],
+  universal:       ["in_progress", "done"],
+  survey:          []
+};
+
+const ATTENTION_STATUSES = {
+  admissions:      ["new", "documents_needed"],
+  hr:              ["new", "interview"],
+  client_requests: ["new", "urgent", "waiting_client"],
+  event:           ["new", "waiting_payment"],
+  universal:       ["new"],
+  survey:          []
+};
+
 const DATE_FILTERS = ["all", "today", "yesterday", "last7", "last30", "custom"];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -110,6 +128,28 @@ function cleanQuestionLabel(value, index, t) {
     .replace(/\s*\[(Вопрос|Question)\s*\d+\]\s*$/i, "")
     .replace(/\s+/g, " ")
     .trim() || `${t.question} ${index + 1}`;
+}
+
+function actionLabel(action, t) {
+  const map = {
+    contacted:        t.actionContacted,
+    documents_needed: t.actionDocumentsNeeded,
+    accepted:         t.actionAccepted,
+    rejected:         t.actionRejected,
+    shortlisted:      t.actionShortlisted,
+    interview:        t.actionInterview,
+    hired:            t.actionHired,
+    urgent:           t.actionUrgent,
+    in_progress:      t.actionInProgress,
+    waiting_client:   t.actionWaitingClient,
+    done:             t.actionDone,
+    confirmed:        t.actionConfirmed,
+    waiting_payment:  t.actionWaitingPayment,
+    attended:         t.actionAttended,
+    cancelled:        t.actionCancelled,
+    new:              t.new
+  };
+  return map[action] || action;
 }
 
 function answerValue(value) {
@@ -496,7 +536,18 @@ function NotificationSettingsBlock({ formId, formTitle, t }) {
         <div className="notif-header-text">
           <div className="notif-title">{t.notifTitle}</div>
           <div className="notif-subtitle">
-            {!loading && !loadError && enabled ? t.notifEnabled : t.notifSubtitle}
+            {!loading && !loadError ? (
+              <>
+                <span className={`whatsapp-status-pill whatsapp-status-pill--${enabled ? "on" : "off"}`}>
+                  {enabled ? t.whatsappStatusOn : t.whatsappStatusOff}
+                </span>
+                {enabled && !isOpen && phoneNumber && (
+                  <span className="notif-phone-masked">
+                    {phoneNumber.slice(0, 4)}{"•".repeat(Math.max(0, phoneNumber.length - 7))}{phoneNumber.slice(-3)}
+                  </span>
+                )}
+              </>
+            ) : t.notifSubtitle}
           </div>
         </div>
         <span className="notif-mock-badge">WhatsApp</span>
@@ -556,6 +607,7 @@ function NotificationSettingsBlock({ formId, formTitle, t }) {
               {saved && <span className="notif-saved-msg">{t.notifSaved}</span>}
               {saveError && <span className="error">{saveError}</span>}
             </div>
+            <p className="whatsapp-demo-helper">{t.whatsappDemoHelper}</p>
           </div>
         )
       )}
@@ -670,6 +722,91 @@ function AnalyticsBlock({ items, t }) {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// ─── Quick Actions Block ──────────────────────────────────────────────────────
+
+function QuickActionsBlock({ scenario, currentStatus, onAction, t }) {
+  const actions = SCENARIO_QUICK_ACTIONS[scenario] || SCENARIO_QUICK_ACTIONS.universal;
+  if (!actions.length) return null;
+  return (
+    <div className="quick-action-section">
+      <div className="quick-action-label">{t.quickActions}</div>
+      <div className="quick-action-row">
+        {actions.map((action) => (
+          <button
+            key={action}
+            className={`quick-action-btn${currentStatus === action ? " quick-action-btn--active" : ""}`}
+            onClick={() => onAction(action)}
+            disabled={currentStatus === action}
+          >
+            {actionLabel(action, t)}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Survey Insights Panel ────────────────────────────────────────────────────
+
+function SurveyInsightsPanel({ items, t }) {
+  const insights = useMemo(() => {
+    const now = new Date();
+    const today = items.filter((item) => {
+      const d = new Date(item.submittedAt || item.createdAt);
+      return !Number.isNaN(d.getTime()) && d.toDateString() === now.toDateString();
+    }).length;
+    const last7 = items.filter((item) => {
+      const d = new Date(item.submittedAt || item.createdAt);
+      return !Number.isNaN(d.getTime()) && d >= new Date(now.getTime() - 7 * 86400000);
+    }).length;
+    const answerMap = {};
+    for (const item of items) {
+      for (const ans of (item.answers || [])) {
+        const q = String(ans.question || "").trim();
+        const a = String(ans.answer || "").trim();
+        if (!q || !a) continue;
+        if (!answerMap[q]) answerMap[q] = {};
+        answerMap[q][a] = (answerMap[q][a] || 0) + 1;
+      }
+    }
+    const popularQuestions = Object.entries(answerMap)
+      .map(([q, answers]) => {
+        const top3 = Object.entries(answers).sort((a, b) => b[1] - a[1]).slice(0, 3);
+        return { question: q, top3 };
+      })
+      .filter((q) => q.top3.length >= 2 && q.top3[0][1] > 1)
+      .slice(0, 4);
+    return { today, last7, popularQuestions };
+  }, [items]);
+
+  return (
+    <div className="survey-insights-card">
+      <div className="survey-insights-header">{t.surveyInsights}</div>
+      <div className="survey-insights-stats">
+        <div className="survey-insight-stat"><span>{t.totalRequests}</span><b>{items.length}</b></div>
+        <div className="survey-insight-stat"><span>{t.analyticsToday}</span><b>{insights.today}</b></div>
+        <div className="survey-insight-stat"><span>{t.analyticsWeek}</span><b>{insights.last7}</b></div>
+      </div>
+      {insights.popularQuestions.length > 0 && (
+        <div className="survey-insights-popular">
+          <div className="survey-insights-popular-title">{t.analyticsPopularAnswers}</div>
+          {insights.popularQuestions.map((q, qi) => (
+            <div key={qi} className="survey-insights-q">
+              <div className="survey-insights-q-label">{q.question}</div>
+              {q.top3.map(([answer, count], ai) => (
+                <div key={ai} className="survey-insights-q-row">
+                  <span className="survey-insights-q-answer">{answer}</span>
+                  <span className="survey-insights-q-count">{count}</span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -792,6 +929,7 @@ export function RequestsPage() {
 
   const stats = useMemo(() => {
     const now = new Date();
+    const attentionSet = new Set(ATTENTION_STATUSES[scenario] || ["new"]);
     return {
       total: items.length,
       fresh: items.filter((item) => item.status === "new").length,
@@ -804,9 +942,10 @@ export function RequestsPage() {
       week: items.filter((item) => {
         const d = new Date(item.submittedAt || item.createdAt);
         return !Number.isNaN(d.getTime()) && d >= new Date(now - 7 * 86400000);
-      }).length
+      }).length,
+      attention: items.filter((item) => attentionSet.size > 0 && attentionSet.has(item.status)).length
     };
-  }, [items]);
+  }, [items, scenario]);
 
   // Determine statuses to show in filter dropdown
   const scenarioStatuses = useMemo(() => {
@@ -857,7 +996,7 @@ export function RequestsPage() {
         </div>
         <div className="ws-stats-row">
           <div className="ws-stat">
-            <span>{t.totalRequests}</span>
+            <span>{scenario === "survey" ? t.surveyResponsesLabel : t.totalRequests}</span>
             <b>{stats.total}</b>
           </div>
           <div className="ws-stat">
@@ -868,10 +1007,17 @@ export function RequestsPage() {
             <span>{t.analyticsWeek}</span>
             <b>{stats.week}</b>
           </div>
-          <div className="ws-stat">
-            <span>{t.newRequests}</span>
-            <b>{stats.fresh}</b>
-          </div>
+          {scenario === "survey" ? (
+            <div className="ws-stat">
+              <span>{t.newRequests}</span>
+              <b>{stats.fresh}</b>
+            </div>
+          ) : (
+            <div className={`ws-stat${stats.attention > 0 ? " ws-stat--attention" : ""}`}>
+              <span>{t.needsAttention}</span>
+              <b>{stats.attention}</b>
+            </div>
+          )}
         </div>
       </div>
 
@@ -883,6 +1029,11 @@ export function RequestsPage() {
           t={t}
           onSelected={handleScenarioSelected}
         />
+      )}
+
+      {/* ── Survey Insights ── */}
+      {scenario === "survey" && items.length > 0 && (
+        <SurveyInsightsPanel items={items} t={t} />
       )}
 
       {/* ── Toolbar ── */}
@@ -937,7 +1088,7 @@ export function RequestsPage() {
           <div className="official-card-title">
             <h2>{workspaceLabel}</h2>
             <div className="export-area">
-              <span>{filteredItems.length} {t.requestsCount}</span>
+              <span>{filteredItems.length} {scenario === "survey" ? t.surveyResponsesLabel : t.requestsCount}</span>
               <div className="export-menu-wrap" ref={exportRef}>
                 <button
                   className="export-btn"
@@ -1034,6 +1185,15 @@ export function RequestsPage() {
                 </select>
               </div>
 
+              {scenario !== "survey" && (
+                <QuickActionsBlock
+                  scenario={scenario || "universal"}
+                  currentStatus={selected.item.status}
+                  onAction={(newStatus) => changeStatus(selected.item.id, newStatus)}
+                  t={t}
+                />
+              )}
+
               <div className="official-answers">
                 {selectedAnswers.map((answer, index) => (
                   <div key={`${answer.label}-${index}`} className="official-answer-row">
@@ -1042,6 +1202,10 @@ export function RequestsPage() {
                   </div>
                 ))}
               </div>
+
+              {scenario === "admissions" && (
+                <div className="admissions-ai-hint">{t.admissionsAiHint}</div>
+              )}
 
               <details className="detail-tech-info">
                 <summary>{t.technicalInfo}</summary>

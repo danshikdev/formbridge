@@ -3904,3 +3904,213 @@ select {
   appearance: auto;
 }
 
+/* ─── Quick Actions ──────────────────────────────────────────────────────────*/
+
+.quick-action-section {
+  margin: 14px 0 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.quick-action-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.quick-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.quick-action-btn {
+  padding: 5px 11px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.14s, border-color 0.14s, color 0.14s;
+  font-family: inherit;
+  line-height: 1.4;
+}
+
+.quick-action-btn:hover:not(:disabled) {
+  background: var(--brand-soft);
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.quick-action-btn--active,
+.quick-action-btn:disabled {
+  background: var(--brand);
+  color: #fff;
+  border-color: var(--brand);
+  cursor: default;
+}
+
+.quick-action-btn--active {
+  opacity: 1;
+}
+
+.quick-action-btn:disabled:not(.quick-action-btn--active) {
+  opacity: 0.5;
+}
+
+/* ─── Survey Insights Card ───────────────────────────────────────────────────*/
+
+.survey-insights-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 18px 22px;
+  box-shadow: var(--shadow-card);
+}
+
+.survey-insights-header {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--brand);
+  margin-bottom: 12px;
+}
+
+.survey-insights-stats {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.survey-insight-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.survey-insight-stat span {
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.survey-insight-stat b {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.survey-insights-popular {
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.survey-insights-popular-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.survey-insights-q {
+  margin-bottom: 12px;
+}
+
+.survey-insights-q:last-child {
+  margin-bottom: 0;
+}
+
+.survey-insights-q-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.survey-insights-q-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 0;
+  font-size: 0.8rem;
+}
+
+.survey-insights-q-answer {
+  color: var(--muted);
+}
+
+.survey-insights-q-count {
+  font-weight: 700;
+  color: var(--brand);
+  min-width: 28px;
+  text-align: right;
+}
+
+/* ─── WhatsApp Status Pill ───────────────────────────────────────────────────*/
+
+.whatsapp-status-pill {
+  display: inline-block;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+
+.whatsapp-status-pill--on {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.whatsapp-status-pill--off {
+  background: var(--surface-muted);
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.notif-phone-masked {
+  font-size: 0.74rem;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+}
+
+.whatsapp-demo-helper {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin: 12px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  line-height: 1.45;
+}
+
+/* ─── Admissions AI Hint ─────────────────────────────────────────────────────*/
+
+.admissions-ai-hint {
+  margin: 10px 0 2px;
+  padding: 9px 13px;
+  background: var(--surface-muted);
+  border-left: 3px solid var(--brand);
+  border-radius: 0 6px 6px 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+/* ─── Attention stat highlight ───────────────────────────────────────────────*/
+
+.ws-stat--attention b {
+  color: var(--warning);
+}
+

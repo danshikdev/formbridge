@@ -271,8 +271,66 @@ How to test:
 Build: `npm run build` ✓
 Commit: f41c9c4
 
+## Recently Completed
+
+### Enhance scenario workspace UX (2026-05-31)
+
+Files changed:
+- `frontend/src/pages/RequestsPage.jsx` — +182 lines
+- `frontend/src/shared/i18n.js` — +75 keys (kk/ru/en)
+- `frontend/src/shared/styles/global.css` — +210 lines
+
+#### Part 1 — Scenario-aware quick actions
+- Added `SCENARIO_QUICK_ACTIONS` map (per scenario: admissions/hr/client_requests/event/universal; survey = empty)
+- Added `QuickActionsBlock` component: compact buttons under detail-status-row; active status highlighted/disabled; hidden for survey
+- Added `actionLabel` helper
+
+#### Part 2 — Needs attention stat
+- Added `ATTENTION_STATUSES` map per scenario
+- `stats.attention` computed in useMemo
+- 4th ws-stat shows "Needs attention / Требуют внимания / Назар қажет" (for non-survey)
+- Highlighted in amber (`ws-stat--attention`) when count > 0
+- For survey: 4th stat stays as "Новые"
+
+#### Part 3 — Survey insights panel
+- Added `SurveyInsightsPanel` component: total/today/last7 stats + popular answers (from loaded items)
+- Shown above toolbar when `scenario === "survey"` and items.length > 0
+- Table count label: "Ответы/Responses" for survey
+
+#### Part 4 — Admissions polish
+- Added `admissionsAiHint` box inside details panel (left-border card style)
+- Shown only when `scenario === "admissions"`
+- QuickActionsBlock visible and prominent for admissions
+
+#### Part 5 — WhatsApp block clarity
+- Collapsed state now shows: On/Off status pill + masked phone (if enabled)
+- Added `whatsapp-demo-helper` text at bottom of expanded body
+- Translated in all 3 languages
+
+#### CSS added
+- `.quick-action-row`, `.quick-action-btn`, `.quick-action-btn--active`
+- `.survey-insights-card`, `.survey-insight-stat`, `.survey-insights-q`
+- `.whatsapp-status-pill--on/off`, `.notif-phone-masked`, `.whatsapp-demo-helper`
+- `.admissions-ai-hint`
+- `.ws-stat--attention`
+
+#### Checks
+- `npm run build` frontend ✓
+- No emoji found in JSX/CSS ✓
+- `git diff --stat`: 3 files, +455 lines ✓
+
+#### How to test manually
+1. Open a form workspace with **admissions** scenario
+2. Click any submission row → details panel opens
+3. See quick action buttons (Contacted / Documents needed / Accept / Reject)
+4. Click a button → status updates, button becomes active/disabled
+5. Switch to **survey** scenario → survey insights panel appears above table; quick actions hidden
+6. Check **WhatsApp** block collapsed → shows "On" / "Off" pill
+7. Expand WhatsApp block → demo helper text appears at bottom
+8. Check 4th stat: shows "Needs attention" for CRM scenarios, "New" for survey
+
 ## Next Planned Tasks
 
-- Survey scenario analytics workspace improvements
-- Consider adapting scenario card icon colors via CSS colorClass
 - Check production deploy with updated CSS
+- Consider PDF/Word export report
+- Consider adapting scenario card icon colors via CSS colorClass
