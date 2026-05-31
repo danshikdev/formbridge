@@ -215,7 +215,44 @@ Build: `npm run build` ✓
 
 Commit: daebbbc
 
-## Next Planned Task
+## Recently Completed
+
+### Polish official frontend UI (2026-05-31)
+
+Files changed:
+- `frontend/src/shared/styles/global.css` — 345 additions, 29 deletions
+
+Changes:
+- Consolidated two duplicate `:root` blocks into one clean design token
+  system with `--brand`, `--surface-muted`, `--shadow-card`, `--radius-card`,
+  `--radius-control`, `--success`, `--warning`
+- Removed blue radial gradient from `body` background (was leftover from
+  old blue accent theme)
+- Added CSS badge classes for all scenario-specific statuses: hired, rejected,
+  shortlisted, interview, documents_needed, accepted, contacted, urgent,
+  waiting_client, closed, confirmed, waiting_payment, cancelled, attended,
+  registered, no_show, completed, archived, in_review
+- Added `:focus-visible` ring (green, `rgba(18,59,47,0.14)`) for all
+  interactive elements — buttons, dropdowns, selects, scenario cards
+- Added `cursor:pointer` / `cursor:not-allowed` consistency rules
+- Fixed admin table row border color from bluish `#f1f5f9` → brand `#edf1ee`
+- Fixed admin badge `border-radius` to `999px` pill for consistency
+- Added admin table row hover highlight
+- Mobile: topbar gets smaller border-radius + tighter padding at ≤600px
+- Mobile: lang switcher hidden at ≤420px to prevent overflow
+- Mobile: admin stat-grid 2-col, ws-stats-row 2-col, scenario-cards 1-col
+- `a.primary-btn` declared as `inline-flex` for `<Link>` compatibility
+- Normalized `select` appearance across browsers
+
+Checks:
+- `npm run build` ✓
+- `rg` — no emoji in JSX/CSS, only KK/RU translations and comment decorators ✓
+- `git diff --stat` — only `global.css` changed ✓
+
+Commit: 69d8bfa
+
+## Next Planned Tasks
 
 - Survey scenario analytics workspace improvements
 - Consider adapting scenario card icon colors via CSS colorClass
+- Check production deploy with updated CSS
