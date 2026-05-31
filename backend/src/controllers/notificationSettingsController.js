@@ -84,12 +84,17 @@ export async function upsertNotificationSettings(req, res) {
       }
     });
 
+    const isDailyTimeChanged = settings.dailyTime !== nextDailyTime;
+    const isModeChanged = settings.mode !== nextMode;
+    const shouldResetSummaryDate = isDailyTimeChanged || isModeChanged;
+
     await settings.update({
       enabled: nextEnabled,
       phoneNumber: normalizedPhoneNumber || null,
       mode: nextMode,
       thresholdCount: nextMode === "threshold" ? nextThresholdCount : null,
-      dailyTime: nextMode === "daily_summary" ? nextDailyTime : settings.dailyTime || "18:00"
+      dailyTime: nextMode === "daily_summary" ? nextDailyTime : settings.dailyTime || "18:00",
+      lastDailySummaryDate: shouldResetSummaryDate ? null : settings.lastDailySummaryDate
     });
 
     res.json({
