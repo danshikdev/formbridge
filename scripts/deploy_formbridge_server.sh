@@ -3,7 +3,7 @@ set -euo pipefail
 
 APP_DIR="/var/www/formbridge"
 DOMAIN="https://formbridge.nlrk.online"
-BACKEND_PORT="4000"
+BACKEND_PORT="4001"
 PM2_APP="formbridge-backend"
 NGINX_SITE="formbridge"
 
@@ -12,8 +12,6 @@ FRONT_ENV="$APP_DIR/frontend/.env.production"
 FRONT_ENV_DEV="$APP_DIR/frontend/.env"
 SECRET_BACK_ENV="/opt/formbridge-secrets/backend.env.production"
 SECRET_FRONT_ENV="/opt/formbridge-secrets/frontend.env.production"
-APP_SECRET_BACK_ENV="$APP_DIR/secrets/backend.env.production"
-APP_SECRET_FRONT_ENV="$APP_DIR/secrets/frontend.env.production"
 
 echo "[1/9] Update code"
 cd "$APP_DIR"
@@ -27,20 +25,16 @@ test -f "$APP_DIR/backend/package.json" || { echo "Missing backend/package.json"
 test -f "$APP_DIR/frontend/package.json" || { echo "Missing frontend/package.json" >&2; exit 1; }
 
 echo "[3/9] Restore protected env files"
-if [ -f "$APP_SECRET_BACK_ENV" ]; then
-  SECRET_BACK_ENV="$APP_SECRET_BACK_ENV"
-fi
-
-if [ -f "$APP_SECRET_FRONT_ENV" ]; then
-  SECRET_FRONT_ENV="$APP_SECRET_FRONT_ENV"
-fi
-
 test -f "$SECRET_BACK_ENV" || { echo "Missing backend env: $SECRET_BACK_ENV" >&2; exit 1; }
 test -f "$SECRET_FRONT_ENV" || { echo "Missing frontend env: $SECRET_FRONT_ENV" >&2; exit 1; }
 grep -q "^PORT=" "$SECRET_BACK_ENV" || { echo "Backend env is invalid: missing PORT= in $SECRET_BACK_ENV" >&2; exit 1; }
+grep -q "^PORT=$BACKEND_PORT$" "$SECRET_BACK_ENV" || { echo "Backend env is invalid: expected PORT=$BACKEND_PORT in $SECRET_BACK_ENV" >&2; exit 1; }
 grep -q "^DB_HOST=" "$SECRET_BACK_ENV" || { echo "Backend env is invalid: missing DB_HOST= in $SECRET_BACK_ENV" >&2; exit 1; }
 grep -q "^OPENAI_API_KEY=" "$SECRET_BACK_ENV" || { echo "Backend env is invalid: missing OPENAI_API_KEY= in $SECRET_BACK_ENV" >&2; exit 1; }
 grep -q "^VITE_API_URL=" "$SECRET_FRONT_ENV" || { echo "Frontend env is invalid: missing VITE_API_URL= in $SECRET_FRONT_ENV" >&2; exit 1; }
+if [ -d "$APP_DIR/secrets" ]; then
+  echo "Warning: $APP_DIR/secrets exists but is ignored. Using /opt/formbridge-secrets only."
+fi
 cp "$SECRET_BACK_ENV" "$BACK_ENV"
 cp "$SECRET_FRONT_ENV" "$FRONT_ENV"
 cp "$SECRET_FRONT_ENV" "$FRONT_ENV_DEV"
