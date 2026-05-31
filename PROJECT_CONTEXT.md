@@ -139,6 +139,20 @@ Recent commits:
 
 ## Recently Completed
 
+### Premium Header Actions Dropdown & Google Form/Sheet Links (2026-05-31)
+
+Files changed:
+- `backend/src/controllers/googleFormsController.js` — updated `getWorkspace` API to return `formUrl` and `sheetUrl` inside the `form` object.
+- `frontend/src/pages/RequestsPage.jsx` — imported `IconChevronDown` and `IconFeedback`; defined dropdown states and outside-click handling; replaced the individual feedback button with a beautiful, premium Actions Dropdown (`ws-actions-dropdown-container`) next to "My Forms" button; dropdown contains "Open Google Form" (external link using `formUrl`), "Open Google Sheet" (external link using `sheetUrl`), and "Suggest improvement" (opens feedback modal).
+- `frontend/src/shared/i18n.js` — added `actionsDropdown`, `openGoogleForm`, and `openGoogleSheet` translation keys in kk, ru, and en locales.
+- `frontend/src/shared/styles/global.css` — added premium CSS rules for actions dropdown trigger, rotation animation on chevron, dropdown menu pop animation, z-indexes, and dropdown hover item states (Handoff HSL tailoring).
+
+Checks passed:
+- `npm run build` frontend build verified ✓
+- `node --check` backend controller syntax verified ✓
+
+## Recently Completed
+
 ### Robust, scenario-aware WhatsApp daily summaries (2026-05-31)
 
 Files changed:

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import { useLocale } from "../shared/useLocale";
-import { IconGrid, IconAcademic, IconUser, IconChart, IconMessage, IconCalendar } from "../shared/icons";
+import { IconGrid, IconAcademic, IconUser, IconChart, IconMessage, IconCalendar, IconChevronDown, IconFeedback } from "../shared/icons";
 
 // ─── Scenario definitions (mirrors backend) ───────────────────────────────────
 
@@ -880,7 +880,9 @@ export function RequestsPage() {
   const [error, setError] = useState("");
   const [exportOpen, setExportOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const exportRef = useRef(null);
+  const menuRef = useRef(null);
 
   useEffect(() => {
     if (!exportOpen) return;
@@ -890,6 +892,15 @@ export function RequestsPage() {
     document.addEventListener("mousedown", onOutsideClick);
     return () => document.removeEventListener("mousedown", onOutsideClick);
   }, [exportOpen]);
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onOutsideClick(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false);
+    }
+    document.addEventListener("mousedown", onOutsideClick);
+    return () => document.removeEventListener("mousedown", onOutsideClick);
+  }, [menuOpen]);
 
   async function loadWorkspace() {
     if (!formId) return;
@@ -1032,9 +1043,60 @@ export function RequestsPage() {
           </div>
           <div className="ws-header-actions">
             <Link className="official-link-btn" to="/forms">{t.myForms}</Link>
-            <button className="official-link-btn feedback-trigger-btn" onClick={() => setFeedbackOpen(true)}>
-              {t.feedbackBtn}
-            </button>
+
+            <div className="ws-actions-dropdown-container" ref={menuRef}>
+              <button
+                className={`official-link-btn ws-actions-trigger-btn${menuOpen ? " active" : ""}`}
+                onClick={() => setMenuOpen((o) => !o)}
+              >
+                <span>{t.actionsDropdown}</span>
+                <IconChevronDown size={14} className={`ws-actions-chevron${menuOpen ? " open" : ""}`} />
+              </button>
+
+              {menuOpen && (
+                <div className="ws-actions-dropdown-menu">
+                  {workspace?.form?.formUrl && (
+                    <a
+                      href={workspace.form.formUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ws-dropdown-item"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="ws-dropdown-item-icon">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14L21 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                      <span>{t.openGoogleForm}</span>
+                    </a>
+                  )}
+                  {workspace?.form?.sheetUrl && (
+                    <a
+                      href={workspace.form.sheetUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="ws-dropdown-item"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="ws-dropdown-item-icon">
+                        <path d="M4 3h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+                        <path d="M8 7h8M8 12h8M8 17h8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                      </svg>
+                      <span>{t.openGoogleSheet}</span>
+                    </a>
+                  )}
+                  <button
+                    className="ws-dropdown-item ws-dropdown-item--feedback"
+                    onClick={() => {
+                      setFeedbackOpen(true);
+                      setMenuOpen(false);
+                    }}
+                  >
+                    <IconFeedback size={16} className="ws-dropdown-item-icon" />
+                    <span>{t.feedbackBtn}</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
         <div className="ws-stats-row">

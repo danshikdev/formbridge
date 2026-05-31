@@ -267,7 +267,9 @@ export async function getWorkspace(req, res) {
       title: integration.formTitle,
       status: integration.status,
       healthStatus: integration.healthStatus,
-      lastEventAt: integration.lastEventAt
+      lastEventAt: integration.lastEventAt,
+      formUrl: integration.formUrl,
+      sheetUrl: integration.sheetUrl
     },
     scenario: scenarioId,
     scenarioConfiguredAt: integration.scenarioConfiguredAt,
