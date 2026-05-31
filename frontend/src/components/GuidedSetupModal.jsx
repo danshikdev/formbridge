@@ -24,7 +24,7 @@ function deriveStatuses(integration) {
   }
   let step3 = "locked";
   if (step2 === "prepared") {
-    step3 = integration?.setupChecklist?.lastTest ? "ok" : "ready";
+    step3 = integration?.healthStatus === "connected" || integration?.status === "ready" ? "ok" : "ready";
   }
   return { step1, step2, step3 };
 }
@@ -67,7 +67,6 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
   const [checking, setChecking] = useState(false);
   const [initLoading, setInitLoading] = useState(!initialIntegration);
   const [error, setError] = useState("");
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!initialIntegration) {
@@ -124,7 +123,7 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
       setIntegration(data.item);
       if (data.scriptUrl) setScriptUrl(data.scriptUrl);
       setStep2Status("prepared");
-      if (step3Status === "locked") setStep3Status("ready");
+      setStep3Status("ready");
       onRefresh?.();
     } catch (err) {
       setError(err.response?.data?.error || t.failedSetup);
@@ -140,20 +139,7 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
     const url = accountAwareUrl(base, googleEmail);
     window.open(url, "_blank", "noopener,noreferrer");
     setStep2Status("opened");
-    if (step3Status === "locked") setStep3Status("ready");
-  }
-
-  async function copySetupLink() {
-    const base = scriptUrl
-      || (integration?.scriptProjectId ? scriptEditorUrlFromId(integration.scriptProjectId) : "");
-    if (!base) return;
-    try {
-      await navigator.clipboard.writeText(accountAwareUrl(base, googleEmail) || base);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // clipboard not available
-    }
+    setStep3Status("ready");
   }
 
   async function verifyConnection() {
@@ -179,9 +165,8 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
   }
 
   const step2Locked = step1Status !== "found";
-  const step3Locked = step2Status === "locked" || step2Status === "ready";
   const hasScriptUrl = Boolean(scriptUrl || integration?.scriptProjectId);
-  const step2Opened = step2Status === "prepared" || step2Status === "opened";
+  const setupComplete = step3Status === "ok";
 
   function handleBackdropClick(e) {
     if (e.target === e.currentTarget) onClose();
@@ -290,14 +275,16 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
         </div>
 
         {/* Step 2 */}
-        <div className={`setup-step${step2Locked ? " setup-step-locked" : ""}${step2Opened ? " setup-step--done" : ""}`}>
+        <div className={`setup-step${step2Locked ? " setup-step-locked" : ""}${setupComplete ? " setup-step--done" : ""}`}>
           <div className="setup-step-header">
             <span className="setup-step-num">2</span>
             <span className="setup-step-title">{t.setupStepAutoDelivery}</span>
             {step2Locked
               ? <span className="setup-status-pill pill-locked">{t.stepLocked}</span>
-              : step2Opened
-                ? <span className="setup-status-pill pill-ok">{t.setupAutoPrepared}</span>
+              : setupComplete
+                ? <span className="setup-status-pill pill-ok">{t.connectionReady}</span>
+              : hasScriptUrl
+                ? <span className="setup-status-pill pill-checking">{t.setupAutoPrepared}</span>
                 : null
             }
           </div>
@@ -332,17 +319,13 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
                   <button
                     className="setup-btn-secondary"
                     type="button"
-                    onClick={copySetupLink}
+                    onClick={verifyConnection}
+                    disabled={verifying}
                   >
-                    {copied ? "Copied" : t.copySetupLink}
+                    {verifying ? t.checking : t.verifyTrigger}
                   </button>
                 )}
               </div>
-              {hasScriptUrl && (
-                <p className="setup-link-helper">
-                  {t.openGoogleSetupFallback}
-                </p>
-              )}
             </>
           )}
 
@@ -383,34 +366,6 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
               </div>
             )}
           </div>
-        </div>
-
-        {/* Step 3 */}
-        <div className={`setup-step${step3Locked ? " setup-step-locked" : ""}${step3Status === "ok" ? " setup-step--done" : ""}`}>
-          <div className="setup-step-header">
-            <span className="setup-step-num">3</span>
-            <span className="setup-step-title">{t.setupStepVerify}</span>
-            {step3Locked && (
-              <span className="setup-status-pill pill-locked">{t.stepLocked}</span>
-            )}
-            {step3Status === "ok" && (
-              <span className="setup-status-pill pill-ok">{t.connectionReady}</span>
-            )}
-          </div>
-          <p className="setup-step-desc">{t.setupStepVerifyDesc}</p>
-
-          {!step3Locked && step3Status !== "ok" && (
-            <div className="setup-actions">
-              <button
-                className="setup-btn-primary"
-                type="button"
-                onClick={verifyConnection}
-                disabled={verifying}
-              >
-                {verifying ? t.checking : t.verifyConnection}
-              </button>
-            </div>
-          )}
 
           {verifyResult && (
             <div className="setup-check-grid">
@@ -433,9 +388,15 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
             </div>
           )}
 
-          {step3Status === "ok" && (
-            <div className="setup-ready-banner">
-              <p className="setup-ready-text">{t.connectionReady}</p>
+          {setupComplete && (
+            <div className="setup-success-celebration">
+              <div className="setup-success-mark" aria-hidden="true">
+                <svg width="34" height="34" viewBox="0 0 34 34" fill="none">
+                  <path d="M9 17.8l5.2 5.2L25.5 11.5" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <p className="setup-success-title">{t.connectionReady}</p>
+              <p className="setup-success-text">{t.setupSuccessText}</p>
               <button className="setup-btn-primary" type="button" onClick={onClose}>
                 {t.openWorkspace}
               </button>

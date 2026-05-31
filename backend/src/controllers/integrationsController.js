@@ -39,11 +39,13 @@ function escapeForScript(value) {
 
 function buildInstallerCode(item, webhookUrl = item.webhookUrl || buildWebhookUrl()) {
   const formTitle = escapeForScript(item.formTitle || "Untitled form");
+  const setupConfirmUrl = webhookUrl.replace(/\/api\/forms\/webhook\/google$/, `/api/integrations/forms/${item.id}/setup-confirm`);
   return `const FORMBRIDGE_FORM_ID = "${item.formId}";
 const FORMBRIDGE_SHEET_ID = "${item.sheetId || ""}";
 const FORMBRIDGE_WEBHOOK_URL = "${webhookUrl}";
 const FORMBRIDGE_WEBHOOK_SECRET = "${item.webhookSecret || process.env.FORMBRIDGE_WEBHOOK_SECRET || ""}";
 const FORMBRIDGE_FORM_TITLE = "${formTitle}";
+const FORMBRIDGE_SETUP_CONFIRM_URL = "${setupConfirmUrl}";
 
 function installFormBridge() {
   if (!FORMBRIDGE_FORM_ID) throw new Error("FORMBRIDGE_FORM_ID is missing");
@@ -60,6 +62,20 @@ function installFormBridge() {
     .forSpreadsheet(FORMBRIDGE_SHEET_ID)
     .onFormSubmit()
     .create();
+
+  UrlFetchApp.fetch(FORMBRIDGE_SETUP_CONFIRM_URL, {
+    method: "post",
+    contentType: "application/json",
+    headers: {
+      "x-formbridge-secret": FORMBRIDGE_WEBHOOK_SECRET
+    },
+    payload: JSON.stringify({
+      formId: FORMBRIDGE_FORM_ID,
+      sheetId: FORMBRIDGE_SHEET_ID,
+      installedAt: new Date().toISOString()
+    }),
+    muteHttpExceptions: true
+  });
 
   return "FormBridge installed: Sheet linked and trigger created.";
 }
@@ -207,11 +223,20 @@ async function verifyIntegrationRecord(item) {
     sheet: Boolean(item.sheetId),
     webhookUrl: Boolean(item.webhookUrl),
     webhookSecret: Boolean(item.webhookSecret),
-    trigger: Boolean(item.triggerId || item.scriptProjectId),
+    trigger: Boolean(item.triggerId || item.setupChecklist?.trigger),
     lastTest: item.lastTestResult === "ok"
   };
 
-  const broken = Object.entries(checklist)
+  const requiredChecklist = {
+    googleAccount: checklist.googleAccount,
+    form: checklist.form,
+    sheet: checklist.sheet,
+    webhookUrl: checklist.webhookUrl,
+    webhookSecret: checklist.webhookSecret,
+    trigger: checklist.trigger
+  };
+
+  const broken = Object.entries(requiredChecklist)
     .filter(([, ok]) => !ok)
     .map(([name]) => name);
 
@@ -224,6 +249,48 @@ async function verifyIntegrationRecord(item) {
   await item.save();
 
   return { checklist, broken };
+}
+
+export async function confirmSetupInstalled(req, res) {
+  const item = await FormIntegration.findByPk(req.params.id);
+  if (!item) return res.status(404).json({ error: "Integration not found" });
+
+  const expectedSecret = item.webhookSecret || process.env.FORMBRIDGE_WEBHOOK_SECRET || "";
+  const providedSecret = req.get("x-formbridge-secret") || "";
+  if (!expectedSecret || providedSecret !== expectedSecret) {
+    return res.status(401).json({ error: "Invalid setup secret" });
+  }
+
+  item.triggerId = "apps_script_install_confirmed";
+  item.status = "ready";
+  item.healthStatus = "connected";
+  item.setupChecklist = {
+    ...(item.setupChecklist || {}),
+    googleAccount: Boolean(item.googleAccountId),
+    form: Boolean(item.formId),
+    sheet: Boolean(item.sheetId),
+    webhookUrl: Boolean(item.webhookUrl),
+    webhookSecret: Boolean(item.webhookSecret),
+    trigger: true,
+    lastTest: item.lastTestResult === "ok"
+  };
+  item.lastVerifiedAt = new Date();
+  item.lastErrorReason = null;
+  await item.save();
+
+  await logIntegrationEvent({
+    integrationId: item.id,
+    type: "setup_confirmed",
+    status: "ok",
+    message: "Apps Script installer confirmed trigger creation.",
+    payload: {
+      formId: req.body?.formId || null,
+      sheetId: req.body?.sheetId || null,
+      installedAt: req.body?.installedAt || null
+    }
+  });
+
+  return res.json({ ok: true });
 }
 
 export async function listIntegrations(req, res) {

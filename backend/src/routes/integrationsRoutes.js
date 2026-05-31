@@ -2,6 +2,7 @@ import { Router } from "express";
 import { requireAuth } from "../middleware/auth.js";
 import {
   autoSetupIntegration,
+  confirmSetupInstalled,
   createIntegration,
   deleteIntegration,
   getSetupScript,
@@ -15,6 +16,8 @@ import {
 } from "../controllers/integrationsController.js";
 
 export const integrationsRoutes = Router();
+
+integrationsRoutes.post("/forms/:id/setup-confirm", confirmSetupInstalled);
 
 integrationsRoutes.use(requireAuth);
 integrationsRoutes.get("/forms", listIntegrations);
