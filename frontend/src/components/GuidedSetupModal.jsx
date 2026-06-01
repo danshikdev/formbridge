@@ -91,7 +91,7 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
       || initialIntegration?.healthStatus === "connected"
   ));
   const [step2Status, setStep2Status] = useState(initial.step2);
-  const [appsScriptApiStatus, setAppsScriptApiStatus] = useState(initialIntegration?.scriptProjectId ? "enabled" : "unknown");
+  const [appsScriptApiStatus, setAppsScriptApiStatus] = useState("unknown");
 
   const [accordion1Open, setAccordion1Open] = useState(false);
   const [accordionApiOpen, setAccordionApiOpen] = useState(false);
