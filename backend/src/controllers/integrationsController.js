@@ -734,12 +734,12 @@ export async function checkAppsScriptApiStatus(req, res) {
         : result.message || "Google Apps Script API is not enabled."
     });
   } catch (err) {
-    return res.status(502).json({
+    return res.json({
       ok: false,
       enabled: false,
       googleAccount: process.env.DEMO_GOOGLE_ACCOUNT_EMAIL || account.email,
       settingsUrl: "https://script.google.com/home/usersettings",
-      error: `Apps Script API check failed: ${err.message}`
+      message: "Google Apps Script API is not enabled. Open Google settings, enable the API, wait a few minutes, then check again."
     });
   }
 }
