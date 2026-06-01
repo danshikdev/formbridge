@@ -723,6 +723,57 @@ export async function checkAppsScriptApiStatus(req, res) {
   if (!account) return res.status(409).json({ error: "Connect Google account first" });
 
   try {
+    const integrationId = req.body?.integrationId || null;
+    if (integrationId) {
+      const item = await FormIntegration.findByPk(integrationId);
+      if (!item) return res.status(404).json({ error: "Integration not found" });
+      if (req.user?.id && item.userId && item.userId !== req.user.id) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+      if (!item.sheetId) {
+        return res.status(409).json({ error: "Sheet is missing. Prepare Google Sheet first." });
+      }
+
+      const currentWebhookUrl = buildWebhookUrl();
+      item.webhookUrl = currentWebhookUrl;
+      item.googleAccountId = account.id;
+      item.setupMode = "oauth_installer";
+
+      if (!item.scriptProjectId) {
+        const project = await createAppsScriptProject(account, `FormBridge - ${item.formTitle || item.formId}`, item.sheetId);
+        item.scriptProjectId = project.scriptId;
+      }
+
+      await updateAppsScriptContent(account, item.scriptProjectId, buildAppsScriptFiles(item, currentWebhookUrl));
+
+      item.status = "configured";
+      item.healthStatus = "needs_trigger";
+      item.setupChecklist = {
+        ...(item.setupChecklist || {}),
+        googleAccount: true,
+        form: Boolean(item.formId),
+        sheet: Boolean(item.sheetId),
+        webhookUrl: true,
+        webhookSecret: Boolean(item.webhookSecret),
+        trigger: false,
+        lastTest: item.lastTestResult === "ok"
+      };
+      item.lastErrorReason = "Open Apps Script and run installFormBridge once to authorize and create trigger.";
+      item.lastErrorAt = new Date();
+      await item.save();
+
+      return res.json({
+        ok: true,
+        enabled: true,
+        item: publicIntegration(item),
+        scriptProjectId: item.scriptProjectId,
+        scriptUrl: scriptEditorUrl(item.scriptProjectId, account),
+        googleAccount: process.env.DEMO_GOOGLE_ACCOUNT_EMAIL || account.email,
+        settingsUrl: "https://script.google.com/home/usersettings",
+        code: "apps_script_api_enabled"
+      });
+    }
+
     const result = await checkAppsScriptApi(account);
     return res.json({
       ok: result.enabled,

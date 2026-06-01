@@ -224,9 +224,15 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
     setCheckingAppsScriptApi(true);
     setError("");
     try {
-      const { data } = await api.post("/api/integrations/apps-script-api/check");
+      const { data } = await api.post("/api/integrations/apps-script-api/check", {
+        integrationId: integration?.id || null
+      });
       if (data.enabled) {
         setAppsScriptApiStatus("enabled");
+        if (data.item) setIntegration(data.item);
+        if (data.scriptUrl) setScriptUrl(data.scriptUrl);
+        if (data.scriptUrl || data.item?.scriptProjectId) setStep2Status("prepared");
+        onRefresh?.();
       } else {
         setAppsScriptApiStatus("missing");
         setError(t.appsScriptApiMissing);
