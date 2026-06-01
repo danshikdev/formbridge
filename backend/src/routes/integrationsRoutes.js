@@ -3,6 +3,7 @@ import { requireAuth } from "../middleware/auth.js";
 import {
   autoSetupIntegration,
   attachExistingSheet,
+  checkAppsScriptApiStatus,
   confirmSetupInstalled,
   createIntegration,
   deleteIntegration,
@@ -28,6 +29,7 @@ integrationsRoutes.post("/forms/setup-google", setupGoogleIntegration);
 integrationsRoutes.get("/health", integrationHealth);
 integrationsRoutes.get("/forms/:id/events", integrationEvents);
 integrationsRoutes.get("/forms/:id/setup-script", getSetupScript);
+integrationsRoutes.post("/apps-script-api/check", checkAppsScriptApiStatus);
 integrationsRoutes.post("/forms/:id/auto-setup", autoSetupIntegration);
 integrationsRoutes.post("/forms/:id/prepare-sheet", prepareIntegrationSheet);
 integrationsRoutes.patch("/forms/:id/sheet", attachExistingSheet);

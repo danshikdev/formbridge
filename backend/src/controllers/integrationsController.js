@@ -5,6 +5,7 @@ import { IntegrationEvent } from "../models/integrationEvent.js";
 import { Request } from "../models/request.js";
 import {
   buildWebhookUrl,
+  checkAppsScriptApi,
   createAppsScriptProject,
   createSpreadsheet,
   getGoogleAccount,
@@ -656,6 +657,32 @@ export async function verifyIntegration(req, res) {
   });
 
   return res.json({ item: publicIntegration(item), ...result });
+}
+
+export async function checkAppsScriptApiStatus(req, res) {
+  const account = await getGoogleAccount(req.user.id);
+  if (!account) return res.status(409).json({ error: "Connect Google account first" });
+
+  try {
+    const result = await checkAppsScriptApi(account);
+    return res.json({
+      ok: result.enabled,
+      enabled: result.enabled,
+      googleAccount: process.env.DEMO_GOOGLE_ACCOUNT_EMAIL || account.email,
+      settingsUrl: "https://script.google.com/home/usersettings",
+      message: result.enabled
+        ? "Google Apps Script API is enabled."
+        : result.message || "Google Apps Script API is not enabled."
+    });
+  } catch (err) {
+    return res.status(502).json({
+      ok: false,
+      enabled: false,
+      googleAccount: process.env.DEMO_GOOGLE_ACCOUNT_EMAIL || account.email,
+      settingsUrl: "https://script.google.com/home/usersettings",
+      error: `Apps Script API check failed: ${err.message}`
+    });
+  }
 }
 
 export async function autoSetupIntegration(req, res) {

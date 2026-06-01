@@ -180,3 +180,22 @@ export async function updateAppsScriptContent(account, scriptId, files) {
     body: JSON.stringify({ files })
   });
 }
+
+export async function checkAppsScriptApi(account) {
+  const token = await getValidAccessToken(account);
+  try {
+    await googleFetch("https://script.googleapis.com/v1/projects/formbridge-api-check/content", {
+      headers: { authorization: `Bearer ${token}` }
+    });
+    return { enabled: true };
+  } catch (error) {
+    const message = error.message || "";
+    if (/not found|requested entity was not found|permission denied|not have permission/i.test(message)) {
+      return { enabled: true };
+    }
+    if (/has not enabled|access not configured|api has not been used|disabled/i.test(message)) {
+      return { enabled: false, message };
+    }
+    throw error;
+  }
+}

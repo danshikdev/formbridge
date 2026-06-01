@@ -16,6 +16,8 @@ function scriptEditorUrlFromId(scriptProjectId) {
   return `https://script.google.com/home/projects/${scriptProjectId}/edit`;
 }
 
+const APPS_SCRIPT_SETTINGS_URL = "https://script.google.com/home/usersettings";
+
 function deriveStatuses(integration) {
   const step1 = integration?.sheetId ? "found" : "missing";
   let step2 = "locked";
@@ -78,8 +80,10 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
       || initialIntegration?.healthStatus === "connected"
   ));
   const [step2Status, setStep2Status] = useState(initial.step2);
+  const [appsScriptApiStatus, setAppsScriptApiStatus] = useState(initialIntegration?.scriptProjectId ? "enabled" : "unknown");
 
   const [accordion1Open, setAccordion1Open] = useState(false);
+  const [accordionApiOpen, setAccordionApiOpen] = useState(false);
   const [accordion2Open, setAccordion2Open] = useState(false);
   const [scriptUrl, setScriptUrl] = useState(null);
   const [verifyResult, setVerifyResult] = useState(null);
@@ -87,6 +91,7 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
   const [preparingSheet, setPreparingSheet] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [checking, setChecking] = useState(false);
+  const [checkingAppsScriptApi, setCheckingAppsScriptApi] = useState(false);
   const [initLoading, setInitLoading] = useState(!initialIntegration);
   const [error, setError] = useState("");
   const [existingSheetUrl, setExistingSheetUrl] = useState("");
@@ -199,6 +204,30 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
     }
   }
 
+  function openAppsScriptSettings() {
+    const url = accountAwareUrl(APPS_SCRIPT_SETTINGS_URL, googleEmail);
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  async function checkAppsScriptApi() {
+    setCheckingAppsScriptApi(true);
+    setError("");
+    try {
+      const { data } = await api.post("/api/integrations/apps-script-api/check");
+      if (data.enabled) {
+        setAppsScriptApiStatus("enabled");
+      } else {
+        setAppsScriptApiStatus("missing");
+        setError(data.message || t.appsScriptApiMissing);
+      }
+    } catch (err) {
+      setAppsScriptApiStatus("missing");
+      setError(err.response?.data?.error || err.response?.data?.message || t.appsScriptApiMissing);
+    } finally {
+      setCheckingAppsScriptApi(false);
+    }
+  }
+
   function openGoogleSetup() {
     const base = scriptUrl
       || (integration?.scriptProjectId ? scriptEditorUrlFromId(integration.scriptProjectId) : null);
@@ -230,6 +259,7 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
   }
 
   const step2Locked = step1Status !== "found" || !step1Confirmed;
+  const step3Locked = step2Locked || appsScriptApiStatus !== "enabled";
   const hasScriptUrl = Boolean(scriptUrl || integration?.scriptProjectId);
   const setupComplete = step2Status === "done";
 
@@ -385,11 +415,72 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
         </div>
 
         {/* Step 2 */}
-        <div className={`setup-step${step2Locked ? " setup-step-locked" : ""}${setupComplete ? " setup-step--done" : ""}`}>
+        <div className={`setup-step${step2Locked ? " setup-step-locked" : ""}${appsScriptApiStatus === "enabled" ? " setup-step--done" : ""}`}>
           <div className="setup-step-header">
             <span className="setup-step-num">2</span>
-            <span className="setup-step-title">{t.setupStepAutoDelivery}</span>
+            <span className="setup-step-title">{t.setupStepAppsScriptApi}</span>
             {step2Locked
+              ? <span className="setup-status-pill pill-locked">{t.stepLocked}</span>
+              : appsScriptApiStatus === "enabled"
+                ? <span className="setup-status-pill pill-ok">{t.appsScriptApiReady}</span>
+                : appsScriptApiStatus === "missing"
+                  ? <span className="setup-status-pill pill-missing">{t.appsScriptApiMissingShort}</span>
+                  : null
+            }
+          </div>
+          <p className="setup-step-desc">{t.setupStepAppsScriptApiDesc}</p>
+
+          {!step2Locked && (
+            <>
+              {googleEmail && (
+                <p className="setup-account-hint">
+                  {t.openGoogleSetupAccountHint}: <strong>{googleEmail}</strong>
+                </p>
+              )}
+              <div className="setup-actions">
+                <button className="setup-btn-secondary" type="button" onClick={openAppsScriptSettings}>
+                  {t.openAppsScriptSettings}
+                </button>
+                <button
+                  className="setup-btn-primary"
+                  type="button"
+                  onClick={checkAppsScriptApi}
+                  disabled={checkingAppsScriptApi}
+                >
+                  {checkingAppsScriptApi ? t.checking : t.checkAppsScriptApi}
+                </button>
+              </div>
+            </>
+          )}
+
+          <div className="setup-accordion">
+            <button
+              className="setup-accordion-toggle"
+              type="button"
+              onClick={() => !step2Locked && setAccordionApiOpen((v) => !v)}
+              disabled={step2Locked}
+            >
+              {t.setupHowAppsScriptApi}
+              <span className={`setup-chevron${accordionApiOpen ? " open" : ""}`} aria-hidden="true" />
+            </button>
+            {accordionApiOpen && !step2Locked && (
+              <div className="setup-accordion-body">
+                <ol className="setup-instructions">
+                  <li>{t.setupAppsScriptApiInstruction1}</li>
+                  <li>{t.setupAppsScriptApiInstruction2}</li>
+                  <li>{t.setupAppsScriptApiInstruction3}</li>
+                </ol>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Step 3 */}
+        <div className={`setup-step${step3Locked ? " setup-step-locked" : ""}${setupComplete ? " setup-step--done" : ""}`}>
+          <div className="setup-step-header">
+            <span className="setup-step-num">3</span>
+            <span className="setup-step-title">{t.setupStepAutoDelivery}</span>
+            {step3Locked
               ? <span className="setup-status-pill pill-locked">{t.stepLocked}</span>
               : setupComplete
                 ? <span className="setup-status-pill pill-ok">{t.connectionReady}</span>
@@ -400,7 +491,7 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
           </div>
           <p className="setup-step-desc">{t.setupStepAutoDeliveryDesc}</p>
 
-          {!step2Locked && (
+          {!step3Locked && (
             <>
               {googleEmail && (
                 <p className="setup-account-hint">
@@ -443,13 +534,13 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
             <button
               className="setup-accordion-toggle"
               type="button"
-              onClick={() => !step2Locked && setAccordion2Open((v) => !v)}
-              disabled={step2Locked}
+              onClick={() => !step3Locked && setAccordion2Open((v) => !v)}
+              disabled={step3Locked}
             >
               {t.setupHowAutoDelivery}
               <span className={`setup-chevron${accordion2Open ? " open" : ""}`} aria-hidden="true" />
             </button>
-            {accordion2Open && !step2Locked && (
+            {accordion2Open && !step3Locked && (
               <div className="setup-accordion-body">
                 <ol className="setup-instructions">
                   <li>{t.setupAutoInstruction1}</li>
