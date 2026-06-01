@@ -269,7 +269,7 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
     }
   }
 
-  const step2Locked = step1Status !== "found" || !step1Confirmed;
+  const step2Locked = step1Status !== "found";
   const step3Locked = step2Locked || appsScriptApiStatus !== "enabled";
   const hasScriptUrl = Boolean(scriptUrl || integration?.scriptProjectId);
   const setupComplete = step2Status === "done";
