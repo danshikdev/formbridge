@@ -190,7 +190,7 @@ export async function checkAppsScriptApi(account) {
     return { enabled: true };
   } catch (error) {
     const message = error.message || "";
-    if (/not found|requested entity was not found|permission denied|not have permission/i.test(message)) {
+    if (/not found|requested entity was not found|permission denied|not have permission|invalid argument/i.test(message)) {
       return { enabled: true };
     }
     if (/has not enabled|access not configured|api has not been used|disabled/i.test(message)) {
