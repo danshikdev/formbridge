@@ -94,6 +94,13 @@ function installFormBridge() {
   return "FormBridge installed: Sheet linked and trigger created.";
 }
 
+function formBridgeResponseId(e) {
+  if (e && e.range && typeof e.range.getRow === "function") {
+    return FORMBRIDGE_FORM_ID + ":" + e.range.getRow();
+  }
+  return FORMBRIDGE_FORM_ID + ":" + Utilities.getUuid();
+}
+
 function onSheetFormSubmit(e) {
   const namedValues = e.namedValues || {};
   const answers = Object.keys(namedValues).map(function(question) {
@@ -110,7 +117,8 @@ function onSheetFormSubmit(e) {
       id: FORMBRIDGE_FORM_ID,
       title: FORMBRIDGE_FORM_TITLE
     },
-    responseId: Utilities.getUuid(),
+    responseId: formBridgeResponseId(e),
+    rowNumber: e && e.range && typeof e.range.getRow === "function" ? e.range.getRow() : null,
     respondentEmail: namedValues["Email Address"] ? String(namedValues["Email Address"][0]) : null,
     answers: answers
   };
@@ -128,6 +136,35 @@ function onSheetFormSubmit(e) {
   console.log("FormBridge webhook", response.getResponseCode(), response.getContentText());
 }
 `;
+}
+
+function buildDisabledAppsScriptFiles() {
+  return [
+    {
+      name: "Code",
+      type: "SERVER_JS",
+      source: `function installFormBridge() {
+  return "FormBridge integration was removed. This project no longer sends webhooks.";
+}
+
+function onSheetFormSubmit(e) {
+  console.log("FormBridge integration removed; webhook skipped.");
+}
+`
+    },
+    {
+      name: "appsscript",
+      type: "JSON",
+      source: JSON.stringify({
+        timeZone: "Asia/Almaty",
+        exceptionLogging: "STACKDRIVER",
+        runtimeVersion: "V8",
+        oauthScopes: [
+          "https://www.googleapis.com/auth/script.scriptapp"
+        ]
+      }, null, 2)
+    }
+  ];
 }
 
 function buildAppsScriptFiles(item, webhookUrl) {
@@ -159,6 +196,13 @@ function buildAppsScriptTemplate(item, webhookUrl = item.webhookUrl || buildWebh
   return `const FORMBRIDGE_WEBHOOK_URL = "${webhookUrl}";
 const FORMBRIDGE_WEBHOOK_SECRET = "${item.webhookSecret || process.env.FORMBRIDGE_WEBHOOK_SECRET || ""}";
 
+function formBridgeResponseId(e) {
+  if (e && e.range && typeof e.range.getRow === "function") {
+    return "${item.formId}" + ":" + e.range.getRow();
+  }
+  return "${item.formId}" + ":" + Utilities.getUuid();
+}
+
 function onSheetFormSubmit(e) {
   const namedValues = e.namedValues || {};
   const answers = Object.keys(namedValues).map(function(question) {
@@ -175,7 +219,8 @@ function onSheetFormSubmit(e) {
       id: "${item.formId}",
       title: "${String(item.formTitle || "Untitled form").replace(/"/g, '\\"')}"
     },
-    responseId: Utilities.getUuid(),
+    responseId: formBridgeResponseId(e),
+    rowNumber: e && e.range && typeof e.range.getRow === "function" ? e.range.getRow() : null,
     respondentEmail: namedValues["Email Address"] ? String(namedValues["Email Address"][0]) : null,
     answers: answers
   };
@@ -540,10 +585,24 @@ export async function deleteIntegration(req, res) {
     return res.status(403).json({ error: "Forbidden" });
   }
 
-  await logIntegrationEvent({ integrationId: item.id, type: "integration_delete", status: "ok", message: "Integration removed from FormBridge" });
+  let cleanupMessage = "Integration removed from FormBridge";
+  if (item.scriptProjectId) {
+    try {
+      const account = await getGoogleAccount(req.user.id);
+      if (account) {
+        await updateAppsScriptContent(account, item.scriptProjectId, buildDisabledAppsScriptFiles());
+        cleanupMessage = "Integration removed from FormBridge and Apps Script webhook disabled";
+      }
+    } catch (err) {
+      cleanupMessage = `Integration removed from FormBridge, but Apps Script cleanup failed: ${err.message}`;
+      console.warn("[deleteIntegration] Apps Script cleanup failed:", err.message);
+    }
+  }
+
+  await logIntegrationEvent({ integrationId: item.id, type: "integration_delete", status: "ok", message: cleanupMessage });
   await item.destroy();
 
-  return res.json({ ok: true });
+  return res.json({ ok: true, message: cleanupMessage });
 }
 
 export async function saveWebhook(req, res) {

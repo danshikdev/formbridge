@@ -6,6 +6,7 @@ import { Request } from "../models/request.js";
 import { env } from "../config/env.js";
 import { sendMessage } from "../services/whatsappService.js";
 import { SCENARIO_IDS, getScenario } from "../config/formScenarios.js";
+import { Op } from "sequelize";
 
 function formRequestsUrl(formId, formTitle) {
   const baseUrl = env.publicBaseUrl.replace(/\/$/, "");
@@ -51,6 +52,15 @@ async function writeEvent(fields) {
   return IntegrationEvent.create(fields).catch((err) => {
     console.error("Failed to write ingestion event", err.message);
   });
+}
+
+function normalizeAnswersForDedupe(answers) {
+  return JSON.stringify((Array.isArray(answers) ? answers : [])
+    .map((item) => ({
+      question: String(item?.question || ""),
+      answer: String(item?.answer || "")
+    }))
+    .sort((a, b) => a.question.localeCompare(b.question) || a.answer.localeCompare(b.answer)));
 }
 
 function publicRequest(row) {
@@ -115,6 +125,36 @@ export async function googleFormsWebhook(req, res) {
     return res.status(400).json({ error: "responseId is required" });
   }
 
+  const answers = Array.isArray(payload.answers) ? payload.answers : [];
+  if (!payload.isTest && formId) {
+    const recentRequests = await Request.findAll({
+      where: {
+        formId,
+        createdAt: { [Op.gte]: new Date(Date.now() - 15_000) }
+      },
+      order: [["createdAt", "DESC"]],
+      limit: 20
+    });
+    const incomingFingerprint = normalizeAnswersForDedupe(answers);
+    const duplicate = recentRequests.find((row) => (
+      row.respondentEmail === (payload.respondentEmail || null)
+      && normalizeAnswersForDedupe(row.answers) === incomingFingerprint
+    ));
+
+    if (duplicate) {
+      await writeEvent({
+        integrationId: integration?.id || null,
+        requestId: duplicate.id,
+        responseId,
+        type: "ingest",
+        status: "duplicate",
+        message: "Near-identical webhook ignored",
+        payload: { formId, duplicateOf: duplicate.responseId }
+      });
+      return res.status(200).json({ ok: true, deduplicated: true, id: duplicate.id });
+    }
+  }
+
   const [record, created] = await Request.findOrCreate({
     where: { responseId },
     defaults: {
@@ -123,7 +163,7 @@ export async function googleFormsWebhook(req, res) {
       formTitle: payload.form?.title || null,
       respondentEmail: payload.respondentEmail || null,
       submittedAt: payload.submittedAt ? new Date(payload.submittedAt) : null,
-      answers: Array.isArray(payload.answers) ? payload.answers : [],
+      answers,
       rawPayload: payload,
       status: payload.isTest ? "test" : "new"
     }
