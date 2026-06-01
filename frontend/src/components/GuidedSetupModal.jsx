@@ -67,6 +67,17 @@ const AUTO_DELIVERY_SCREENSHOTS = [
   }
 ];
 
+const APPS_SCRIPT_API_SCREENSHOTS = [
+  {
+    src: "/setup-screenshots/apps-script-api-off.png",
+    labelKey: "setupAppsScriptApiShotOff"
+  },
+  {
+    src: "/setup-screenshots/apps-script-api-on.png",
+    labelKey: "setupAppsScriptApiShotOn"
+  }
+];
+
 export function GuidedSetupModal({ formId, formTitle, integration: initialIntegration, googleEmail, onClose, onRefresh }) {
   const { t } = useLocale();
   const [integration, setIntegration] = useState(initialIntegration || null);
@@ -470,6 +481,14 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
                   <li>{t.setupAppsScriptApiInstruction2}</li>
                   <li>{t.setupAppsScriptApiInstruction3}</li>
                 </ol>
+                <div className="setup-screenshot-grid">
+                  {APPS_SCRIPT_API_SCREENSHOTS.map((shot) => (
+                    <figure className="setup-screenshot-card" key={shot.src}>
+                      <img src={shot.src} alt={t[shot.labelKey]} loading="lazy" />
+                      <figcaption>{t[shot.labelKey]}</figcaption>
+                    </figure>
+                  ))}
+                </div>
               </div>
             )}
           </div>
