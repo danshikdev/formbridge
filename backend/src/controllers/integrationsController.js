@@ -729,9 +729,7 @@ export async function checkAppsScriptApiStatus(req, res) {
       enabled: result.enabled,
       googleAccount: process.env.DEMO_GOOGLE_ACCOUNT_EMAIL || account.email,
       settingsUrl: "https://script.google.com/home/usersettings",
-      message: result.enabled
-        ? "Google Apps Script API is enabled."
-        : result.message || "Google Apps Script API is not enabled."
+      code: result.enabled ? "apps_script_api_enabled" : "apps_script_api_missing"
     });
   } catch (err) {
     return res.json({
@@ -739,7 +737,7 @@ export async function checkAppsScriptApiStatus(req, res) {
       enabled: false,
       googleAccount: process.env.DEMO_GOOGLE_ACCOUNT_EMAIL || account.email,
       settingsUrl: "https://script.google.com/home/usersettings",
-      message: "Google Apps Script API is not enabled. Open Google settings, enable the API, wait a few minutes, then check again."
+      code: "apps_script_api_missing"
     });
   }
 }

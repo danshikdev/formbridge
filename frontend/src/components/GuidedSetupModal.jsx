@@ -229,11 +229,11 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
         setAppsScriptApiStatus("enabled");
       } else {
         setAppsScriptApiStatus("missing");
-        setError(data.message || t.appsScriptApiMissing);
+        setError(t.appsScriptApiMissing);
       }
     } catch (err) {
       setAppsScriptApiStatus("missing");
-      setError(err.response?.data?.error || err.response?.data?.message || t.appsScriptApiMissing);
+      setError(t.appsScriptApiMissing);
     } finally {
       setCheckingAppsScriptApi(false);
     }
