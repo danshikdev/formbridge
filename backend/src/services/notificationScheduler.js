@@ -5,6 +5,7 @@ import { NotificationSettings } from "../models/notificationSettings.js";
 import { Request } from "../models/request.js";
 import { sendMessage } from "./whatsappService.js";
 import { getScenario } from "../config/formScenarios.js";
+import { syncFormIntegration } from "./googleFormsSyncService.js";
 
 let schedulerStarted = false;
 
@@ -111,9 +112,23 @@ async function buildDailySummaryMessage(setting, today) {
   return lines.join("\n");
 }
 
+async function syncBeforeDailySummary(setting, syncedFormIds) {
+  if (syncedFormIds.has(setting.formId)) return;
+
+  const integration = await FormIntegration.findOne({ where: { formId: setting.formId } });
+  if (!integration || integration.setupMode !== "forms_api_polling" || !integration.syncEnabled) {
+    syncedFormIds.add(setting.formId);
+    return;
+  }
+
+  await syncFormIntegration(integration.id);
+  syncedFormIds.add(setting.formId);
+}
+
 async function runDailySummaryTick() {
   const now = almatyParts();
   const today = todayRangeInAlmaty();
+  const syncedFormIds = new Set();
 
   const settings = await NotificationSettings.findAll({
     where: {
@@ -131,6 +146,7 @@ async function runDailySummaryTick() {
 
   for (const setting of settings) {
     try {
+      await syncBeforeDailySummary(setting, syncedFormIds);
       const message = await buildDailySummaryMessage(setting, today);
       await sendMessage(setting.phoneNumber, message);
       setting.lastDailySummaryDate = today.date;
