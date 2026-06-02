@@ -111,7 +111,7 @@ function TopBar({ t, lang, setLang, isHome }) {
 
   return (
     <header className="topbar clean-topbar home-topbar">
-      <Link to={token ? "/forms" : "/"} className="brand">
+      <Link to={token ? "/" : "/"} className="brand">
         <span className="brand-mark"><img src="/icons/formbridge-icon-192.png" alt="" /></span>
         <span>{t.appName}</span>
       </Link>
