@@ -25,10 +25,11 @@ export async function getNotificationSettings(req, res) {
       id: settings.id,
       enabled: settings.enabled,
       phoneNumber: settings.phoneNumber || "",
-      mode: settings.mode,
-      thresholdCount: settings.thresholdCount,
-      dailyTime: settings.dailyTime || "18:00",
-      channel: settings.channel
+        mode: settings.mode,
+        thresholdCount: settings.thresholdCount,
+        lastThresholdNotifiedAt: settings.lastThresholdNotifiedAt,
+        dailyTime: settings.dailyTime || "18:00",
+        channel: settings.channel
     });
   } catch (err) {
     console.error("getNotificationSettings:", err.message);
@@ -86,13 +87,16 @@ export async function upsertNotificationSettings(req, res) {
 
     const isDailyTimeChanged = settings.dailyTime !== nextDailyTime;
     const isModeChanged = settings.mode !== nextMode;
+    const isThresholdChanged = settings.thresholdCount !== nextThresholdCount;
     const shouldResetSummaryDate = isDailyTimeChanged || isModeChanged;
+    const shouldResetThreshold = isModeChanged || isThresholdChanged;
 
     await settings.update({
       enabled: nextEnabled,
       phoneNumber: normalizedPhoneNumber || null,
       mode: nextMode,
       thresholdCount: nextMode === "threshold" ? nextThresholdCount : null,
+      lastThresholdNotifiedAt: shouldResetThreshold ? new Date() : settings.lastThresholdNotifiedAt,
       dailyTime: nextMode === "daily_summary" ? nextDailyTime : settings.dailyTime || "18:00",
       lastDailySummaryDate: shouldResetSummaryDate ? null : settings.lastDailySummaryDate
     });
@@ -103,6 +107,7 @@ export async function upsertNotificationSettings(req, res) {
       phoneNumber: settings.phoneNumber || "",
       mode: settings.mode,
       thresholdCount: settings.thresholdCount,
+      lastThresholdNotifiedAt: settings.lastThresholdNotifiedAt,
       dailyTime: settings.dailyTime || "18:00",
       channel: settings.channel
     });

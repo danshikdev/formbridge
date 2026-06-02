@@ -38,6 +38,10 @@ export const NotificationSettings = sequelize.define("NotificationSettings", {
     type: DataTypes.INTEGER,
     allowNull: true
   },
+  lastThresholdNotifiedAt: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
   dailyTime: {
     type: DataTypes.STRING,
     allowNull: true

@@ -1,52 +1,10 @@
 import { FormIntegration } from "../models/formIntegration.js";
 import { FormFeedback } from "../models/formFeedback.js";
 import { IntegrationEvent } from "../models/integrationEvent.js";
-import { NotificationSettings } from "../models/notificationSettings.js";
 import { Request } from "../models/request.js";
-import { env } from "../config/env.js";
-import { sendMessage } from "../services/whatsappService.js";
 import { SCENARIO_IDS, getScenario } from "../config/formScenarios.js";
+import { notifyForNewRequests } from "../services/whatsappNotificationService.js";
 import { Op } from "sequelize";
-
-function formRequestsUrl(formId, formTitle) {
-  const baseUrl = env.publicBaseUrl.replace(/\/$/, "");
-  if (!formId) return `${baseUrl}/forms`;
-
-  const params = formTitle
-    ? `?formTitle=${encodeURIComponent(formTitle)}`
-    : "";
-
-  return `${baseUrl}/forms/${encodeURIComponent(formId)}/requests${params}`;
-}
-
-async function dispatchWhatsappNotifications(formId, record) {
-  try {
-    const settings = await NotificationSettings.findAll({
-      where: { formId, channel: "whatsapp", enabled: true }
-    });
-
-    for (const s of settings) {
-      if (!s.phoneNumber) continue;
-      if (s.mode === "daily_summary") continue;
-      const title = record.formTitle || formId;
-      const email = record.respondentEmail ? `\nОт: ${record.respondentEmail}` : "";
-      const text = [
-        "FormBridge: новая заявка",
-        `Форма: «${title}»${email}`,
-        "",
-        `Открыть заявки: ${formRequestsUrl(formId, title)}`
-      ].join("\n");
-      try {
-        await sendMessage(s.phoneNumber, text);
-        console.log(`[WhatsApp] Sent to ${s.phoneNumber}`);
-      } catch (err) {
-        console.warn(`[WhatsApp] Failed to send to ${s.phoneNumber}:`, err.message);
-      }
-    }
-  } catch (err) {
-    console.error("[WhatsApp] dispatchWhatsappNotifications error:", err.message);
-  }
-}
 
 async function writeEvent(fields) {
   return IntegrationEvent.create(fields).catch((err) => {
@@ -193,7 +151,7 @@ export async function googleFormsWebhook(req, res) {
   }
 
   // fire-and-forget — не задерживаем ответ webhook
-  dispatchWhatsappNotifications(formId, record).catch(() => {});
+  notifyForNewRequests(formId, [record]).catch(() => {});
 
   return res.status(201).json({ ok: true, id: record.id });
 }

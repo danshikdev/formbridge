@@ -1,6 +1,7 @@
 import { FormIntegration } from "../models/formIntegration.js";
 import { Request } from "../models/request.js";
 import { getGoogleAccount, getGoogleForm, listGoogleFormResponses } from "./googleService.js";
+import { notifyForNewRequests } from "./whatsappNotificationService.js";
 
 function questionMapFromForm(form) {
   const map = new Map();
@@ -84,6 +85,7 @@ export async function syncFormIntegration(integrationId) {
 
     let created = 0;
     let skipped = 0;
+    const createdRecords = [];
 
     for (const response of responses) {
       if (!response.responseId) {
@@ -92,13 +94,17 @@ export async function syncFormIntegration(integrationId) {
       }
 
       const payload = normalizeResponse(response, { ...integration.toJSON(), formTitle }, questionMap);
-      const [, wasCreated] = await Request.findOrCreate({
+      const [record, wasCreated] = await Request.findOrCreate({
         where: { responseId: payload.responseId },
         defaults: payload
       });
 
-      if (wasCreated) created += 1;
-      else skipped += 1;
+      if (wasCreated) {
+        created += 1;
+        createdRecords.push(record);
+      } else {
+        skipped += 1;
+      }
     }
 
     const lastSyncedAt = new Date();
@@ -130,6 +136,8 @@ export async function syncFormIntegration(integrationId) {
       polling: true
     };
     await integration.save();
+
+    await notifyForNewRequests(integration.formId, createdRecords);
 
     return {
       integration,
