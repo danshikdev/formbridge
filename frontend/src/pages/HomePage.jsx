@@ -15,7 +15,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useLocale } from "../shared/useLocale";
 
-const SCREENSHOT_SRC = "/setup-screenshots/product-dashboard.png";
+const SCREENSHOT_SRC = "/setup-screenshots/forms-dashboard.png";
 
 const SOLUTIONS = [
   { id: "admissions",      Icon: AcademicCapIcon    },
@@ -253,7 +253,7 @@ export function HomePage() {
             {text.workspaceFeatures.map((item) => <span key={item}><CheckCircleIcon />{item}</span>)}
           </div>
         </div>
-        <ProductPreview variant="wide" alt={text.screenshotAlt} src="/setup-screenshots/feature-ai.png" />
+        <ProductPreview variant="wide" alt={text.screenshotAlt} src="/setup-screenshots/product-dashboard.png" />
       </section>
 
       <section className="landing-ai" id="ai">
