@@ -3,6 +3,11 @@ dist/
 .env
 .env.*
 !.env.example
+.claude/
+CLAUDE.md
+PROJECT_CONTEXT.md
+DIPLOMA_PRODUCT_PLAN.md
+DEMO_SCRIPT.md
 secrets/
 logs/
 .pids/
