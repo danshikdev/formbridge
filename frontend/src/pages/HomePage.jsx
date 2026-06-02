@@ -1,10 +1,8 @@
 import { Link } from "react-router-dom";
 import {
-  BellIcon,
   BoltIcon,
   ChartBarSquareIcon,
   CheckCircleIcon,
-  CpuChipIcon,
   DocumentTextIcon,
   ShieldCheckIcon,
   SparklesIcon,
@@ -173,16 +171,6 @@ export function HomePage() {
           </div>
         </div>
         <ProductPreview variant="hero" alt={text.screenshotAlt} />
-      </section>
-
-      <section className="landing-stats" aria-label="FormBridge statistics">
-        {text.stats.map(([value, label]) => (
-          <article key={label}>
-            <div><CpuChipIcon /></div>
-            <strong>{value}</strong>
-            <span>{label}</span>
-          </article>
-        ))}
       </section>
 
       <section className="landing-workspace" id="workspace">
