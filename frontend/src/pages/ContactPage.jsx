@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { CheckCircleIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
 import { useLocale } from "../shared/useLocale";
+import { api } from "../api/client";
 
 const copy = {
   kk: {
@@ -76,6 +77,7 @@ export function ContactPage() {
   const [errors, setErrors] = useState({});
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const [sendError, setSendError] = useState("");
 
   function validate() {
     const next = {};
@@ -90,10 +92,16 @@ export function ContactPage() {
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setErrors({});
+    setSendError("");
     setSending(true);
-    await new Promise((r) => setTimeout(r, 900));
-    setSending(false);
-    setSent(true);
+    try {
+      await api.post("/api/contact", { name, email, message });
+      setSent(true);
+    } catch (err) {
+      setSendError(err.response?.data?.error || "Ошибка отправки. Попробуйте позже.");
+    } finally {
+      setSending(false);
+    }
   }
 
   if (sent) {
@@ -152,6 +160,7 @@ export function ContactPage() {
           <button type="submit" className="primary-btn home-primary" disabled={sending}>
             {sending ? t.sending : t.send}
           </button>
+          {sendError ? <span className="contact-field-error">{sendError}</span> : null}
         </form>
 
         <aside className="contact-info">
@@ -160,7 +169,7 @@ export function ContactPage() {
             <div className="contact-info-icon"><EnvelopeIcon /></div>
             <div>
               <span className="contact-info-label">{t.infoEmail}</span>
-              <span className="contact-info-val">support@formbridge.app</span>
+              <span className="contact-info-val">shora.inc@outlook.com</span>
             </div>
           </div>
           <div className="contact-info-row">
