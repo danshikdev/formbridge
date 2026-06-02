@@ -75,6 +75,22 @@ export async function exchangeCodeForTokens(code) {
   });
 }
 
+export async function revokeGoogleToken(token) {
+  if (!token) return false;
+
+  try {
+    await googleFetch("https://oauth2.googleapis.com/revoke", {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ token })
+    });
+    return true;
+  } catch (err) {
+    console.warn("[Google] token revoke failed:", err.message);
+    return false;
+  }
+}
+
 export async function refreshAccessToken(account) {
   if (!account.refreshToken) {
     throw new Error("Google refresh token is missing. Reconnect Google account.");

@@ -10,6 +10,7 @@ import { FormFeedback } from "../models/formFeedback.js";
 import { GoogleAccount } from "../models/googleAccount.js";
 import { IntegrationEvent } from "../models/integrationEvent.js";
 import { NotificationSettings } from "../models/notificationSettings.js";
+import { revokeGoogleToken } from "../services/googleService.js";
 import { env } from "../config/env.js";
 
 export const adminRoutes = Router();
@@ -140,18 +141,48 @@ adminRoutes.post("/users/clear-data", async (req, res) => {
     return res.status(400).json({ error: "Email confirmation does not match" });
   }
 
-  if (email === String(req.user.email || "").trim().toLowerCase()) {
-    return res.status(400).json({ error: "You cannot clear your own admin account from this screen" });
-  }
-
   try {
+    const tokensToRevoke = [];
     const result = await sequelize.transaction(async (transaction) => {
       const user = await User.findOne({
         where: sequelize.where(sequelize.fn("lower", sequelize.col("email")), email),
         transaction
       });
 
-      if (!user) {
+      const googleAccountWhere = user
+        ? {
+            [Op.or]: [
+              { userId: user.id },
+              sequelize.where(sequelize.fn("lower", sequelize.col("email")), email)
+            ]
+          }
+        : sequelize.where(sequelize.fn("lower", sequelize.col("email")), email);
+
+      const googleAccountRows = await GoogleAccount.findAll({
+        where: googleAccountWhere,
+        transaction
+      });
+      const googleAccountIds = googleAccountRows.map((item) => item.id);
+      for (const account of googleAccountRows) {
+        if (account.refreshToken) tokensToRevoke.push(account.refreshToken);
+        else if (account.accessToken) tokensToRevoke.push(account.accessToken);
+      }
+
+      const integrationWhereParts = [];
+      if (user) integrationWhereParts.push({ userId: user.id });
+      if (googleAccountIds.length) integrationWhereParts.push({ googleAccountId: { [Op.in]: googleAccountIds } });
+
+      const integrations = integrationWhereParts.length
+        ? await FormIntegration.findAll({
+            where: { [Op.or]: integrationWhereParts },
+            attributes: ["id", "formId"],
+            transaction
+          })
+        : [];
+      const integrationIds = integrations.map((item) => item.id);
+      const formIds = integrations.map((item) => item.formId).filter(Boolean);
+
+      if (!user && !googleAccountRows.length && !integrations.length) {
         return {
           found: false,
           email,
@@ -166,14 +197,6 @@ adminRoutes.post("/users/clear-data", async (req, res) => {
           }
         };
       }
-
-      const integrations = await FormIntegration.findAll({
-        where: { userId: user.id },
-        attributes: ["id", "formId"],
-        transaction
-      });
-      const integrationIds = integrations.map((item) => item.id);
-      const formIds = integrations.map((item) => item.formId).filter(Boolean);
 
       const requests = formIds.length
         ? await Request.findAll({
@@ -200,7 +223,7 @@ adminRoutes.post("/users/clear-data", async (req, res) => {
       const notificationSettings = await NotificationSettings.destroy({
         where: {
           [Op.or]: [
-            { userId: user.id },
+            user ? { userId: user.id } : null,
             formIds.length ? { formId: { [Op.in]: formIds } } : null
           ].filter(Boolean)
         },
@@ -210,7 +233,7 @@ adminRoutes.post("/users/clear-data", async (req, res) => {
       const feedback = await FormFeedback.destroy({
         where: {
           [Op.or]: [
-            { userId: user.id },
+            user ? { userId: user.id } : null,
             formIds.length ? { formId: { [Op.in]: formIds } } : null
           ].filter(Boolean)
         },
@@ -222,19 +245,23 @@ adminRoutes.post("/users/clear-data", async (req, res) => {
         : 0;
 
       const deletedIntegrations = await FormIntegration.destroy({
-        where: { userId: user.id },
+        where: { id: { [Op.in]: integrationIds } },
         transaction
       });
 
-      const googleAccounts = await GoogleAccount.destroy({
-        where: { userId: user.id },
-        transaction
-      });
+      const googleAccounts = googleAccountIds.length
+        ? await GoogleAccount.destroy({
+            where: { id: { [Op.in]: googleAccountIds } },
+            transaction
+          })
+        : 0;
 
-      const users = await User.destroy({
-        where: { id: user.id },
-        transaction
-      });
+      const users = user
+        ? await User.destroy({
+            where: { id: user.id },
+            transaction
+          })
+        : 0;
 
       return {
         found: true,
@@ -251,7 +278,12 @@ adminRoutes.post("/users/clear-data", async (req, res) => {
       };
     });
 
-    res.json({ ok: true, ...result });
+    const revokedTokens = [];
+    for (const token of [...new Set(tokensToRevoke)]) {
+      if (await revokeGoogleToken(token)) revokedTokens.push(token);
+    }
+
+    res.json({ ok: true, ...result, revokedGoogleTokens: revokedTokens.length });
   } catch (err) {
     console.error("[admin/users/clear-data]", err);
     res.status(500).json({ error: "Failed to clear user data" });
