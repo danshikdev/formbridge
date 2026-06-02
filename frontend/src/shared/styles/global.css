@@ -1183,6 +1183,46 @@ html {
   line-height: 1.6;
 }
 
+.footer-dev-card {
+  display: grid;
+  gap: 6px;
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.footer-dev-label {
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.footer-dev-name {
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 800;
+  text-decoration: none;
+  width: fit-content;
+}
+.footer-dev-name:hover { color: var(--brand); }
+
+.footer-dev-contacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 2px;
+}
+.footer-dev-contacts a {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.footer-dev-contacts a:hover { color: var(--brand); }
+
 .landing-footer-groups {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

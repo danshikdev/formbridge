@@ -92,7 +92,6 @@ const copy = {
       ["Өнім", "Жұмыс кеңістігі", "ЖИ көмекші", "Есептер", "Қалай жұмыс істейді"],
       ["Шешімдер", "Қабылдау", "Клиент өтініштері", "HR", "Сауалнама", "Іс-шара", "Универсал"],
       ["Компания", "Біз туралы", "Байланыс", "Бастау"],
-      ["Shora", "shora.site", "+7 708 538 1689", "shora.inc@outlook.com"],
     ],
     copyright: "© 2026 FormBridge. Барлық құқықтар қорғалған.",
     screenshotAlt: "FormBridge жұмыс кеңістігінің нақты көрінісі"
@@ -162,7 +161,6 @@ const copy = {
       ["Продукт", "Рабочее пространство", "AI помощник", "Отчёты", "Как работает"],
       ["Решения", "Приёмная комиссия", "Клиентские заявки", "HR", "Опросы", "Мероприятие", "Универсал"],
       ["Компания", "О нас", "Контакты", "Начать"],
-      ["Shora", "shora.site", "+7 708 538 1689", "shora.inc@outlook.com"],
     ],
     copyright: "© 2026 FormBridge. Все права защищены.",
     screenshotAlt: "Реальный вид рабочего пространства FormBridge"
@@ -227,7 +225,6 @@ const copy = {
       ["Product", "Workspace", "AI Assistant", "Reports", "How it works"],
       ["Solutions", "Admissions", "Client requests", "HR", "Surveys", "Events", "Universal"],
       ["Company", "About", "Contact", "Get started"],
-      ["Shora", "shora.site", "+7 708 538 1689", "shora.inc@outlook.com"],
     ],
     copyright: "© 2026 FormBridge. All rights reserved.",
     screenshotAlt: "Real FormBridge workspace dashboard"
@@ -242,7 +239,6 @@ const FOOTER_HREFS = [
   ["/#workspace", "/#ai", "/#reports", "/#workflow"],
   ["/solutions/admissions", "/solutions/client_requests", "/solutions/hr", "/solutions/survey", "/solutions/event", "/solutions/universal"],
   ["/about", "/contact", "/login"],
-  ["https://shora.site", "tel:+77085381689", "mailto:shora.inc@outlook.com", "https://shora.site"],
 ];
 
 function ProductPreview({ variant = "hero", alt, src }) {
@@ -410,6 +406,15 @@ export function HomePage() {
         <div className="landing-footer-brand">
           <strong>FormBridge</strong>
           <p>{text.footerText}</p>
+          <div className="footer-dev-card">
+            <span className="footer-dev-label">{text.aboutCreatorLabel}</span>
+            <a className="footer-dev-name" href="https://shora.site" target="_blank" rel="noopener noreferrer">Shora</a>
+            <div className="footer-dev-contacts">
+              <a href="https://shora.site" target="_blank" rel="noopener noreferrer">shora.site</a>
+              <a href="tel:+77085381689">+7 708 538 1689</a>
+              <a href="mailto:shora.inc@outlook.com">shora.inc@outlook.com</a>
+            </div>
+          </div>
         </div>
         <div className="landing-footer-groups">
           {text.footerGroups.map(([title, ...items], gi) => (
