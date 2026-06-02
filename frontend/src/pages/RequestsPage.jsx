@@ -56,6 +56,30 @@ const ATTENTION_STATUSES = {
 const DATE_FILTERS = ["all", "today", "yesterday", "last7", "last30", "custom"];
 
 const WORKSPACE_TABS = ["requests", "analytics", "ai", "whatsapp", "reports", "feedback"];
+const WORKSPACE_TAB_STORAGE_PREFIX = "formbridge.workspace.activeTab.";
+
+function workspaceTabStorageKey(formId) {
+  return `${WORKSPACE_TAB_STORAGE_PREFIX}${formId || "default"}`;
+}
+
+function readStoredWorkspaceTab(formId) {
+  if (typeof window === "undefined") return null;
+  try {
+    const tab = window.localStorage.getItem(workspaceTabStorageKey(formId));
+    return WORKSPACE_TABS.includes(tab) ? tab : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeStoredWorkspaceTab(formId, tab) {
+  if (typeof window === "undefined" || !WORKSPACE_TABS.includes(tab)) return;
+  try {
+    window.localStorage.setItem(workspaceTabStorageKey(formId), tab);
+  } catch {
+    // Ignore storage errors so tab switching still works in restricted browsers.
+  }
+}
 
 function SkeletonLine({ className = "" }) {
   return <span className={`skeleton-line ${className}`} aria-hidden="true" />;
@@ -1587,15 +1611,28 @@ export function RequestsPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState("");
-  const initialTab = WORKSPACE_TABS.includes(searchParams.get("tab")) ? searchParams.get("tab") : "requests";
+  const initialTab = WORKSPACE_TABS.includes(searchParams.get("tab"))
+    ? searchParams.get("tab")
+    : readStoredWorkspaceTab(formId) || "requests";
   const [activeTab, setActiveTab] = useState(initialTab);
   const exportRef = useRef(null);
   const menuRef = useRef(null);
 
   useEffect(() => {
     const nextTab = searchParams.get("tab");
-    if (WORKSPACE_TABS.includes(nextTab)) setActiveTab(nextTab);
-  }, [searchParams]);
+    if (WORKSPACE_TABS.includes(nextTab)) {
+      setActiveTab(nextTab);
+      writeStoredWorkspaceTab(formId, nextTab);
+      return;
+    }
+    const storedTab = readStoredWorkspaceTab(formId);
+    if (storedTab) setActiveTab(storedTab);
+  }, [formId, searchParams]);
+
+  function handleTabChange(tab) {
+    setActiveTab(tab);
+    writeStoredWorkspaceTab(formId, tab);
+  }
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -1834,7 +1871,7 @@ export function RequestsPage() {
             key={tab}
             type="button"
             className={`workspace-tab${activeTab === tab ? " workspace-tab--active" : ""}`}
-            onClick={() => setActiveTab(tab)}
+            onClick={() => handleTabChange(tab)}
             role="tab"
             aria-selected={activeTab === tab}
           >
