@@ -112,15 +112,15 @@ html {
   max-width: 720px;
   margin: 0;
   color: var(--text-primary);
-  font-size: clamp(2.55rem, 4.8vw, 3.75rem);
-  line-height: 1.08;
+  font-size: clamp(1.85rem, 3.2vw, 2.75rem);
+  line-height: 1.1;
   letter-spacing: 0;
   overflow-wrap: break-word;
 }
 
 .home-lang-kk .landing-hero-copy h1 {
   max-width: 680px;
-  font-size: clamp(2.35rem, 4.1vw, 3.85rem);
+  font-size: clamp(1.75rem, 3vw, 2.55rem);
 }
 
 .landing-hero-copy p {
@@ -9171,8 +9171,8 @@ select {
 @media (max-width: 620px) {
   .landing-hero-copy h1,
   .home-lang-kk .landing-hero-copy h1 {
-    font-size: clamp(2.05rem, 12vw, 3rem);
-    line-height: 1.1;
+    font-size: clamp(1.65rem, 7.5vw, 2.1rem);
+    line-height: 1.12;
   }
 
   .landing-stats,
@@ -9300,8 +9300,8 @@ select {
   }
   .landing-hero-copy h1,
   .home-lang-kk .landing-hero-copy h1 {
-    font-size: clamp(1.9rem, 10.5vw, 2.6rem);
-    line-height: 1.1;
+    font-size: clamp(1.55rem, 7vw, 1.9rem);
+    line-height: 1.12;
   }
 }
 
@@ -9312,8 +9312,8 @@ select {
   }
   .landing-hero-copy h1,
   .home-lang-kk .landing-hero-copy h1 {
-    font-size: clamp(1.75rem, 9.5vw, 2rem);
-    line-height: 1.12;
+    font-size: clamp(1.45rem, 6.5vw, 1.65rem);
+    line-height: 1.13;
   }
   .landing-hero-copy p {
     font-size: 0.95rem;
