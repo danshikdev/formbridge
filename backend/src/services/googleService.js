@@ -139,6 +139,17 @@ export async function getGoogleForm(account, formId) {
   });
 }
 
+export async function getDriveFile(account, fileId) {
+  const token = await getValidAccessToken(account);
+  const params = new URLSearchParams({
+    fields: "id,name,mimeType,trashed,webViewLink"
+  });
+
+  return googleFetch(`https://www.googleapis.com/drive/v3/files/${fileId}?${params.toString()}`, {
+    headers: { authorization: `Bearer ${token}` }
+  });
+}
+
 export async function createSpreadsheet(account, title) {
   const token = await getValidAccessToken(account);
   return googleFetch("https://sheets.googleapis.com/v4/spreadsheets", {

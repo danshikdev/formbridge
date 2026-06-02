@@ -8,6 +8,7 @@ import {
   checkAppsScriptApi,
   createAppsScriptProject,
   createSpreadsheet,
+  getDriveFile,
   getGoogleAccount,
   getGoogleForm,
   updateAppsScriptContent
@@ -44,6 +45,48 @@ function scriptEditorUrl(scriptProjectId, account) {
 
 function generateSecret() {
   return crypto.randomBytes(32).toString("hex");
+}
+
+const GOOGLE_SHEETS_MIME_TYPE = "application/vnd.google-apps.spreadsheet";
+
+async function resolveUsableLinkedSheet(account, linkedSheetId, formId) {
+  if (!linkedSheetId) return null;
+
+  try {
+    const file = await getDriveFile(account, linkedSheetId);
+    if (file.trashed) {
+      await logIntegrationEvent({
+        type: "linked_sheet_check",
+        status: "warning",
+        message: "Linked Google Sheet is in trash; FormBridge will prepare a new Sheet.",
+        payload: { formId, sheetId: linkedSheetId, fileName: file.name || null }
+      });
+      return null;
+    }
+
+    if (file.mimeType !== GOOGLE_SHEETS_MIME_TYPE) {
+      await logIntegrationEvent({
+        type: "linked_sheet_check",
+        status: "warning",
+        message: "Linked response destination is not a Google Sheet; FormBridge will prepare a new Sheet.",
+        payload: { formId, sheetId: linkedSheetId, mimeType: file.mimeType || null }
+      });
+      return null;
+    }
+
+    return {
+      sheetId: file.id,
+      sheetUrl: file.webViewLink || sheetUrlFromId(file.id)
+    };
+  } catch (err) {
+    await logIntegrationEvent({
+      type: "linked_sheet_check",
+      status: "warning",
+      message: `Linked Google Sheet is not accessible; FormBridge will prepare a new Sheet: ${err.message}`,
+      payload: { formId, sheetId: linkedSheetId, status: err.status || null }
+    });
+    return null;
+  }
 }
 
 
@@ -420,10 +463,13 @@ export async function setupGoogleIntegration(req, res) {
     const googleForm = await getGoogleForm(account, formId);
     resolvedTitle = googleForm.info?.title || resolvedTitle;
     if (googleForm.linkedSheetId) {
-      sheetId = googleForm.linkedSheetId;
-      sheetUrl = sheetUrlFromId(sheetId);
-      checklist.sheet = true;
-      setupNote = "Existing Google Forms response Sheet found. Apps Script trigger installation is ready.";
+      const linkedSheet = await resolveUsableLinkedSheet(account, googleForm.linkedSheetId, formId);
+      if (linkedSheet) {
+        sheetId = linkedSheet.sheetId;
+        sheetUrl = linkedSheet.sheetUrl;
+        checklist.sheet = true;
+        setupNote = "Existing Google Forms response Sheet found. Apps Script trigger installation is ready.";
+      }
     }
   } catch (err) {
     await logIntegrationEvent({ type: "google_form_read", status: "error", message: err.message, payload: { formId } });
@@ -468,14 +514,14 @@ export async function setupGoogleIntegration(req, res) {
       googleAccountId: account.id,
       formUrl: formUrlFromId(formId),
       formTitle: resolvedTitle,
-      sheetId: record.sheetId || sheetId,
-      sheetUrl: record.sheetUrl || sheetUrl,
+      sheetId: sheetId || record.sheetId,
+      sheetUrl: sheetUrl || record.sheetUrl,
       webhookUrl,
       webhookSecret: record.webhookSecret || webhookSecret,
       setupMode: "oauth",
-      status: checklist.sheet || record.sheetId ? "configured" : "draft",
-      healthStatus: checklist.sheet || record.sheetId ? "needs_trigger" : "needs_sheet",
-      setupChecklist: { ...checklist, sheet: Boolean(record.sheetId || sheetId) }
+      status: checklist.sheet || sheetId || record.sheetId ? "configured" : "draft",
+      healthStatus: checklist.sheet || sheetId || record.sheetId ? "needs_trigger" : "needs_sheet",
+      setupChecklist: { ...checklist, sheet: Boolean(sheetId || record.sheetId) }
     });
   }
 

@@ -55,7 +55,7 @@ const ATTENTION_STATUSES = {
 
 const DATE_FILTERS = ["all", "today", "yesterday", "last7", "last30", "custom"];
 
-const WORKSPACE_TABS = ["requests", "analytics", "ai", "whatsapp", "reports", "integration"];
+const WORKSPACE_TABS = ["requests", "analytics", "ai", "whatsapp", "reports", "feedback"];
 
 function SkeletonLine({ className = "" }) {
   return <span className={`skeleton-line ${className}`} aria-hidden="true" />;
@@ -536,6 +536,66 @@ function FeedbackModal({ formId, t, onClose }) {
               </button>
             </div>
           </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function FeedbackPanel({ formId, t }) {
+  const [message, setMessage] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [sentItems, setSentItems] = useState([]);
+  const [error, setError] = useState("");
+
+  async function submit() {
+    if (!message.trim()) return;
+    const nextMessage = message.trim();
+    setSaving(true);
+    setError("");
+    try {
+      await api.post(`/api/forms/${encodeURIComponent(formId)}/feedback`, { message: nextMessage });
+      setSentItems((prev) => [{ message: nextMessage, createdAt: new Date().toISOString() }, ...prev]);
+      setMessage("");
+    } catch {
+      setError(t.feedbackError);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="feedback-panel">
+      <div className="feedback-panel-copy">
+        <span className="section-kicker">{t.feedbackBtn}</span>
+        <h2>{t.feedbackPanelTitle}</h2>
+        <p>{t.feedbackPanelSubtitle}</p>
+      </div>
+      <div className="feedback-panel-card">
+        <textarea
+          className="feedback-textarea"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder={t.feedbackPlaceholder}
+          rows={5}
+          disabled={saving}
+        />
+        {error ? <p className="error feedback-panel-error">{error}</p> : null}
+        <button className="primary-btn compact-action-btn" type="button" onClick={submit} disabled={saving || !message.trim()}>
+          {saving ? "..." : t.feedbackSubmit}
+        </button>
+      </div>
+      <div className="feedback-panel-list">
+        <h3>{t.feedbackMySuggestions}</h3>
+        {sentItems.length === 0 ? (
+          <p className="muted">{t.feedbackNoSuggestions}</p>
+        ) : (
+          sentItems.map((item) => (
+            <article key={`${item.createdAt}-${item.message}`}>
+              <p>{item.message}</p>
+              <span>{new Date(item.createdAt).toLocaleString()}</span>
+            </article>
+          ))
         )}
       </div>
     </div>
@@ -1386,7 +1446,7 @@ export function RequestsPage() {
     ai: t.aiTab,
     whatsapp: t.whatsappTab,
     reports: t.reportsTab,
-    integration: t.integrationTab
+    feedback: t.feedbackTab
   };
 
   if (loading) return <RequestsPageSkeleton />;
@@ -1756,22 +1816,9 @@ export function RequestsPage() {
         </div>
       )}
 
-      {activeTab === "integration" && (
-        <div className="workspace-tab-panel integration-info-panel">
-          <div>
-            <h2>{t.integrationTitle}</h2>
-            <p>{t.integrationSubtitle}</p>
-          </div>
-          <div className="integration-flow">
-            {["Google Form", "Google Sheet", "Apps Script", "FormBridge API", "PostgreSQL", "React CRM"].map((step) => (
-              <span key={step}>{step}</span>
-            ))}
-          </div>
-          <div className="integration-links">
-            {workspace?.form?.formUrl && <a className="official-link-btn" href={workspace.form.formUrl} target="_blank" rel="noopener noreferrer">{t.openGoogleForm}</a>}
-            {workspace?.form?.sheetUrl && <a className="official-link-btn" href={workspace.form.sheetUrl} target="_blank" rel="noopener noreferrer">{t.openGoogleSheet}</a>}
-            <Link className="official-link-btn" to="/forms">{t.continueSetup}</Link>
-          </div>
+      {activeTab === "feedback" && (
+        <div className="workspace-tab-panel">
+          <FeedbackPanel formId={formId} t={t} />
         </div>
       )}
 
