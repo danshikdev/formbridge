@@ -4929,6 +4929,10 @@ body {
   padding: 14px 16px;
 }
 
+.analytics-section--timeline {
+  overflow-x: auto;
+}
+
 /* Donut chart */
 .analytics-donut-wrap {
   display: flex;
@@ -4996,6 +5000,7 @@ body {
   gap: 4px;
   height: 80px;
   padding-top: 20px;
+  min-width: 340px;
 }
 
 .analytics-tl-col {
