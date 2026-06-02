@@ -7,6 +7,8 @@ import {
 } from "@heroicons/react/24/outline";
 import { LoginPage } from "../pages/LoginPage.jsx";
 import { HomePage } from "../pages/HomePage.jsx";
+import { AboutPage } from "../pages/AboutPage.jsx";
+import { ContactPage } from "../pages/ContactPage.jsx";
 import { SolutionPage } from "../pages/SolutionPage.jsx";
 import { ProfilePage } from "../pages/ProfilePage.jsx";
 import { RequestsPage } from "../pages/RequestsPage.jsx";
@@ -326,6 +328,8 @@ export function App() {
             <Routes>
               <Route path="/login" element={<LoginPage t={t} />} />
               <Route path="/" element={<HomePage />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/contact" element={<ContactPage />} />
               <Route path="/solutions/:solutionId" element={<SolutionPage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>

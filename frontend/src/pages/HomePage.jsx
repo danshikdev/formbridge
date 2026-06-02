@@ -41,8 +41,8 @@ const copy = {
     workflowLabel: "Қалай жұмыс істейді",
     workflowTitle: "Google Forms деректері FormBridge ішінде қалай жұмыс істейді",
     workflowSteps: [
-      ["Google Forms қосу", "Формаңыздан келетін жауаптар бір жүйеге бағытталады."],
-      ["Apps Script байланысы", "Google Sheets арқылы жаңа жауаптар қауіпсіз жіберіледі."],
+      ["Google Forms қосу", "FormBridge Google аккаунтыңызға қосылып, формаңызды автоматты анықтайды."],
+      ["Google Forms API арқылы синхрондау", "Жауаптар Google Forms API арқылы тікелей оқылады — Sheets немесе Apps Script қажет емес."],
       ["Деректерді өңдеу", "Өтініштер сақталып, статус пен жауапты адамға бөлінеді."],
       ["Аналитика және ЖИ", "Жүйе деректерді талдап, қысқаша ұсыныстар береді."],
       ["Өтініштерді басқару", "Команда барлық өтінішті бір жұмыс кеңістігінде бақылайды."]
@@ -105,8 +105,8 @@ const copy = {
     workflowLabel: "Как работает",
     workflowTitle: "Как данные Google Forms попадают в FormBridge",
     workflowSteps: [
-      ["Подключение Google Forms", "Ответы из формы направляются в единую систему."],
-      ["Связь через Apps Script", "Новые ответы безопасно передаются через Google Sheets."],
+      ["Подключение Google Forms", "FormBridge подключается к вашему Google-аккаунту и автоматически находит форму."],
+      ["Синхронизация через Google Forms API", "Ответы читаются напрямую через Google Forms API — без Sheets и Apps Script."],
       ["Обработка данных", "Заявки сохраняются, получают статус и ответственного."],
       ["Аналитика и AI", "Система анализирует данные и показывает краткие рекомендации."],
       ["Управление заявками", "Команда работает с заявками в одном пространстве."]
@@ -169,8 +169,8 @@ const copy = {
     workflowLabel: "How it works",
     workflowTitle: "How Google Forms data flows into FormBridge",
     workflowSteps: [
-      ["Connect Google Forms", "Form responses are routed into one management system."],
-      ["Apps Script integration", "New answers are transferred through Google Sheets securely."],
+      ["Connect Google Forms", "FormBridge connects to your Google account and detects your form automatically."],
+      ["Sync via Google Forms API", "Responses are read directly through the Google Forms API — no Sheets or Apps Script needed."],
       ["Data processing", "Requests are stored, assigned a status and an owner."],
       ["Analytics and AI", "The platform analyzes data and returns concise recommendations."],
       ["Request management", "Teams manage every request from one workspace."]
@@ -223,7 +223,7 @@ const workflowIcons = [DocumentTextIcon, BoltIcon, CpuChipIcon, ChartBarSquareIc
 const FOOTER_HREFS = [
   ["/#workspace", "/#ai", "/#reports", "/#workflow"],
   ["/solutions/admissions", "/solutions/client_requests", "/solutions/hr", "/solutions/survey"],
-  ["/#about", "/#about", "/#pricing"],
+  ["/about", "/contact", "/login"],
 ];
 
 function ProductPreview({ variant = "hero", alt, src }) {

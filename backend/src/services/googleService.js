@@ -1,4 +1,3 @@
-import dotenv from "dotenv";
 import { env } from "../config/env.js";
 import { GoogleAccount } from "../models/googleAccount.js";
 
@@ -175,74 +174,3 @@ export async function listGoogleFormResponses(account, formId) {
   return responses;
 }
 
-export async function getDriveFile(account, fileId) {
-  const token = await getValidAccessToken(account);
-  const params = new URLSearchParams({
-    fields: "id,name,mimeType,trashed,webViewLink"
-  });
-
-  return googleFetch(`https://www.googleapis.com/drive/v3/files/${fileId}?${params.toString()}`, {
-    headers: { authorization: `Bearer ${token}` }
-  });
-}
-
-export async function createSpreadsheet(account, title) {
-  const token = await getValidAccessToken(account);
-  return googleFetch("https://sheets.googleapis.com/v4/spreadsheets", {
-    method: "POST",
-    headers: {
-      authorization: `Bearer ${token}`,
-      "content-type": "application/json"
-    },
-    body: JSON.stringify({ properties: { title } })
-  });
-}
-
-export function buildWebhookUrl() {
-  dotenv.config({ override: true });
-  const publicBaseUrl = process.env.PUBLIC_BASE_URL || env.publicBaseUrl;
-  return `${publicBaseUrl.replace(/\/$/, "")}/api/forms/webhook/google`;
-}
-
-export async function createAppsScriptProject(account, title, parentId) {
-  const token = await getValidAccessToken(account);
-  return googleFetch("https://script.googleapis.com/v1/projects", {
-    method: "POST",
-    headers: {
-      authorization: `Bearer ${token}`,
-      "content-type": "application/json"
-    },
-    body: JSON.stringify({ title, parentId })
-  });
-}
-
-export async function updateAppsScriptContent(account, scriptId, files) {
-  const token = await getValidAccessToken(account);
-  return googleFetch(`https://script.googleapis.com/v1/projects/${scriptId}/content`, {
-    method: "PUT",
-    headers: {
-      authorization: `Bearer ${token}`,
-      "content-type": "application/json"
-    },
-    body: JSON.stringify({ files })
-  });
-}
-
-export async function checkAppsScriptApi(account) {
-  const token = await getValidAccessToken(account);
-  try {
-    await googleFetch("https://script.googleapis.com/v1/projects/formbridgeapicheck000000000000000000000000000000000000000000000000/content", {
-      headers: { authorization: `Bearer ${token}` }
-    });
-    return { enabled: true };
-  } catch (error) {
-    const message = error.message || "";
-    if (/not found|requested entity was not found|permission denied|not have permission|invalid argument/i.test(message)) {
-      return { enabled: true };
-    }
-    if (/has not enabled|access not configured|api has not been used|disabled/i.test(message)) {
-      return { enabled: false, message };
-    }
-    throw error;
-  }
-}
