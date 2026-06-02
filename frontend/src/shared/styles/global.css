@@ -92,6 +92,9 @@ html {
 }
 
 .home-page {
+  width: min(1240px, 100%);
+  display: grid;
+  gap: 72px;
   padding-bottom: 28px;
 }
 
