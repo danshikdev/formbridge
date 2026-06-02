@@ -160,9 +160,9 @@ export function AdminPage() {
           <table className="admin-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Registered</th>
+                <th>{t.adminNameColumn}</th>
+                <th>{t.adminEmailColumn}</th>
+                <th>{t.adminRegisteredColumn}</th>
               </tr>
             </thead>
             <tbody>
@@ -190,12 +190,12 @@ export function AdminPage() {
           <table className="admin-table">
             <thead>
               <tr>
-                <th>User</th>
-                <th>Scenario</th>
-                <th>Message</th>
-                <th>Status</th>
-                <th>Date</th>
-                <th>Actions</th>
+                <th>{t.adminUserColumn}</th>
+                <th>{t.adminScenarioColumn}</th>
+                <th>{t.adminMessageColumn}</th>
+                <th>{t.adminStatusColumn}</th>
+                <th>{t.adminDateColumn}</th>
+                <th>{t.adminActionsColumn}</th>
               </tr>
             </thead>
             <tbody>

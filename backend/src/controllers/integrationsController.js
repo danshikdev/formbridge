@@ -419,11 +419,17 @@ export async function setupGoogleIntegration(req, res) {
   try {
     const googleForm = await getGoogleForm(account, formId);
     resolvedTitle = googleForm.info?.title || resolvedTitle;
+    if (googleForm.linkedSheetId) {
+      sheetId = googleForm.linkedSheetId;
+      sheetUrl = sheetUrlFromId(sheetId);
+      checklist.sheet = true;
+      setupNote = "Existing Google Forms response Sheet found. Apps Script trigger installation is ready.";
+    }
   } catch (err) {
     await logIntegrationEvent({ type: "google_form_read", status: "error", message: err.message, payload: { formId } });
   }
 
-  if (shouldCreateSheet) {
+  if (shouldCreateSheet && !sheetId) {
     try {
       const spreadsheet = await createSpreadsheet(account, `FormBridge - ${resolvedTitle}`);
       sheetId = spreadsheet.spreadsheetId;

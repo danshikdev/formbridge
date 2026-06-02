@@ -55,6 +55,8 @@ const ATTENTION_STATUSES = {
 
 const DATE_FILTERS = ["all", "today", "yesterday", "last7", "last30", "custom"];
 
+const WORKSPACE_TABS = ["requests", "analytics", "ai", "whatsapp", "reports", "integration"];
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function isWithinDateRange(dateStr, range, from, to) {
@@ -1169,8 +1171,15 @@ export function RequestsPage() {
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportType, setReportType] = useState("pdf"); // "pdf" | "word"
   const [menuOpen, setMenuOpen] = useState(false);
+  const initialTab = WORKSPACE_TABS.includes(searchParams.get("tab")) ? searchParams.get("tab") : "requests";
+  const [activeTab, setActiveTab] = useState(initialTab);
   const exportRef = useRef(null);
   const menuRef = useRef(null);
+
+  useEffect(() => {
+    const nextTab = searchParams.get("tab");
+    if (WORKSPACE_TABS.includes(nextTab)) setActiveTab(nextTab);
+  }, [searchParams]);
 
   useEffect(() => {
     if (!exportOpen) return;
@@ -1303,6 +1312,14 @@ export function RequestsPage() {
   const workspaceLabel = scenarioMeta?.workspaceTitle?.[lang] || scenarioMeta?.workspaceTitle?.ru || t.inbox;
 
   const displayTitle = formTitle || workspace?.form?.title || t.requestsTitle;
+  const tabLabels = {
+    requests: scenario === "survey" ? t.surveyResponsesLabel : t.requestsTab,
+    analytics: t.analyticsTab,
+    ai: t.aiTab,
+    whatsapp: t.whatsappTab,
+    reports: t.reportsTab,
+    integration: t.integrationTab
+  };
 
   if (loading) return <section className="card"><p className="muted">{t.loadingRequests}</p></section>;
   if (error) return <section className="card"><p className="error">{error}</p></section>;
@@ -1429,92 +1446,75 @@ export function RequestsPage() {
         <SurveyInsightsPanel items={items} t={t} />
       )}
 
-      {/* ── Toolbar ── */}
-      <div className="official-toolbar">
-        <label>
-          {t.search}
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t.searchPlaceholder} />
-        </label>
-        <label>
-          {t.status}
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-            {scenarioStatuses.map((s) => (
-              <option key={s || "all"} value={s}>{s ? statusLabel(s, t) : t.all}</option>
-            ))}
-          </select>
-        </label>
-        <div className="toolbar-date-group">
-          <label>
-            {t.dateRange}
-            <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}>
-              {DATE_FILTERS.map((f) => (
-                <option key={f} value={f}>
-                  {f === "all" ? t.all
-                    : f === "today" ? t.dateFilterToday
-                    : f === "yesterday" ? t.dateFilterYesterday
-                    : f === "last7" ? t.dateFilterLast7
-                    : f === "last30" ? t.dateFilterLast30
-                    : t.dateFilterCustom}
-                </option>
-              ))}
-            </select>
-          </label>
-          {dateFilter === "custom" && (
-            <div className="toolbar-date-custom">
-              <label className="toolbar-date-input-label">
-                <span>{t.dateFrom}</span>
-                <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
-              </label>
-              <span className="toolbar-date-sep">—</span>
-              <label className="toolbar-date-input-label">
-                <span>{t.dateTo}</span>
-                <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
-              </label>
-            </div>
-          )}
-        </div>
+      <div className="workspace-tabs" role="tablist" aria-label={t.workspaceTabsLabel}>
+        {WORKSPACE_TABS.map((tab) => (
+          <button
+            key={tab}
+            type="button"
+            className={`workspace-tab${activeTab === tab ? " workspace-tab--active" : ""}`}
+            onClick={() => setActiveTab(tab)}
+            role="tab"
+            aria-selected={activeTab === tab}
+          >
+            {tabLabels[tab]}
+          </button>
+        ))}
       </div>
 
-      {/* ── Workspace (Table + Details) ── */}
-      <div className="official-workspace">
-        <div className="official-table-card">
-          <div className="official-card-title">
-            <h2>{workspaceLabel}</h2>
-            <div className="export-area">
-              <span>{filteredItems.length} {scenario === "survey" ? t.surveyResponsesLabel : t.requestsCount}</span>
-              <div className="export-menu-wrap" ref={exportRef}>
-                <button
-                  className="export-btn"
-                  onClick={() => setExportOpen((o) => !o)}
-                  disabled={filteredItems.length === 0}
-                >
-                  {t.exportBtn}
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                </button>
-                {exportOpen && (
-                  <div className="export-dropdown">
-                    <button onClick={() => { doExportCSV(filteredItems, t); setExportOpen(false); }}>
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="1" width="10" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.4"/><path d="M4 5h6M4 7.5h6M4 10h4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
-                      CSV
-                    </button>
-                    <button onClick={() => { doExportJSON(filteredItems, t); setExportOpen(false); }}>
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 4.5C3 3.12 4.12 2 5.5 2h3C9.88 2 11 3.12 11 4.5v5c0 1.38-1.12 2.5-2.5 2.5h-3C4.12 12 3 10.88 3 9.5v-5z" stroke="currentColor" strokeWidth="1.4"/><path d="M5 5.5h4M5 8h2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
-                      JSON
-                    </button>
-                    <button onClick={() => { setReportType("pdf"); setReportModalOpen(true); setExportOpen(false); }}>
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10h10V2zM8 5.5L6.5 7 5 5.5M6.5 2v5"/></svg>
-                      {t.exportPDF}
-                    </button>
-                    <button onClick={() => { setReportType("word"); setReportModalOpen(true); setExportOpen(false); }}>
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10h10V2zM4 6h6M4 8h6M4 4h3"/></svg>
-                      {t.exportWord}
-                    </button>
-                  </div>
-                )}
-              </div>
+      {activeTab === "requests" && (
+        <>
+          <div className="official-toolbar">
+            <label>
+              {t.search}
+              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t.searchPlaceholder} />
+            </label>
+            <label>
+              {t.status}
+              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+                {scenarioStatuses.map((s) => (
+                  <option key={s || "all"} value={s}>{s ? statusLabel(s, t) : t.all}</option>
+                ))}
+              </select>
+            </label>
+            <div className="toolbar-date-group">
+              <label>
+                {t.dateRange}
+                <select value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}>
+                  {DATE_FILTERS.map((f) => (
+                    <option key={f} value={f}>
+                      {f === "all" ? t.all
+                        : f === "today" ? t.dateFilterToday
+                        : f === "yesterday" ? t.dateFilterYesterday
+                        : f === "last7" ? t.dateFilterLast7
+                        : f === "last30" ? t.dateFilterLast30
+                        : t.dateFilterCustom}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {dateFilter === "custom" && (
+                <div className="toolbar-date-custom">
+                  <label className="toolbar-date-input-label">
+                    <span>{t.dateFrom}</span>
+                    <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+                  </label>
+                  <span className="toolbar-date-sep">—</span>
+                  <label className="toolbar-date-input-label">
+                    <span>{t.dateTo}</span>
+                    <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+                  </label>
+                </div>
+              )}
             </div>
           </div>
-          <div className="official-table-wrap">
+
+          <div className="official-workspace">
+            <div className="official-table-card">
+              <div className="official-card-title">
+                <h2>{workspaceLabel}</h2>
+                <span>{filteredItems.length} {scenario === "survey" ? t.surveyResponsesLabel : t.requestsCount}</span>
+              </div>
+              <div className="official-table-wrap">
             <table className="official-table">
               <thead>
                 <tr>
@@ -1549,10 +1549,10 @@ export function RequestsPage() {
                 ))}
               </tbody>
             </table>
-          </div>
-        </div>
+              </div>
+            </div>
 
-        <aside className="official-details-card">
+            <aside className="official-details-card">
           {!selected && !detailsLoading ? (
             <div className="official-empty-state">
               <h3>{t.selectRequest}</h3>
@@ -1614,19 +1614,19 @@ export function RequestsPage() {
               </details>
             </>
           ) : null}
-        </aside>
-      </div>
-
-      {/* ── Analytics (collapsible) ── */}
-      {items.length > 0 && (
-        <details className="ws-analytics-section">
-          <summary className="ws-analytics-summary">{t.analyticsStatusDist}</summary>
-          <AnalyticsBlock items={items} t={t} />
-        </details>
+            </aside>
+          </div>
+        </>
       )}
 
-      {/* ── Bottom Row: AI + WhatsApp ── */}
-      <div className="ws-bottom-row">
+      {activeTab === "analytics" && (
+        <div className="workspace-tab-panel">
+          {items.length > 0 ? <AnalyticsBlock items={items} t={t} /> : <p className="muted">{t.noRequestsForForm}</p>}
+        </div>
+      )}
+
+      {activeTab === "ai" && (
+        <div className="workspace-tab-panel">
         {formId && (
           <AIChatBlock
             formId={formId}
@@ -1637,8 +1637,75 @@ export function RequestsPage() {
             t={t}
           />
         )}
-        <NotificationSettingsBlock formId={formId} formTitle={displayTitle} t={t} />
-      </div>
+        </div>
+      )}
+
+      {activeTab === "whatsapp" && (
+        <div className="workspace-tab-panel">
+          <NotificationSettingsBlock formId={formId} formTitle={displayTitle} t={t} />
+        </div>
+      )}
+
+      {activeTab === "reports" && (
+        <div className="workspace-tab-panel report-actions-panel">
+          <div>
+            <h2>{t.reportsTitle}</h2>
+            <p>{t.reportsSubtitle}</p>
+          </div>
+          <div className="export-area report-export-area" ref={exportRef}>
+            <span>{filteredItems.length} {scenario === "survey" ? t.surveyResponsesLabel : t.requestsCount}</span>
+            <div className="export-menu-wrap">
+              <button
+                className="export-btn"
+                onClick={() => setExportOpen((o) => !o)}
+                disabled={filteredItems.length === 0}
+              >
+                {t.exportBtn}
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+              {exportOpen && (
+                <div className="export-dropdown">
+                  <button onClick={() => { doExportCSV(filteredItems, t); setExportOpen(false); }}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="1" width="10" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.4"/><path d="M4 5h6M4 7.5h6M4 10h4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+                    CSV
+                  </button>
+                  <button onClick={() => { doExportJSON(filteredItems, t); setExportOpen(false); }}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 4.5C3 3.12 4.12 2 5.5 2h3C9.88 2 11 3.12 11 4.5v5c0 1.38-1.12 2.5-2.5 2.5h-3C4.12 12 3 10.88 3 9.5v-5z" stroke="currentColor" strokeWidth="1.4"/><path d="M5 5.5h4M5 8h2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
+                    JSON
+                  </button>
+                  <button onClick={() => { setReportType("pdf"); setReportModalOpen(true); setExportOpen(false); }}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10h10V2zM8 5.5L6.5 7 5 5.5M6.5 2v5"/></svg>
+                    {t.exportPDF}
+                  </button>
+                  <button onClick={() => { setReportType("word"); setReportModalOpen(true); setExportOpen(false); }}>
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10h10V2zM4 6h6M4 8h6M4 4h3"/></svg>
+                    {t.exportWord}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "integration" && (
+        <div className="workspace-tab-panel integration-info-panel">
+          <div>
+            <h2>{t.integrationTitle}</h2>
+            <p>{t.integrationSubtitle}</p>
+          </div>
+          <div className="integration-flow">
+            {["Google Form", "Google Sheet", "Apps Script", "FormBridge API", "PostgreSQL", "React CRM"].map((step) => (
+              <span key={step}>{step}</span>
+            ))}
+          </div>
+          <div className="integration-links">
+            {workspace?.form?.formUrl && <a className="official-link-btn" href={workspace.form.formUrl} target="_blank" rel="noopener noreferrer">{t.openGoogleForm}</a>}
+            {workspace?.form?.sheetUrl && <a className="official-link-btn" href={workspace.form.sheetUrl} target="_blank" rel="noopener noreferrer">{t.openGoogleSheet}</a>}
+            <Link className="official-link-btn" to="/forms">{t.continueSetup}</Link>
+          </div>
+        </div>
+      )}
 
       {/* ── Feedback Modal ── */}
       {feedbackOpen && (

@@ -25,6 +25,16 @@ export function ProfilePage({ t }) {
     navigate("/login");
   }
 
+  function roleLabel(role) {
+    if (role === "admin") return t.adminLink || role;
+    if (role === "user") {
+      if (t.profile === "Профиль") return "Пользователь";
+      if (t.profile === "Profile") return "User";
+      return "Пайдаланушы";
+    }
+    return role;
+  }
+
   if (error) return <section className="card"><p className="error">{error}</p></section>;
   if (!user) return <section className="card"><p className="muted">{t.loadingProfile}</p></section>;
 
@@ -47,7 +57,7 @@ export function ProfilePage({ t }) {
           </div>
           <div>
             <dt>{t.accessLevel}</dt>
-            <dd>{user.role}</dd>
+            <dd>{roleLabel(user.role)}</dd>
           </div>
         </dl>
         <div className="profile-clean-actions">
