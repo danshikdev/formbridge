@@ -3,6 +3,7 @@ import { FormIntegration } from "../models/formIntegration.js";
 import { GoogleAccount } from "../models/googleAccount.js";
 import { IntegrationEvent } from "../models/integrationEvent.js";
 import { Request } from "../models/request.js";
+import { syncFormIntegration } from "../services/googleFormsSyncService.js";
 import {
   buildWebhookUrl,
   checkAppsScriptApi,
@@ -304,12 +305,28 @@ function publicIntegration(item) {
     lastTestAt: item.lastTestAt,
     lastTestResult: item.lastTestResult,
     setupChecklist: item.setupChecklist,
+    formSchema: item.formSchema || null,
+    syncEnabled: Boolean(item.syncEnabled),
+    syncStatus: item.syncStatus || "idle",
+    lastSyncedAt: item.lastSyncedAt || null,
+    lastSyncError: item.lastSyncError || null,
     scenario: item.scenario || "universal",
     scenarioConfiguredAt: item.scenarioConfiguredAt || null,
     createdAt: item.createdAt,
     updatedAt: item.updatedAt,
     webhookSecretMasked: item.webhookSecret ? `${item.webhookSecret.slice(0, 6)}...${item.webhookSecret.slice(-4)}` : null
   };
+}
+
+async function findOwnedIntegration(id, userId) {
+  const item = await FormIntegration.findByPk(id);
+  if (!item) return null;
+  if (userId && item.userId && item.userId !== userId) {
+    const error = new Error("Forbidden");
+    error.status = 403;
+    throw error;
+  }
+  return item;
 }
 
 async function logIntegrationEvent(fields) {
@@ -319,24 +336,42 @@ async function logIntegrationEvent(fields) {
 }
 
 async function verifyIntegrationRecord(item) {
-  const checklist = {
-    googleAccount: Boolean(item.googleAccountId),
-    form: Boolean(item.formId),
-    sheet: Boolean(item.sheetId),
-    webhookUrl: Boolean(item.webhookUrl),
-    webhookSecret: Boolean(item.webhookSecret),
-    trigger: Boolean(item.triggerId || item.setupChecklist?.trigger),
-    lastTest: item.lastTestResult === "ok"
-  };
+  const isPolling = item.setupMode === "forms_api_polling";
+  const checklist = isPolling
+    ? {
+        googleAccount: Boolean(item.googleAccountId),
+        form: Boolean(item.formId),
+        formSchema: Boolean(item.formSchema),
+        polling: Boolean(item.syncEnabled),
+        lastSync: Boolean(item.lastSyncedAt),
+        syncHealthy: item.syncStatus !== "error"
+      }
+    : {
+        googleAccount: Boolean(item.googleAccountId),
+        form: Boolean(item.formId),
+        sheet: Boolean(item.sheetId),
+        webhookUrl: Boolean(item.webhookUrl),
+        webhookSecret: Boolean(item.webhookSecret),
+        trigger: Boolean(item.triggerId || item.setupChecklist?.trigger),
+        lastTest: item.lastTestResult === "ok"
+      };
 
-  const requiredChecklist = {
-    googleAccount: checklist.googleAccount,
-    form: checklist.form,
-    sheet: checklist.sheet,
-    webhookUrl: checklist.webhookUrl,
-    webhookSecret: checklist.webhookSecret,
-    trigger: checklist.trigger
-  };
+  const requiredChecklist = isPolling
+    ? {
+        googleAccount: checklist.googleAccount,
+        form: checklist.form,
+        formSchema: checklist.formSchema,
+        polling: checklist.polling,
+        syncHealthy: checklist.syncHealthy
+      }
+    : {
+        googleAccount: checklist.googleAccount,
+        form: checklist.form,
+        sheet: checklist.sheet,
+        webhookUrl: checklist.webhookUrl,
+        webhookSecret: checklist.webhookSecret,
+        trigger: checklist.trigger
+      };
 
   const broken = Object.entries(requiredChecklist)
     .filter(([, ok]) => !ok)
@@ -534,6 +569,97 @@ export async function setupGoogleIntegration(req, res) {
   });
 
   return res.status(201).json({ item: publicIntegration(record), message: setupNote });
+}
+
+export async function enablePolling(req, res) {
+  try {
+    const item = await findOwnedIntegration(req.params.id, req.user?.id);
+    if (!item) return res.status(404).json({ error: "Integration not found" });
+
+    if (!item.userId) item.userId = req.user.id;
+    item.setupMode = "forms_api_polling";
+    item.syncEnabled = true;
+    item.syncStatus = "syncing";
+    item.lastSyncError = null;
+    await item.save();
+
+    const result = await syncFormIntegration(item.id);
+
+    await logIntegrationEvent({
+      integrationId: item.id,
+      type: "enable_polling",
+      status: "ok",
+      message: "Google Forms API polling enabled.",
+      payload: {
+        created: result.created,
+        skipped: result.skipped,
+        total: result.total,
+        lastSyncedAt: result.lastSyncedAt
+      }
+    });
+
+    return res.json({
+      ok: true,
+      integration: publicIntegration(result.integration),
+      created: result.created,
+      skipped: result.skipped,
+      total: result.total,
+      lastSyncedAt: result.lastSyncedAt
+    });
+  } catch (err) {
+    const status = err.status || 502;
+    if (status !== 403) {
+      await logIntegrationEvent({
+        integrationId: req.params.id,
+        type: "enable_polling",
+        status: "error",
+        message: err.message
+      });
+    }
+    return res.status(status).json({ error: status === 403 ? "Forbidden" : `Polling setup failed: ${err.message}` });
+  }
+}
+
+export async function syncNow(req, res) {
+  try {
+    const item = await findOwnedIntegration(req.params.id, req.user?.id);
+    if (!item) return res.status(404).json({ error: "Integration not found" });
+
+    const result = await syncFormIntegration(item.id);
+
+    await logIntegrationEvent({
+      integrationId: item.id,
+      type: "sync_now",
+      status: "ok",
+      message: "Google Forms API sync completed.",
+      payload: {
+        created: result.created,
+        skipped: result.skipped,
+        total: result.total,
+        lastSyncedAt: result.lastSyncedAt
+      }
+    });
+
+    return res.json({
+      ok: true,
+      integration: publicIntegration(result.integration),
+      created: result.created,
+      skipped: result.skipped,
+      total: result.total,
+      lastSyncedAt: result.lastSyncedAt
+    });
+  } catch (err) {
+    const status = err.status || 502;
+    if (status !== 403) {
+      await logIntegrationEvent({
+        integrationId: req.params.id,
+        type: "sync_now",
+        status: "error",
+        message: err.message
+      });
+    }
+    return res.status(status).json({ error: status === 403 ? "Forbidden" : `Sync failed: ${err.message}` });
+  }
 }
 
 export async function prepareIntegrationSheet(req, res) {

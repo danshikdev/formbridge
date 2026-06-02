@@ -7,6 +7,7 @@ import {
   confirmSetupInstalled,
   createIntegration,
   deleteIntegration,
+  enablePolling,
   getSetupScript,
   integrationEvents,
   integrationHealth,
@@ -14,6 +15,7 @@ import {
   prepareIntegrationSheet,
   saveWebhook,
   setupGoogleIntegration,
+  syncNow,
   testIntegration,
   verifyIntegration
 } from "../controllers/integrationsController.js";
@@ -31,6 +33,8 @@ integrationsRoutes.get("/forms/:id/events", integrationEvents);
 integrationsRoutes.get("/forms/:id/setup-script", getSetupScript);
 integrationsRoutes.post("/apps-script-api/check", checkAppsScriptApiStatus);
 integrationsRoutes.post("/forms/:id/auto-setup", autoSetupIntegration);
+integrationsRoutes.post("/forms/:id/enable-polling", enablePolling);
+integrationsRoutes.post("/forms/:id/sync-now", syncNow);
 integrationsRoutes.post("/forms/:id/prepare-sheet", prepareIntegrationSheet);
 integrationsRoutes.patch("/forms/:id/sheet", attachExistingSheet);
 integrationsRoutes.patch("/forms/:id/webhook", saveWebhook);

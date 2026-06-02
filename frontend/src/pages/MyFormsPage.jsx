@@ -322,6 +322,7 @@ export function MyFormsPage() {
 
       {setupModal && (
         <GuidedSetupModal
+          mode="forms_api_polling"
           formId={setupModal.formId}
           formTitle={setupModal.formTitle}
           integration={setupModal.integration}

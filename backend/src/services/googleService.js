@@ -139,6 +139,26 @@ export async function getGoogleForm(account, formId) {
   });
 }
 
+export async function listGoogleFormResponses(account, formId) {
+  const token = await getValidAccessToken(account);
+  const responses = [];
+  let pageToken = "";
+
+  do {
+    const params = new URLSearchParams({ pageSize: "100" });
+    if (pageToken) params.set("pageToken", pageToken);
+
+    const data = await googleFetch(`https://forms.googleapis.com/v1/forms/${formId}/responses?${params.toString()}`, {
+      headers: { authorization: `Bearer ${token}` }
+    });
+
+    responses.push(...(data.responses || []));
+    pageToken = data.nextPageToken || "";
+  } while (pageToken);
+
+  return responses;
+}
+
 export async function getDriveFile(account, fileId) {
   const token = await getValidAccessToken(account);
   const params = new URLSearchParams({

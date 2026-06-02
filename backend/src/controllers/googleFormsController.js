@@ -303,13 +303,19 @@ export async function getWorkspace(req, res) {
 
   return res.json({
     form: {
+      integrationId: integration.id,
       id: integration.formId,
       title: integration.formTitle,
       status: integration.status,
       healthStatus: integration.healthStatus,
       lastEventAt: integration.lastEventAt,
       formUrl: integration.formUrl,
-      sheetUrl: integration.sheetUrl
+      sheetUrl: integration.sheetUrl,
+      setupMode: integration.setupMode,
+      syncEnabled: Boolean(integration.syncEnabled),
+      syncStatus: integration.syncStatus || "idle",
+      lastSyncedAt: integration.lastSyncedAt || null,
+      lastSyncError: integration.lastSyncError || null
     },
     scenario: scenarioId,
     scenarioConfiguredAt: integration.scenarioConfiguredAt,

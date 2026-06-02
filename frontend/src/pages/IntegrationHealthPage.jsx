@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
+import { useLocale } from "../shared/useLocale";
 
 function formatDate(value) {
   if (!value) return "-";
@@ -8,12 +9,21 @@ function formatDate(value) {
   return d.toLocaleString();
 }
 
+function syncStatusClass(status) {
+  if (status === "error") return "broken";
+  if (status === "syncing") return "needs_trigger";
+  return "connected";
+}
+
 export function IntegrationHealthPage() {
+  const { t } = useLocale();
   const [items, setItems] = useState([]);
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [syncingId, setSyncingId] = useState("");
+  const [legacyOpen, setLegacyOpen] = useState(false);
   const [setupScript, setSetupScript] = useState(null);
   const [autoSetup, setAutoSetup] = useState(null);
   const [autoSetupLoadingId, setAutoSetupLoadingId] = useState("");
@@ -36,6 +46,21 @@ export function IntegrationHealthPage() {
     }
     boot();
   }, []);
+
+  async function syncNow(id) {
+    setMessage("");
+    setError("");
+    setSyncingId(id);
+    try {
+      const { data } = await api.post(`/api/integrations/forms/${id}/sync-now`);
+      setMessage((t.syncNowSuccess || "Sync completed.") + ` ${t.newResponses || "New"}: ${data.created ?? 0}, ${t.skippedResponses || "skipped"}: ${data.skipped ?? 0}.`);
+      await loadHealth();
+    } catch (_err) {
+      setError(t.pollingSetupError || "Не удалось подключить форму. Проверьте, что у аккаунта есть доступ к этой Google Form.");
+    } finally {
+      setSyncingId("");
+    }
+  }
 
   async function verify(id) {
     setMessage("");
@@ -72,7 +97,7 @@ export function IntegrationHealthPage() {
     try {
       const { data } = await api.get(`/api/integrations/forms/${id}/setup-script`);
       setSetupScript(data);
-      setMessage("Setup script loaded. Paste it into the linked Sheet Apps Script project.");
+      setMessage("Legacy setup script loaded.");
     } catch (err) {
       setError(err.response?.data?.error || `Failed to load setup script${err.response?.status ? ` (HTTP ${err.response.status})` : ""}`);
     }
@@ -96,8 +121,8 @@ export function IntegrationHealthPage() {
     <section className="card requests-card">
       <div className="page-heading">
         <div>
-          <h1>Integrations Health</h1>
-          <p className="muted">Operational control for connected Google Forms: status, last event, errors, and diagnostics.</p>
+          <h1>{t.integrationHealthTitle || "Integrations Health"}</h1>
+          <p className="muted">{t.integrationHealthSubtitle || "Google Forms API connection status, sync health, and diagnostics."}</p>
         </div>
       </div>
 
@@ -112,44 +137,59 @@ export function IntegrationHealthPage() {
               <p className="muted">{item.formId}</p>
             </div>
             <div className="health-meta">
-              <span className={`status-pill health-${item.healthStatus}`}>{item.healthStatus}</span>
-              <span>Last event: {formatDate(item.lastEventAt)}</span>
-              <span>Last verified: {formatDate(item.lastVerifiedAt)}</span>
+              <span>{t.connectionMethod || "Connection method"}: <strong>Google Forms API</strong></span>
+              <span>{t.syncMode || "Sync mode"}: <strong>Polling</strong></span>
+              <span className={`status-pill health-${syncStatusClass(item.syncStatus)}`}>{item.syncStatus || "idle"}</span>
+              <span>{t.lastSync || "Last sync"}: {formatDate(item.lastSyncedAt)}</span>
             </div>
-            {item.lastErrorReason ? <p className="error">{item.lastErrorReason}</p> : <p className="ok-msg">No active error recorded.</p>}
+            {item.lastSyncError ? <p className="error">{item.lastSyncError}</p> : <p className="ok-msg">{t.pollingEnabled || "Automatic sync is enabled."}</p>}
             <div className="wizard-actions">
-              <button type="button" className="primary-btn" onClick={() => runAutoSetup(item.id)} disabled={autoSetupLoadingId === item.id}>{autoSetupLoadingId === item.id ? "Setting up..." : "Auto Setup"}</button>
+              <button type="button" className="primary-btn" onClick={() => syncNow(item.id)} disabled={syncingId === item.id}>
+                {syncingId === item.id ? (t.checking || "Syncing...") : (t.syncNow || "Sync now")}
+              </button>
               <button type="button" className="ghost-btn" onClick={() => verify(item.id)}>Verify</button>
-              <button type="button" className="ghost-btn" onClick={() => test(item.id)}>Test</button>
-              <button type="button" className="ghost-btn" onClick={() => loadSetupScript(item.id)}>Manual Script</button>
             </div>
           </article>
         ))}
       </div>
 
-      {autoSetup ? (
+      <div className="wizard-step setup-script-panel">
+        <button type="button" className="ghost-btn" onClick={() => setLegacyOpen((value) => !value)}>
+          {legacyOpen ? "Hide Advanced / Legacy Apps Script setup" : "Advanced / Legacy Apps Script setup"}
+        </button>
+        {legacyOpen ? (
+          <div className="legacy-setup-panel">
+            <p className="muted">Legacy webhook setup is kept only as a backup for older integrations.</p>
+            <div className="health-list">
+              {items.map((item) => (
+                <article key={item.id} className="health-card">
+                  <h3>{item.formTitle || item.formId}</h3>
+                  <div className="wizard-actions">
+                    <button type="button" className="ghost-btn" onClick={() => runAutoSetup(item.id)} disabled={autoSetupLoadingId === item.id}>
+                      {autoSetupLoadingId === item.id ? "Setting up..." : "Prepare legacy setup"}
+                    </button>
+                    <button type="button" className="ghost-btn" onClick={() => test(item.id)}>Test webhook</button>
+                    <button type="button" className="ghost-btn" onClick={() => loadSetupScript(item.id)}>Load legacy script</button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </div>
+
+      {autoSetup && legacyOpen ? (
         <div className="wizard-step setup-script-panel">
-          <h3>Auto Setup next step</h3>
-          <p className="muted">FormBridge created/updated the Apps Script project. Google requires one manual authorization run.</p>
-          <p><a className="primary-btn inline-link-btn" href={autoSetup.scriptUrl} target="_blank" rel="noreferrer">Open Apps Script installer</a></p>
-          <ol className="instruction-list">
-            <li>Open the installer link.</li>
-            <li>Select function <strong>{autoSetup.functionName}</strong>.</li>
-            <li>Press Run.</li>
-            <li>Approve Google permissions.</li>
-            <li>Return here and press Test or submit a Google Form response.</li>
-          </ol>
+          <h3>Legacy setup next step</h3>
+          <p className="muted">Open the legacy installer only if you intentionally use the old webhook backup.</p>
+          <p><a className="primary-btn inline-link-btn" href={autoSetup.scriptUrl} target="_blank" rel="noreferrer">Open legacy installer</a></p>
         </div>
       ) : null}
 
-      {setupScript ? (
+      {setupScript && legacyOpen ? (
         <div className="wizard-step setup-script-panel">
-          <h3>Apps Script setup</h3>
+          <h3>Legacy webhook setup</h3>
           <p className="muted">Webhook URL: {setupScript.webhookUrl}</p>
-          {setupScript.sheetUrl ? <p><a className="top-link" href={setupScript.sheetUrl} target="_blank" rel="noreferrer">Open linked Sheet</a></p> : null}
-          <ol className="instruction-list">
-            {(setupScript.instructions || []).map((item) => <li key={item}>{item}</li>)}
-          </ol>
           <pre className="code-block"><code>{setupScript.code}</code></pre>
         </div>
       ) : null}

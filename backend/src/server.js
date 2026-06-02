@@ -10,6 +10,7 @@ import "./models/notificationSettings.js";
 import "./models/formFeedback.js";
 import { initClient } from "./services/whatsappService.js";
 import { startNotificationScheduler } from "./services/notificationScheduler.js";
+import { startGoogleFormsPollingScheduler } from "./services/googleFormsPollingScheduler.js";
 
 async function boot() {
   try {
@@ -20,6 +21,7 @@ async function boot() {
       console.log(`Backend running on http://localhost:${env.port}`);
       initClient(); // запускает WhatsApp в фоне, QR появится в терминале
       startNotificationScheduler();
+      startGoogleFormsPollingScheduler();
     });
   } catch (error) {
     console.error("Boot failed:", error.message);

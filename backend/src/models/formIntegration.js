@@ -96,6 +96,28 @@ export const FormIntegration = sequelize.define("FormIntegration", {
     allowNull: false,
     defaultValue: {}
   },
+  formSchema: {
+    type: DataTypes.JSONB,
+    allowNull: true
+  },
+  syncEnabled: {
+    type: DataTypes.BOOLEAN,
+    allowNull: false,
+    defaultValue: false
+  },
+  syncStatus: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: "idle"
+  },
+  lastSyncedAt: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
+  lastSyncError: {
+    type: DataTypes.TEXT,
+    allowNull: true
+  },
   scenario: {
     type: DataTypes.STRING,
     allowNull: false,

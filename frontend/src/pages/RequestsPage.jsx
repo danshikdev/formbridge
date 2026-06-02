@@ -1524,6 +1524,8 @@ export function RequestsPage() {
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportType, setReportType] = useState("pdf"); // "pdf" | "word"
   const [menuOpen, setMenuOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState("");
   const initialTab = WORKSPACE_TABS.includes(searchParams.get("tab")) ? searchParams.get("tab") : "requests";
   const [activeTab, setActiveTab] = useState(initialTab);
   const exportRef = useRef(null);
@@ -1607,6 +1609,24 @@ export function RequestsPage() {
     }
   }
 
+  async function syncWorkspaceNow() {
+    const integrationId = workspace?.form?.integrationId;
+    if (!integrationId || syncing) return;
+
+    setSyncing(true);
+    setSyncMessage("");
+    setError("");
+    try {
+      const { data } = await api.post(`/api/integrations/forms/${integrationId}/sync-now`);
+      setSyncMessage(`${t.syncNowSuccess || "Sync completed."} ${t.newResponses || "New"}: ${data.created ?? 0}.`);
+      await Promise.all([loadWorkspace(), loadRequests()]);
+    } catch {
+      setSyncMessage(t.pollingSetupError || "Не удалось подключить форму. Проверьте, что у аккаунта есть доступ к этой Google Form.");
+    } finally {
+      setSyncing(false);
+    }
+  }
+
   function handleScenarioSelected(newScenario) {
     setScenario(newScenario);
     setScenarioConfiguredAt(new Date().toISOString());
@@ -1671,6 +1691,11 @@ export function RequestsPage() {
             )}
           </div>
           <div className="ws-header-actions">
+            {workspace?.form?.integrationId ? (
+              <button className="official-link-btn" type="button" onClick={syncWorkspaceNow} disabled={syncing}>
+                {syncing ? (t.checking || "...") : (t.syncNow || "Sync now")}
+              </button>
+            ) : null}
             <Link className="official-link-btn" to="/forms">{t.myForms}</Link>
 
             <div className="ws-actions-dropdown-container" ref={menuRef}>
@@ -1739,6 +1764,8 @@ export function RequestsPage() {
           onSelected={handleScenarioSelected}
         />
       )}
+
+      {syncMessage ? <p className="ok-msg official-message">{syncMessage}</p> : null}
 
       <div className="workspace-tabs" role="tablist" aria-label={t.workspaceTabsLabel}>
         {WORKSPACE_TABS.map((tab) => (
