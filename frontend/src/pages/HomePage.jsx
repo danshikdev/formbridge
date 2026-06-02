@@ -1,6 +1,9 @@
 import { Link } from "react-router-dom";
 import {
+  AcademicCapIcon,
   BoltIcon,
+  BriefcaseIcon,
+  CalendarDaysIcon,
   ChartBarSquareIcon,
   CheckCircleIcon,
   CpuChipIcon,
@@ -12,7 +15,16 @@ import {
 } from "@heroicons/react/24/outline";
 import { useLocale } from "../shared/useLocale";
 
-const SCREENSHOT_SRC = "/product-dashboard.png";
+const SCREENSHOT_SRC = "/setup-screenshots/product-dashboard.png";
+
+const SOLUTIONS = [
+  { id: "admissions",      Icon: AcademicCapIcon    },
+  { id: "client_requests", Icon: BriefcaseIcon      },
+  { id: "hr",              Icon: UsersIcon           },
+  { id: "survey",          Icon: ChartBarSquareIcon  },
+  { id: "event",           Icon: CalendarDaysIcon    },
+  { id: "universal",       Icon: Squares2X2Icon      },
+];
 
 const copy = {
   kk: {
@@ -37,11 +49,15 @@ const copy = {
     ],
     solutionsLabel: "Шешімдер",
     solutionsTitle: "Кез келген салаға арналған шешімдер",
-    solutions: [
-      ["Білім беру", "Студенттерді қабылдау, тіркеу, кері байланыс және өтініштерді басқару."],
-      ["Бизнес", "Клиенттік өтініштер, тапсырыстар, кері байланыс және қолдау сұрақтары."],
-      ["Кадр бөлімі", "Үміткерлермен жұмыс, сауалнамалар және ішкі процестер."]
-    ],
+    solutionsMore: "Толығырақ",
+    solutions: {
+      admissions:      ["Қабылдау комиссиясы",  "Абитуриент өтініштерін жылдам өңдеп, қабылдау процесін толық бақылаңыз."],
+      client_requests: ["Клиент өтініштері",     "Клиент хабарларын жоғалтпаңыз — шұғылдарды бірінші өңдеңіз."],
+      hr:              ["HR / Рекрутинг",         "Үміткерлерді іріктеп, shortlist жасаңыз — ЖИ ең үздікті табады."],
+      survey:          ["Сауалнама / Анкета",     "ЖИ жауаптардан паттерн табады, диаграммалар жасайды, есеп дайындайды."],
+      event:           ["Іс-шара тіркеу",         "Қатысушылар тізімін басқарып, растаңыз және есеп алыңыз."],
+      universal:       ["Жалпылама режим",        "Кез келген форма үшін — статустар, ЖИ талдау және есептер."],
+    },
     aiLabel: "ЖИ кемекші",
     aiTitle: "Форма деректерінен ақылды жауаптар алыңыз",
     aiText: "Әр жұмыс кеңістігінде кірістірілген ЖИ бар — ол форманың барлық жауаптарын оқиды және сұрақтарыңызға нақты жауап береді.",
@@ -97,11 +113,15 @@ const copy = {
     ],
     solutionsLabel: "Решения",
     solutionsTitle: "Решения для разных сфер",
-    solutions: [
-      ["Образование", "Приемная комиссия, регистрации, обратная связь и заявки студентов."],
-      ["Бизнес", "Клиентские заявки, заказы, обратная связь и вопросы поддержки."],
-      ["HR", "Работа с кандидатами, анкеты и внутренние процессы."]
-    ],
+    solutionsMore: "Подробнее",
+    solutions: {
+      admissions:      ["Приемная комиссия",     "Быстро обрабатывайте заявки абитуриентов и контролируйте процесс поступления."],
+      client_requests: ["Клиентские заявки",     "Не теряйте клиентские обращения — срочные обрабатывайте первыми."],
+      hr:              ["HR / Рекрутинг",         "Отбирайте кандидатов и делайте шортлисты — AI находит лучших."],
+      survey:          ["Опрос / Анкета",         "AI находит паттерны в ответах, строит графики и готовит выводы."],
+      event:           ["Регистрация на событие", "Управляйте списком участников, подтверждайте, получайте отчёты."],
+      universal:       ["Универсальный режим",    "Для любой формы — статусы, AI-анализ и экспорт отчётов."],
+    },
     aiLabel: "ЖИ-помощник",
     aiTitle: "Получайте умные ответы из данных формы",
     aiText: "В каждом рабочем пространстве встроен AI — он читает все ответы формы и отвечает на ваши вопросы точно и быстро.",
@@ -153,7 +173,15 @@ const copy = {
     ],
     solutionsLabel: "Solutions",
     solutionsTitle: "Solutions for every industry",
-    solutions: [["Education", "Admissions, registrations, feedback and student requests."], ["Business", "Client requests, orders, feedback and support questions."], ["HR", "Candidate workflows, surveys and internal processes."]],
+    solutionsMore: "Learn more",
+    solutions: {
+      admissions:      ["Admissions",           "Process applicant submissions quickly and control the full admissions workflow."],
+      client_requests: ["Client requests",      "Never miss a client request — handle urgent ones first."],
+      hr:              ["HR / Recruiting",       "Screen candidates and build shortlists — AI finds the best ones."],
+      survey:          ["Survey / Questionnaire","AI finds patterns, builds charts and writes conclusions from responses."],
+      event:           ["Event registration",   "Manage participant lists, send confirmations and get reports."],
+      universal:       ["Universal mode",       "For any form — statuses, AI analysis and report export."],
+    },
     aiLabel: "AI Assistant",
     aiTitle: "Get smart answers from your form data",
     aiText: "Every workspace has a built-in AI that reads all form responses and answers your questions accurately and instantly.",
@@ -180,8 +208,6 @@ const copy = {
   }
 };
 
-const solutionIcons = [DocumentTextIcon, Squares2X2Icon, UsersIcon];
-const solutionRoutes = ["education", "business", "hr"];
 const whyIcons = [ShieldCheckIcon, ChartBarSquareIcon, SparklesIcon, BoltIcon];
 const workflowIcons = [DocumentTextIcon, BoltIcon, CpuChipIcon, ChartBarSquareIcon, CheckCircleIcon];
 
@@ -234,7 +260,7 @@ export function HomePage() {
         <div className="landing-ai-screenshot">
           <div className="product-preview product-preview--wide">
             <div className="product-preview-bar"><span /><span /><span /></div>
-            <img src="/feature-ai.png" alt={text.aiScreenshotAlt} loading="lazy" />
+            <img src="/setup-screenshots/feature-ai.png" alt={text.aiScreenshotAlt} loading="lazy" />
           </div>
         </div>
         <div className="landing-ai-copy">
@@ -258,7 +284,7 @@ export function HomePage() {
         <div className="landing-reports-screenshot">
           <div className="product-preview product-preview--modal">
             <div className="product-preview-bar"><span /><span /><span /></div>
-            <img src="/feature-reports.png" alt={text.reportsScreenshotAlt} loading="lazy" />
+            <img src="/setup-screenshots/feature-reports.png" alt={text.reportsScreenshotAlt} loading="lazy" />
           </div>
         </div>
       </section>
@@ -285,14 +311,14 @@ export function HomePage() {
         <span className="section-kicker">{text.solutionsLabel}</span>
         <h2>{text.solutionsTitle}</h2>
         <div className="landing-solution-grid">
-          {text.solutions.map(([title, desc], index) => {
-            const Icon = solutionIcons[index];
+          {SOLUTIONS.map(({ id, Icon }) => {
+            const [title, desc] = text.solutions[id];
             return (
-              <article key={title}>
+              <article key={id}>
                 <Icon />
                 <h3>{title}</h3>
                 <p>{desc}</p>
-                <Link to={`/solutions/${solutionRoutes[index]}`}>{lang === "kk" ? "Толығырақ" : lang === "ru" ? "Подробнее" : "Learn more"} →</Link>
+                <Link to={`/solutions/${id}`}>{text.solutionsMore} →</Link>
               </article>
             );
           })}
