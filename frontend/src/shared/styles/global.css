@@ -594,6 +594,121 @@ html {
   font-weight: 850;
 }
 
+.skeleton-line {
+  display: block;
+  width: 100%;
+  height: 14px;
+  border-radius: 999px;
+  background:
+    linear-gradient(90deg, rgba(231, 236, 232, 0.78) 0%, rgba(248, 250, 248, 0.95) 42%, rgba(231, 236, 232, 0.78) 84%);
+  background-size: 220% 100%;
+  animation: skeleton-shimmer 1.25s ease-in-out infinite;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 180% 0;
+  }
+  100% {
+    background-position: -80% 0;
+  }
+}
+
+.skeleton-title {
+  width: min(360px, 70%);
+  height: 34px;
+  border-radius: 12px;
+}
+
+.skeleton-heading {
+  width: min(260px, 62%);
+  height: 22px;
+  border-radius: 10px;
+}
+
+.skeleton-text {
+  width: min(420px, 72%);
+}
+
+.skeleton-wide {
+  width: min(620px, 92%);
+}
+
+.skeleton-number {
+  width: 74px;
+  height: 28px;
+  border-radius: 10px;
+}
+
+.skeleton-chip {
+  width: 86px;
+  height: 28px;
+  border-radius: 999px;
+}
+
+.skeleton-button {
+  width: 130px;
+  height: 40px;
+  border-radius: 12px;
+}
+
+.skeleton-input {
+  height: 46px;
+  border-radius: 14px;
+}
+
+.skeleton-select {
+  width: 180px;
+  height: 46px;
+  border-radius: 14px;
+}
+
+.skeleton-tab {
+  width: 110px;
+  height: 38px;
+  border-radius: 999px;
+}
+
+.forms-skeleton-title {
+  min-height: 122px;
+}
+
+.form-management-row--skeleton {
+  pointer-events: none;
+}
+
+.requests-skeleton-header .ws-header-main {
+  align-items: center;
+}
+
+.requests-skeleton-table {
+  display: grid;
+  gap: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+
+.requests-skeleton-row {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr 2fr 0.8fr;
+  gap: 18px;
+  align-items: center;
+  min-height: 58px;
+  padding: 0 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.requests-skeleton-row:last-child {
+  border-bottom: none;
+}
+
+.requests-skeleton-detail-lines {
+  display: grid;
+  gap: 14px;
+  margin-top: 22px;
+}
+
 .landing-why-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -7991,6 +8106,12 @@ select {
     grid-template-columns: 1fr;
   }
 
+  .requests-skeleton-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    padding: 16px;
+  }
+
   .home-feature-grid,
   .auth-split-page,
   .workspace-shell {
@@ -8027,5 +8148,10 @@ select {
   .product-preview--hero,
   .product-preview--wide {
     aspect-ratio: 4 / 3;
+  }
+
+  .skeleton-select,
+  .skeleton-button {
+    width: 100%;
   }
 }

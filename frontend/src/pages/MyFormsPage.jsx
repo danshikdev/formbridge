@@ -45,6 +45,47 @@ function scenarioLabel(scenario, lang) {
   return map[lang] || map.en;
 }
 
+function SkeletonLine({ className = "" }) {
+  return <span className={`skeleton-line ${className}`} aria-hidden="true" />;
+}
+
+function FormsPageSkeleton() {
+  return (
+    <section className="my-forms-page" aria-busy="true">
+      <div className="official-page-title forms-skeleton-title">
+        <div>
+          <SkeletonLine className="skeleton-title" />
+          <SkeletonLine className="skeleton-text skeleton-wide" />
+        </div>
+      </div>
+      <div className="forms-list-card">
+        <div className="official-card-title">
+          <SkeletonLine className="skeleton-heading" />
+          <SkeletonLine className="skeleton-chip" />
+        </div>
+        <div className="forms-toolbar">
+          <SkeletonLine className="skeleton-input" />
+          <SkeletonLine className="skeleton-select" />
+        </div>
+        <div className="forms-list">
+          {[0, 1, 2, 3].map((item) => (
+            <article key={item} className="form-management-row form-management-row--skeleton">
+              <div className="form-row-info">
+                <SkeletonLine className="skeleton-heading" />
+                <SkeletonLine className="skeleton-text" />
+              </div>
+              <div className="form-row-actions">
+                <SkeletonLine className="skeleton-chip" />
+                <SkeletonLine className="skeleton-button" />
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function MyFormsPage() {
   const { t, lang } = useLocale();
   const [googleStatus, setGoogleStatus] = useState(null);
@@ -150,7 +191,7 @@ export function MyFormsPage() {
     return result;
   }, [forms, search, filterType, integrationByFormId]);
 
-  if (loading) return <section className="card"><p className="muted">{t.loading}</p></section>;
+  if (loading) return <FormsPageSkeleton />;
 
   return (
     <section className="my-forms-page">

@@ -57,6 +57,74 @@ const DATE_FILTERS = ["all", "today", "yesterday", "last7", "last30", "custom"];
 
 const WORKSPACE_TABS = ["requests", "analytics", "ai", "whatsapp", "reports", "integration"];
 
+function SkeletonLine({ className = "" }) {
+  return <span className={`skeleton-line ${className}`} aria-hidden="true" />;
+}
+
+function RequestsPageSkeleton() {
+  return (
+    <section className="official-requests-page" aria-busy="true">
+      <div className="ws-header-card requests-skeleton-header">
+        <div className="ws-header-main">
+          <div className="ws-title-block">
+            <SkeletonLine className="skeleton-title" />
+            <SkeletonLine className="skeleton-text skeleton-wide" />
+          </div>
+          <div className="ws-header-actions">
+            <SkeletonLine className="skeleton-button" />
+            <SkeletonLine className="skeleton-button" />
+          </div>
+        </div>
+        <div className="ws-stats-row">
+          {[0, 1, 2, 3].map((item) => (
+            <div key={item} className="ws-stat">
+              <SkeletonLine className="skeleton-text" />
+              <SkeletonLine className="skeleton-number" />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="workspace-tabs">
+        {[0, 1, 2, 3, 4, 5].map((item) => <SkeletonLine key={item} className="skeleton-tab" />)}
+      </div>
+
+      <div className="official-toolbar">
+        <SkeletonLine className="skeleton-input" />
+        <SkeletonLine className="skeleton-select" />
+        <SkeletonLine className="skeleton-select" />
+      </div>
+
+      <div className="official-workspace">
+        <div className="official-table-card">
+          <div className="official-card-title">
+            <SkeletonLine className="skeleton-heading" />
+            <SkeletonLine className="skeleton-chip" />
+          </div>
+          <div className="requests-skeleton-table">
+            {[0, 1, 2, 3, 4].map((item) => (
+              <div key={item} className="requests-skeleton-row">
+                <SkeletonLine />
+                <SkeletonLine />
+                <SkeletonLine className="skeleton-wide" />
+                <SkeletonLine className="skeleton-chip" />
+              </div>
+            ))}
+          </div>
+        </div>
+        <aside className="official-details-card">
+          <SkeletonLine className="skeleton-heading" />
+          <SkeletonLine className="skeleton-text skeleton-wide" />
+          <SkeletonLine className="skeleton-text" />
+          <div className="requests-skeleton-detail-lines">
+            {[0, 1, 2, 3].map((item) => <SkeletonLine key={item} className="skeleton-wide" />)}
+          </div>
+        </aside>
+      </div>
+    </section>
+  );
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function isWithinDateRange(dateStr, range, from, to) {
@@ -1321,7 +1389,7 @@ export function RequestsPage() {
     integration: t.integrationTab
   };
 
-  if (loading) return <section className="card"><p className="muted">{t.loadingRequests}</p></section>;
+  if (loading) return <RequestsPageSkeleton />;
   if (error) return <section className="card"><p className="error">{error}</p></section>;
 
   const selectedAnswers = answersForView(selected?.item?.answers || [], t);
