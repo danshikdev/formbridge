@@ -8902,18 +8902,18 @@ select {
 }
 
 .home-shell .page-wrap {
-  padding-top: 38px;
+  padding-top: 16px;
 }
 
 .home-topbar {
   width: min(1240px, calc(100% - 36px));
-  margin-top: 0;
-  border: none;
-  border-bottom: 1px solid var(--border);
-  border-radius: 0;
-  background: rgba(255, 255, 255, 0.92);
+  margin: 12px auto 0;
+  top: 12px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.95);
   color: var(--text-primary);
-  box-shadow: none;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.07);
 }
 
 .home-topbar .brand,
@@ -9570,6 +9570,14 @@ select {
   .about-cta { border-radius: 16px; }
 }
 
+@media (max-width: 400px) {
+  .about-page { gap: 28px; }
+  .about-hero h1 { font-size: clamp(1.75rem, 9vw, 2rem); }
+  .about-cta { padding: 20px 16px; }
+  .about-cta-actions { flex-direction: column; }
+  .about-cta-actions .primary-btn { width: 100%; text-align: center; }
+}
+
 /* ═══════════════════════════════════════════
    Contact Page
 ═══════════════════════════════════════════ */
@@ -9762,4 +9770,10 @@ select {
   .contact-page { gap: 32px; }
   .contact-info { padding: 20px 16px; }
   .contact-form .primary-btn { width: 100%; justify-self: stretch; }
+}
+
+@media (max-width: 400px) {
+  .contact-page { gap: 22px; }
+  .contact-hero h1 { font-size: clamp(1.75rem, 9vw, 2rem); }
+  .contact-form input, .contact-form textarea { font-size: 0.93rem; }
 }
