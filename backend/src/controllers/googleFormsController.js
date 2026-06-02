@@ -356,6 +356,25 @@ export async function updateScenario(req, res) {
 
 // ─── Feedback ─────────────────────────────────────────────────────────────────
 
+export async function getFeedback(req, res) {
+  const { formId } = req.params;
+  const userId = req.user?.id;
+
+  const integration = await FormIntegration.findOne({ where: { formId, userId } });
+  if (!integration) {
+    return res.status(404).json({ error: "Form integration not found or access denied" });
+  }
+
+  const items = await FormFeedback.findAll({
+    where: { formId, userId },
+    order: [["createdAt", "DESC"]],
+    limit: 50,
+    attributes: ["id", "message", "status", "createdAt"]
+  });
+
+  return res.json(items);
+}
+
 export async function createFeedback(req, res) {
   const { formId } = req.params;
   const { message } = req.body;

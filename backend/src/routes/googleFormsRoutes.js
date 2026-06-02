@@ -7,7 +7,8 @@ import {
   updateRequestStatus,
   getWorkspace,
   updateScenario,
-  createFeedback
+  createFeedback,
+  getFeedback
 } from "../controllers/googleFormsController.js";
 import {
   getNotificationSettings,
@@ -25,6 +26,7 @@ googleFormsRoutes.get("/debug-last", debugLastRequests);
 
 googleFormsRoutes.get("/:formId/workspace", requireAuth, getWorkspace);
 googleFormsRoutes.patch("/:formId/scenario", requireAuth, updateScenario);
+googleFormsRoutes.get("/:formId/feedback", requireAuth, getFeedback);
 googleFormsRoutes.post("/:formId/feedback", requireAuth, createFeedback);
 
 googleFormsRoutes.get("/:formId/notification-settings", requireAuth, getNotificationSettings);

@@ -368,12 +368,28 @@ function ScenarioSelectBanner({ formId, lang, t, onSelected }) {
 // ─── AI Chat Block ────────────────────────────────────────────────────────────
 
 function AIChatBlock({ formId, formTitle, scenario, scenarioMeta, lang, t }) {
-  const [messages, setMessages] = useState([]);
+  const storageKey = `fb_ai_${formId}`;
+  const [messages, setMessages] = useState(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
 
   const suggestedQuestions = (scenarioMeta?.suggestedQuestions || {})[lang] || [];
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(messages.slice(-40)));
+    } catch {
+      // storage quota exceeded — ignore
+    }
+  }, [messages, storageKey]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -547,6 +563,12 @@ function FeedbackPanel({ formId, t }) {
   const [saving, setSaving] = useState(false);
   const [sentItems, setSentItems] = useState([]);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    api.get(`/api/forms/${encodeURIComponent(formId)}/feedback`)
+      .then(({ data }) => setSentItems(data || []))
+      .catch(() => {});
+  }, [formId]);
 
   async function submit() {
     if (!message.trim()) return;
@@ -753,8 +775,6 @@ function generateWordReport(formTitle, scenario, items, t, lang) {
 }
 
 function ReportPreviewModal({ isOpen, onClose, reportType, items, formTitle, scenario, t, lang }) {
-  if (!isOpen) return null;
-
   const now = new Date();
   const todayCount = useMemo(() => {
     return items.filter((item) => {
@@ -774,6 +794,8 @@ function ReportPreviewModal({ isOpen, onClose, reportType, items, formTitle, sce
   const questionLabels = useMemo(() => collectAllQuestions(items, t), [items, t]);
 
   const sortedStatuses = Object.entries(statusCounts).sort((a, b) => b[1] - a[1]);
+
+  if (!isOpen) return null;
 
   function handleDownload() {
     if (reportType === "pdf") {
@@ -895,7 +917,6 @@ function normalizeWhatsAppPhoneInput(value) {
 }
 
 function NotificationSettingsBlock({ formId, formTitle, t }) {
-  const [isOpen, setIsOpen] = useState(false);
   const [enabled, setEnabled] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
   const [mode, setMode] = useState("every_submission");
@@ -958,14 +979,8 @@ function NotificationSettingsBlock({ formId, formTitle, t }) {
   if (!formId) return null;
 
   return (
-    <div className="notif-block">
-      <div
-        className={`notif-header notif-collapsible-header${isOpen ? " notif-is-open" : ""}`}
-        role="button"
-        tabIndex={0}
-        onClick={() => setIsOpen((o) => !o)}
-        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setIsOpen((o) => !o); }}
-      >
+    <div className="notif-block notif-block--open">
+      <div className="notif-header notif-header--static">
         <div className="notif-icon">
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M9 1.5C4.86 1.5 1.5 4.86 1.5 9c0 1.44.39 2.79 1.07 3.95L1.5 16.5l3.62-1.14A7.47 7.47 0 0 0 9 16.5c4.14 0 7.5-3.36 7.5-7.5S13.14 1.5 9 1.5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
@@ -976,99 +991,84 @@ function NotificationSettingsBlock({ formId, formTitle, t }) {
           <div className="notif-title">{t.notifTitle}</div>
           <div className="notif-subtitle">
             {!loading && !loadError ? (
-              <>
-                <span className={`whatsapp-status-pill whatsapp-status-pill--${enabled ? "on" : "off"}`}>
-                  {enabled ? t.whatsappStatusOn : t.whatsappStatusOff}
-                </span>
-                {enabled && !isOpen && phoneNumber && (
-                  <span className="notif-phone-masked">
-                    {phoneNumber.slice(0, 4)}{"•".repeat(Math.max(0, phoneNumber.length - 7))}{phoneNumber.slice(-3)}
-                  </span>
-                )}
-              </>
+              <span className={`whatsapp-status-pill whatsapp-status-pill--${enabled ? "on" : "off"}`}>
+                {enabled ? t.whatsappStatusOn : t.whatsappStatusOff}
+              </span>
             ) : t.notifSubtitle}
           </div>
         </div>
         <span className="notif-mock-badge">WhatsApp</span>
-        <svg
-          className={`notif-chevron${isOpen ? " notif-chevron--open" : ""}`}
-          width="14" height="14" viewBox="0 0 14 14" fill="none"
-        >
-          <path d="M3 5l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
       </div>
 
-      {isOpen && (
-        loading ? (
-          <p className="muted" style={{ padding: "4px 0 0" }}>{t.loading}</p>
-        ) : loadError ? (
-          <p className="error" style={{ padding: "4px 0 0" }}>{loadError}</p>
-        ) : (
-          <div className="notif-body">
-            <label className="notif-toggle-row">
-              <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
-              <span>{t.notifEnabled}</span>
-            </label>
+      {loading ? (
+        <p className="muted" style={{ padding: "8px 0" }}>{t.loading}</p>
+      ) : loadError ? (
+        <p className="error" style={{ padding: "8px 0" }}>{loadError}</p>
+      ) : (
+        <div className="notif-body">
+          <label className="notif-toggle-row">
+            <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
+            <span>{t.notifEnabled}</span>
+          </label>
 
-            {enabled && (
-              <div className="notif-fields">
+          {enabled && (
+            <div className="notif-fields">
+              <label className="notif-field">
+                <span>{t.notifPhone}</span>
+                <input
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => {
+                    setPhoneNumber(e.target.value);
+                    setSaveError("");
+                  }}
+                  onBlur={() => {
+                    const normalized = normalizeWhatsAppPhoneInput(phoneNumber);
+                    if (normalized) setPhoneNumber(normalized);
+                  }}
+                  placeholder={t.notifPhonePh}
+                />
+                <small className="notif-field-hint">{t.notifPhoneHint}</small>
+              </label>
+              <label className="notif-field">
+                <span>{t.notifMode}</span>
+                <select value={mode} onChange={(e) => setMode(e.target.value)}>
+                  {NOTIF_MODES.map((m) => (
+                    <option key={m} value={m}>
+                      {m === "every_submission" ? t.notifModeEvery : m === "threshold" ? t.notifModeThreshold : t.notifModeDaily}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              {mode === "threshold" && (
                 <label className="notif-field">
-                  <span>{t.notifPhone}</span>
-                  <input
-                    type="tel"
-                    value={phoneNumber}
-                    onChange={(e) => {
-                      setPhoneNumber(e.target.value);
-                      setSaveError("");
-                    }}
-                    onBlur={() => {
-                      const normalized = normalizeWhatsAppPhoneInput(phoneNumber);
-                      if (normalized) setPhoneNumber(normalized);
-                    }}
-                    placeholder={t.notifPhonePh}
-                  />
-                  <small className="notif-field-hint">{t.notifPhoneHint}</small>
+                  <span>{t.notifThreshold}</span>
+                  <input type="number" min="1" value={thresholdCount} onChange={(e) => setThresholdCount(e.target.value)} />
                 </label>
+              )}
+              {mode === "daily_summary" && (
                 <label className="notif-field">
-                  <span>{t.notifMode}</span>
-                  <select value={mode} onChange={(e) => setMode(e.target.value)}>
-                    {NOTIF_MODES.map((m) => (
-                      <option key={m} value={m}>
-                        {m === "every_submission" ? t.notifModeEvery : m === "threshold" ? t.notifModeThreshold : t.notifModeDaily}
-                      </option>
-                    ))}
-                  </select>
+                  <span>{t.notifDailyTime}</span>
+                  <input type="time" value={dailyTime} onChange={(e) => setDailyTime(e.target.value)} />
+                  <small className="notif-field-hint">{t.notifDailyHint}</small>
                 </label>
-                {mode === "threshold" && (
-                  <label className="notif-field">
-                    <span>{t.notifThreshold}</span>
-                    <input type="number" min="1" value={thresholdCount} onChange={(e) => setThresholdCount(e.target.value)} />
-                  </label>
-                )}
-                {mode === "daily_summary" && (
-                  <label className="notif-field">
-                    <span>{t.notifDailyTime}</span>
-                    <input type="time" value={dailyTime} onChange={(e) => setDailyTime(e.target.value)} />
-                    <small className="notif-field-hint">{t.notifDailyHint}</small>
-                  </label>
-                )}
-                <div className="notif-preview">
-                  <div className="notif-preview-label">{t.notifPreview}</div>
-                  <div className="notif-preview-bubble">{previewMsg}</div>
-                </div>
+              )}
+              <div className="notif-preview">
+                <div className="notif-preview-label">{t.notifPreview}</div>
+                <div className="notif-preview-bubble">{previewMsg}</div>
               </div>
-            )}
-
-            <div className="notif-actions">
-              <button className="official-link-btn" onClick={save} disabled={saving}>
-                {saving ? t.loading : t.notifSave}
-              </button>
-              {saved && <span className="notif-saved-msg">{t.notifSaved}</span>}
-              {saveError && <span className="error">{saveError}</span>}
             </div>
-            <p className="whatsapp-demo-helper">{t.whatsappDemoHelper}</p>
+          )}
+
+          <div className="notif-actions">
+            <button className="primary-btn compact-action-btn" onClick={save} disabled={saving}>
+              {saving ? t.loading : t.notifSave}
+            </button>
+            {saved && <span className="notif-saved-msg">{t.notifSaved}</span>}
+            {saveError && <span className="error">{saveError}</span>}
           </div>
-        )
+          <p className="whatsapp-demo-helper">{t.whatsappDemoHelper}</p>
+        </div>
       )}
     </div>
   );
@@ -1076,7 +1076,113 @@ function NotificationSettingsBlock({ formId, formTitle, t }) {
 
 // ─── Analytics Block ──────────────────────────────────────────────────────────
 
-const STATUS_ORDER = ["new", "in_progress", "done", "test"];
+const STATUS_COLORS = {
+  new: "#d7b56d",
+  in_progress: "#123b2f",
+  done: "#4ade80",
+  test: "#818cf8",
+  contacted: "#60a5fa",
+  documents_needed: "#f97316",
+  accepted: "#22c55e",
+  rejected: "#ef4444",
+  shortlisted: "#a78bfa",
+  interview: "#8b5cf6",
+  hired: "#10b981",
+  urgent: "#f43f5e",
+  waiting_client: "#f59e0b",
+  confirmed: "#34d399",
+  waiting_payment: "#fb923c",
+  cancelled: "#9ca3af",
+  attended: "#2dd4bf"
+};
+
+function DonutChart({ statusCounts, total, t }) {
+  const R = 38;
+  const circumference = 2 * Math.PI * R;
+  const entries = Object.entries(statusCounts).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+  if (total === 0 || entries.length === 0) return null;
+
+  let accum = 0;
+  const segments = entries.map(([status, count]) => {
+    const len = (count / total) * circumference;
+    const seg = { status, count, len, offset: accum };
+    accum += len;
+    return seg;
+  });
+
+  return (
+    <div className="analytics-donut-wrap">
+      <div className="analytics-donut-chart-area">
+        <svg viewBox="0 0 100 100" className="analytics-donut-svg">
+          <g style={{ transform: "rotate(-90deg)", transformOrigin: "50px 50px" }}>
+            <circle cx="50" cy="50" r={R} fill="none" stroke="#edf1ee" strokeWidth="10" />
+            {segments.map((seg) => (
+              <circle
+                key={seg.status}
+                cx="50" cy="50" r={R}
+                fill="none"
+                stroke={STATUS_COLORS[seg.status] || "#ccc"}
+                strokeWidth="10"
+                strokeDasharray={`${seg.len} ${circumference}`}
+                strokeDashoffset={-seg.offset}
+              />
+            ))}
+          </g>
+          <text x="50" y="44" textAnchor="middle" fontSize="16" fontWeight="800" fill="#10231d">{total}</text>
+          <text x="50" y="57" textAnchor="middle" fontSize="7" fontWeight="700" fill="#66746f" textTransform="uppercase" letterSpacing="0.5">{t.totalRequests}</text>
+        </svg>
+      </div>
+      <div className="analytics-donut-legend">
+        {segments.map((seg) => (
+          <div key={seg.status} className="analytics-donut-legend-item">
+            <span className="analytics-donut-dot" style={{ background: STATUS_COLORS[seg.status] || "#ccc" }} />
+            <span className="analytics-donut-label">{statusLabel(seg.status, t)}</span>
+            <span className="analytics-donut-count">{seg.count}</span>
+            <span className="analytics-donut-pct">{Math.round((seg.count / total) * 100)}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TimelineChart({ items }) {
+  const days = useMemo(() => {
+    const result = [];
+    const now = new Date();
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      const label = d.toLocaleDateString(undefined, { month: "numeric", day: "numeric" });
+      const dateStr = d.toDateString();
+      const count = items.filter((item) => {
+        const dd = new Date(item.submittedAt || item.createdAt);
+        return !Number.isNaN(dd.getTime()) && dd.toDateString() === dateStr;
+      }).length;
+      result.push({ label, count, isToday: i === 0 });
+    }
+    return result;
+  }, [items]);
+
+  const maxCount = Math.max(...days.map((d) => d.count), 1);
+
+  return (
+    <div className="analytics-timeline">
+      {days.map((day, i) => (
+        <div key={i} className={`analytics-tl-col${day.isToday ? " analytics-tl-col--today" : ""}`}>
+          <div className="analytics-tl-bar-wrap">
+            <div
+              className={`analytics-tl-bar${day.isToday ? " analytics-tl-bar--today" : ""}`}
+              style={{ height: `${Math.max((day.count / maxCount) * 100, day.count > 0 ? 8 : 0)}%` }}
+            />
+            {day.count > 0 && <span className="analytics-tl-count">{day.count}</span>}
+          </div>
+          <span className="analytics-tl-label">{day.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function AnalyticsBlock({ items, t }) {
   const analytics = useMemo(() => {
@@ -1093,9 +1199,9 @@ function AnalyticsBlock({ items, t }) {
       (a, b) => new Date(b.submittedAt || b.createdAt) - new Date(a.submittedAt || a.createdAt)
     );
     const lastItem = sorted[0];
-    const statusCounts = { new: 0, in_progress: 0, done: 0, test: 0 };
+    const statusCounts = {};
     for (const item of items) {
-      if (item.status in statusCounts) statusCounts[item.status]++;
+      statusCounts[item.status] = (statusCounts[item.status] || 0) + 1;
     }
     const answerMap = {};
     for (const item of items) {
@@ -1143,44 +1249,41 @@ function AnalyticsBlock({ items, t }) {
         </div>
       </div>
 
-      <div className="analytics-bottom-row">
-        <div className="analytics-section">
+      <div className="analytics-charts-row">
+        <div className="analytics-section analytics-section--donut">
           <div className="analytics-section-title">{t.analyticsStatusDist}</div>
-          <div className="analytics-status-bars">
-            {STATUS_ORDER.map((status) => {
-              const count = analytics.statusCounts[status] || 0;
-              const pct = total > 0 ? Math.round((count / total) * 100) : 0;
-              return (
-                <div key={status} className="analytics-status-row">
-                  <span className={`official-badge status-${status} analytics-status-label`}>{statusLabel(status, t)}</span>
-                  <div className="analytics-bar-track">
-                    <div className={`analytics-bar analytics-bar--${status}`} style={{ width: `${pct}%` }} />
-                  </div>
-                  <span className="analytics-bar-count">{count}</span>
-                </div>
-              );
-            })}
-          </div>
+          <DonutChart statusCounts={analytics.statusCounts} total={total} t={t} />
         </div>
-        {analytics.popularQuestions.length > 0 && (
-          <div className="analytics-section">
-            <div className="analytics-section-title">{t.analyticsPopularAnswers}</div>
-            <div className="analytics-popular-grid">
-              {analytics.popularQuestions.map((q, qi) => (
-                <div key={qi} className="analytics-popular-card">
-                  <div className="analytics-popular-question">{q.question}</div>
-                  {q.top3.map(([answer, count], ai) => (
+        <div className="analytics-section analytics-section--timeline">
+          <div className="analytics-section-title">{t.analyticsLast14Days || "Last 14 days"}</div>
+          <TimelineChart items={items} />
+        </div>
+      </div>
+
+      {analytics.popularQuestions.length > 0 && (
+        <div className="analytics-section">
+          <div className="analytics-section-title">{t.analyticsPopularAnswers}</div>
+          <div className="analytics-popular-grid">
+            {analytics.popularQuestions.map((q, qi) => (
+              <div key={qi} className="analytics-popular-card">
+                <div className="analytics-popular-question">{q.question}</div>
+                {q.top3.map(([answer, count], ai) => {
+                  const pct = Math.round((count / total) * 100);
+                  return (
                     <div key={ai} className="analytics-popular-answer-row">
-                      <span className="analytics-popular-answer-text">{answer}</span>
+                      <div className="analytics-popular-bar-wrap">
+                        <div className="analytics-popular-bar" style={{ width: `${pct}%` }} />
+                        <span className="analytics-popular-answer-text">{answer}</span>
+                      </div>
                       <span className="analytics-popular-count">{count}</span>
                     </div>
-                  ))}
-                </div>
-              ))}
-            </div>
+                  );
+                })}
+              </div>
+            ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1209,67 +1312,6 @@ function QuickActionsBlock({ scenario, currentStatus, onAction, t }) {
   );
 }
 
-// ─── Survey Insights Panel ────────────────────────────────────────────────────
-
-function SurveyInsightsPanel({ items, t }) {
-  const insights = useMemo(() => {
-    const now = new Date();
-    const today = items.filter((item) => {
-      const d = new Date(item.submittedAt || item.createdAt);
-      return !Number.isNaN(d.getTime()) && d.toDateString() === now.toDateString();
-    }).length;
-    const last7 = items.filter((item) => {
-      const d = new Date(item.submittedAt || item.createdAt);
-      return !Number.isNaN(d.getTime()) && d >= new Date(now.getTime() - 7 * 86400000);
-    }).length;
-    const answerMap = {};
-    for (const item of items) {
-      for (const ans of (item.answers || [])) {
-        const q = String(ans.question || "").trim();
-        const a = String(ans.answer || "").trim();
-        if (!q || !a) continue;
-        if (!answerMap[q]) answerMap[q] = {};
-        answerMap[q][a] = (answerMap[q][a] || 0) + 1;
-      }
-    }
-    const popularQuestions = Object.entries(answerMap)
-      .map(([q, answers]) => {
-        const top3 = Object.entries(answers).sort((a, b) => b[1] - a[1]).slice(0, 3);
-        return { question: q, top3 };
-      })
-      .filter((q) => q.top3.length >= 2 && q.top3[0][1] > 1)
-      .slice(0, 4);
-    return { today, last7, popularQuestions };
-  }, [items]);
-
-  return (
-    <div className="survey-insights-card">
-      <div className="survey-insights-header">{t.surveyInsights}</div>
-      <div className="survey-insights-stats">
-        <div className="survey-insight-stat"><span>{t.totalRequests}</span><b>{items.length}</b></div>
-        <div className="survey-insight-stat"><span>{t.analyticsToday}</span><b>{insights.today}</b></div>
-        <div className="survey-insight-stat"><span>{t.analyticsWeek}</span><b>{insights.last7}</b></div>
-      </div>
-      {insights.popularQuestions.length > 0 && (
-        <div className="survey-insights-popular">
-          <div className="survey-insights-popular-title">{t.analyticsPopularAnswers}</div>
-          {insights.popularQuestions.map((q, qi) => (
-            <div key={qi} className="survey-insights-q">
-              <div className="survey-insights-q-label">{q.question}</div>
-              {q.top3.map(([answer, count], ai) => (
-                <div key={ai} className="survey-insights-q-row">
-                  <span className="survey-insights-q-answer">{answer}</span>
-                  <span className="survey-insights-q-count">{count}</span>
-                </div>
-              ))}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export function RequestsPage() {
@@ -1294,7 +1336,6 @@ export function RequestsPage() {
   const [loading, setLoading] = useState(true);
   const [detailsLoading, setDetailsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [exportOpen, setExportOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportType, setReportType] = useState("pdf"); // "pdf" | "word"
@@ -1308,15 +1349,6 @@ export function RequestsPage() {
     const nextTab = searchParams.get("tab");
     if (WORKSPACE_TABS.includes(nextTab)) setActiveTab(nextTab);
   }, [searchParams]);
-
-  useEffect(() => {
-    if (!exportOpen) return;
-    function onOutsideClick(e) {
-      if (exportRef.current && !exportRef.current.contains(e.target)) setExportOpen(false);
-    }
-    document.addEventListener("mousedown", onOutsideClick);
-    return () => document.removeEventListener("mousedown", onOutsideClick);
-  }, [exportOpen]);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -1569,11 +1601,6 @@ export function RequestsPage() {
         />
       )}
 
-      {/* ── Survey Insights ── */}
-      {scenario === "survey" && items.length > 0 && (
-        <SurveyInsightsPanel items={items} t={t} />
-      )}
-
       <div className="workspace-tabs" role="tablist" aria-label={t.workspaceTabsLabel}>
         {WORKSPACE_TABS.map((tab) => (
           <button
@@ -1775,41 +1802,55 @@ export function RequestsPage() {
       )}
 
       {activeTab === "reports" && (
-        <div className="workspace-tab-panel report-actions-panel">
-          <div>
-            <h2>{t.reportsTitle}</h2>
-            <p>{t.reportsSubtitle}</p>
-          </div>
-          <div className="export-area report-export-area" ref={exportRef}>
-            <span>{filteredItems.length} {scenario === "survey" ? t.surveyResponsesLabel : t.requestsCount}</span>
-            <div className="export-menu-wrap">
-              <button
-                className="export-btn"
-                onClick={() => setExportOpen((o) => !o)}
-                disabled={filteredItems.length === 0}
-              >
-                {t.exportBtn}
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </button>
-              {exportOpen && (
-                <div className="export-dropdown">
-                  <button onClick={() => { doExportCSV(filteredItems, t); setExportOpen(false); }}>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="1" width="10" height="12" rx="1.5" stroke="currentColor" strokeWidth="1.4"/><path d="M4 5h6M4 7.5h6M4 10h4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
-                    CSV
-                  </button>
-                  <button onClick={() => { doExportJSON(filteredItems, t); setExportOpen(false); }}>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 4.5C3 3.12 4.12 2 5.5 2h3C9.88 2 11 3.12 11 4.5v5c0 1.38-1.12 2.5-2.5 2.5h-3C4.12 12 3 10.88 3 9.5v-5z" stroke="currentColor" strokeWidth="1.4"/><path d="M5 5.5h4M5 8h2.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/></svg>
-                    JSON
-                  </button>
-                  <button onClick={() => { setReportType("pdf"); setReportModalOpen(true); setExportOpen(false); }}>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10h10V2zM8 5.5L6.5 7 5 5.5M6.5 2v5"/></svg>
-                    {t.exportPDF}
-                  </button>
-                  <button onClick={() => { setReportType("word"); setReportModalOpen(true); setExportOpen(false); }}>
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2H2v10h10V2zM4 6h6M4 8h6M4 4h3"/></svg>
-                    {t.exportWord}
-                  </button>
+        <div className="workspace-tab-panel">
+          <div className="reports-panel">
+            <div className="reports-panel-header">
+              <div>
+                <h2>{t.reportsTitle}</h2>
+                <p>{t.reportsSubtitle}</p>
+              </div>
+            </div>
+
+            <div className="reports-summary-row">
+              {[
+                { label: t.totalRequests, value: items.length },
+                { label: t.analyticsToday, value: items.filter((item) => { const d = new Date(item.submittedAt || item.createdAt); return !Number.isNaN(d.getTime()) && d.toDateString() === new Date().toDateString(); }).length },
+                { label: t.newRequests, value: items.filter((i) => i.status === "new").length },
+                { label: t.filterApplied || "Filtered", value: filteredItems.length }
+              ].map(({ label, value }) => (
+                <div key={label} className="reports-summary-card">
+                  <span>{label}</span>
+                  <strong>{value}</strong>
                 </div>
+              ))}
+            </div>
+
+            <div className="reports-export-section" ref={exportRef}>
+              <div className="reports-export-title">{t.exportBtn || "Export"}</div>
+              <div className="reports-export-grid">
+                <button className="reports-export-card" onClick={() => doExportCSV(filteredItems, t)} disabled={filteredItems.length === 0}>
+                  <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="2" width="16" height="18" rx="2" stroke="currentColor" strokeWidth="1.6"/><path d="M7 8h8M7 12h8M7 16h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+                  <span className="reports-export-card-label">CSV</span>
+                  <span className="reports-export-card-desc">{t.exportCsvDesc || "Spreadsheet-compatible"}</span>
+                </button>
+                <button className="reports-export-card" onClick={() => doExportJSON(filteredItems, t)} disabled={filteredItems.length === 0}>
+                  <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M5 7c0-2.2 1.8-4 4-4h4c2.2 0 4 1.8 4 4v8c0 2.2-1.8 4-4 4H9c-2.2 0-4-1.8-4-4V7z" stroke="currentColor" strokeWidth="1.6"/><path d="M8 9h6M8 13h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+                  <span className="reports-export-card-label">JSON</span>
+                  <span className="reports-export-card-desc">{t.exportJsonDesc || "Raw data"}</span>
+                </button>
+                <button className="reports-export-card" onClick={() => { setReportType("pdf"); setReportModalOpen(true); }} disabled={filteredItems.length === 0}>
+                  <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="2" width="16" height="18" rx="2" stroke="currentColor" strokeWidth="1.6"/><path d="M13 2v6h6M9 13l2.5 2.5L15 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  <span className="reports-export-card-label">{t.exportPDF}</span>
+                  <span className="reports-export-card-desc">{t.exportPdfDesc || "Printable report"}</span>
+                </button>
+                <button className="reports-export-card" onClick={() => { setReportType("word"); setReportModalOpen(true); }} disabled={filteredItems.length === 0}>
+                  <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="2" width="16" height="18" rx="2" stroke="currentColor" strokeWidth="1.6"/><path d="M7 9h8M7 13h8M7 17h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/><path d="M13 2v5h6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  <span className="reports-export-card-label">{t.exportWord}</span>
+                  <span className="reports-export-card-desc">{t.exportWordDesc || "Word document"}</span>
+                </button>
+              </div>
+              {filteredItems.length === 0 && (
+                <p className="muted reports-empty-hint">{t.noRequestsFound}</p>
               )}
             </div>
           </div>
