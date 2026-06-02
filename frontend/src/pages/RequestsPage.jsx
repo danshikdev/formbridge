@@ -1184,46 +1184,187 @@ function TimelineChart({ items }) {
   );
 }
 
-function AnalyticsBlock({ items, t }) {
-  const analytics = useMemo(() => {
-    const now = new Date();
-    const todayCount = items.filter((item) => {
-      const d = new Date(item.submittedAt || item.createdAt);
-      return !Number.isNaN(d.getTime()) && d.toDateString() === now.toDateString();
-    }).length;
-    const weekCount = items.filter((item) => {
-      const d = new Date(item.submittedAt || item.createdAt);
-      return !Number.isNaN(d.getTime()) && d >= new Date(now - 7 * 86400000);
-    }).length;
-    const sorted = [...items].sort(
-      (a, b) => new Date(b.submittedAt || b.createdAt) - new Date(a.submittedAt || a.createdAt)
-    );
-    const lastItem = sorted[0];
-    const statusCounts = {};
-    for (const item of items) {
-      statusCounts[item.status] = (statusCounts[item.status] || 0) + 1;
-    }
-    const answerMap = {};
-    for (const item of items) {
-      for (const ans of (item.answers || [])) {
-        const q = String(ans.question || "").trim();
-        const a = String(ans.answer || "").trim();
-        if (!q || !a) continue;
-        if (!answerMap[q]) answerMap[q] = {};
-        answerMap[q][a] = (answerMap[q][a] || 0) + 1;
-      }
-    }
-    const popularQuestions = Object.entries(answerMap)
-      .map(([q, answers]) => {
-        const top3 = Object.entries(answers).sort((a, b) => b[1] - a[1]).slice(0, 3);
-        return { question: q, top3 };
-      })
-      .filter((q) => q.top3.length >= 2 && q.top3[0][1] > 1)
-      .slice(0, 3);
-    return { todayCount, weekCount, lastItem, statusCounts, popularQuestions };
-  }, [items]);
+function buildAnalytics(items) {
+  const now = new Date();
+  const todayCount = items.filter((item) => {
+    const d = new Date(item.submittedAt || item.createdAt);
+    return !Number.isNaN(d.getTime()) && d.toDateString() === now.toDateString();
+  }).length;
+  const weekCount = items.filter((item) => {
+    const d = new Date(item.submittedAt || item.createdAt);
+    return !Number.isNaN(d.getTime()) && d >= new Date(now - 7 * 86400000);
+  }).length;
+  const sorted = [...items].sort(
+    (a, b) => new Date(b.submittedAt || b.createdAt) - new Date(a.submittedAt || a.createdAt)
+  );
+  const lastItem = sorted[0];
 
-  if (items.length === 0) return null;
+  // Status counts
+  const statusCounts = {};
+  for (const item of items) {
+    statusCounts[item.status] = (statusCounts[item.status] || 0) + 1;
+  }
+
+  // Answer map: question → { answer → count }
+  const answerMap = {};
+  const emailDomains = {};
+  for (const item of items) {
+    if (item.respondentEmail) {
+      const domain = item.respondentEmail.split("@")[1] || "unknown";
+      emailDomains[domain] = (emailDomains[domain] || 0) + 1;
+    }
+    for (const ans of (item.answers || [])) {
+      const q = String(ans.question || "").trim();
+      const a = String(ans.answer || "").trim();
+      if (!q || !a || a === "-") continue;
+      if (!answerMap[q]) answerMap[q] = {};
+      answerMap[q][a] = (answerMap[q][a] || 0) + 1;
+    }
+  }
+
+  // Questions with distribution (≤12 unique answers, answered by ≥2 people)
+  const answerDistributions = Object.entries(answerMap)
+    .map(([q, answers]) => {
+      const entries = Object.entries(answers).sort((a, b) => b[1] - a[1]);
+      const totalAnswers = entries.reduce((s, [, c]) => s + c, 0);
+      return { question: q, entries, totalAnswers, uniqueCount: entries.length };
+    })
+    .filter((q) => q.uniqueCount <= 12 && q.totalAnswers >= 2)
+    .slice(0, 8);
+
+  // Day-of-week distribution
+  const dowCounts = [0, 0, 0, 0, 0, 0, 0];
+  for (const item of items) {
+    const d = new Date(item.submittedAt || item.createdAt);
+    if (!Number.isNaN(d.getTime())) dowCounts[d.getDay()]++;
+  }
+  const busiestDow = dowCounts.indexOf(Math.max(...dowCounts));
+
+  // Avg per day (last 14 days active days)
+  const last14 = items.filter((item) => {
+    const d = new Date(item.submittedAt || item.createdAt);
+    return !Number.isNaN(d.getTime()) && d >= new Date(now - 14 * 86400000);
+  }).length;
+  const avgPerDay = last14 > 0 ? (last14 / 14).toFixed(1) : "0";
+
+  // Unique respondents
+  const uniqueEmails = new Set(items.map((i) => i.respondentEmail).filter(Boolean)).size;
+
+  // Top email domains
+  const topDomains = Object.entries(emailDomains).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+  return { todayCount, weekCount, lastItem, statusCounts, answerDistributions, busiestDow, avgPerDay, uniqueEmails, topDomains };
+}
+
+const DOW_LABELS = {
+  ru: ["Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб"],
+  kk: ["Жс", "Дс", "Сс", "Ср", "Бс", "Жм", "Сн"],
+  en: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+};
+
+function InsightCards({ analytics, total, scenario, t, lang }) {
+  const insights = [];
+  const doneCount = analytics.statusCounts["done"] || 0;
+  const newCount = analytics.statusCounts["new"] || 0;
+  const hiredCount = analytics.statusCounts["hired"] || 0;
+  const acceptedCount = analytics.statusCounts["accepted"] || 0;
+  const rejectedCount = analytics.statusCounts["rejected"] || 0;
+
+  if (total > 0) {
+    const pendingPct = Math.round((newCount / total) * 100);
+    if (pendingPct > 0) {
+      insights.push({ icon: "⏳", color: "amber", text: `${pendingPct}% (${newCount}) ${t.insightPending || "ожидают обработки"}`, sub: t.insightPendingHint || "Новые заявки без статуса" });
+    }
+    if (doneCount > 0) {
+      insights.push({ icon: "✓", color: "green", text: `${Math.round((doneCount / total) * 100)}% ${t.insightDone || "завершено"}`, sub: `${doneCount} ${t.insightOf || "из"} ${total}` });
+    }
+    if (hiredCount > 0 || acceptedCount > 0) {
+      const convCount = hiredCount + acceptedCount;
+      insights.push({ icon: "★", color: "blue", text: `${Math.round((convCount / total) * 100)}% ${t.insightConversion || "конверсия"}`, sub: `${convCount} ${t.insightAccepted || "принято / нанято"}` });
+    }
+    if (rejectedCount > 0) {
+      insights.push({ icon: "✗", color: "red", text: `${rejectedCount} ${t.insightRejected || "отклонено"}`, sub: `${Math.round((rejectedCount / total) * 100)}% ${t.insightFromTotal || "от всех"}` });
+    }
+  }
+
+  if (analytics.avgPerDay !== "0") {
+    insights.push({ icon: "📈", color: "teal", text: `${analytics.avgPerDay} ${t.insightAvgDay || "в среднем/день"}`, sub: t.insightAvgDayHint || "За последние 14 дней" });
+  }
+  if (analytics.uniqueEmails > 0) {
+    insights.push({ icon: "👤", color: "purple", text: `${analytics.uniqueEmails} ${t.insightUnique || "уникальных участников"}`, sub: t.insightUniqueHint || "По email адресам" });
+  }
+  const dowNames = DOW_LABELS[lang] || DOW_LABELS.ru;
+  if (analytics.busiestDow !== undefined) {
+    insights.push({ icon: "📅", color: "indigo", text: `${dowNames[analytics.busiestDow]} — ${t.insightBusiestDay || "самый активный день"}`, sub: t.insightBusiestHint || "По количеству заявок" });
+  }
+  if (analytics.answerDistributions.length > 0) {
+    const top = analytics.answerDistributions[0];
+    const [topAns, topCnt] = top.entries[0];
+    const pct = Math.round((topCnt / top.totalAnswers) * 100);
+    const shortQ = top.question.length > 30 ? top.question.slice(0, 30) + "…" : top.question;
+    insights.push({ icon: "💬", color: "green", text: `«${topAns}» — ${pct}%`, sub: shortQ });
+  }
+
+  if (insights.length === 0) return null;
+
+  return (
+    <div className="analytics-insights-row">
+      {insights.slice(0, 6).map((ins, i) => (
+        <div key={i} className={`analytics-insight-card analytics-insight-card--${ins.color}`}>
+          <span className="analytics-insight-icon">{ins.icon}</span>
+          <div>
+            <div className="analytics-insight-text">{ins.text}</div>
+            <div className="analytics-insight-sub">{ins.sub}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function AnswerDistributionBlock({ distributions, t }) {
+  if (distributions.length === 0) return null;
+  return (
+    <div className="analytics-section">
+      <div className="analytics-section-title">{t.analyticsAnswerDist || "Распределение ответов"}</div>
+      <div className="analytics-dist-grid">
+        {distributions.map((q, qi) => (
+          <div key={qi} className="analytics-dist-card">
+            <div className="analytics-dist-question">{q.question}</div>
+            <div className="analytics-dist-bars">
+              {q.entries.slice(0, 8).map(([answer, count], ai) => {
+                const pct = Math.round((count / q.totalAnswers) * 100);
+                return (
+                  <div key={ai} className="analytics-dist-row">
+                    <div className="analytics-dist-label" title={answer}>{answer}</div>
+                    <div className="analytics-dist-track">
+                      <div
+                        className="analytics-dist-fill"
+                        style={{ width: `${pct}%`, background: `hsl(${150 - ai * 20}, 45%, ${45 + ai * 4}%)` }}
+                      />
+                    </div>
+                    <span className="analytics-dist-pct">{pct}%</span>
+                    <span className="analytics-dist-count">{count}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="analytics-dist-footer">{q.totalAnswers} {t.analyticsResponses || "ответов"}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AnalyticsBlock({ items, scenario, t, lang }) {
+  const analytics = useMemo(() => buildAnalytics(items), [items]);
+
+  if (items.length === 0) return (
+    <div className="analytics-empty">
+      <p className="muted">{t.noRequestsForForm}</p>
+    </div>
+  );
   const total = items.length;
 
   return (
@@ -1249,6 +1390,8 @@ function AnalyticsBlock({ items, t }) {
         </div>
       </div>
 
+      <InsightCards analytics={analytics} total={total} scenario={scenario} t={t} lang={lang} />
+
       <div className="analytics-charts-row">
         <div className="analytics-section analytics-section--donut">
           <div className="analytics-section-title">{t.analyticsStatusDist}</div>
@@ -1260,27 +1403,25 @@ function AnalyticsBlock({ items, t }) {
         </div>
       </div>
 
-      {analytics.popularQuestions.length > 0 && (
+      <AnswerDistributionBlock distributions={analytics.answerDistributions} t={t} />
+
+      {analytics.topDomains.length >= 2 && (
         <div className="analytics-section">
-          <div className="analytics-section-title">{t.analyticsPopularAnswers}</div>
-          <div className="analytics-popular-grid">
-            {analytics.popularQuestions.map((q, qi) => (
-              <div key={qi} className="analytics-popular-card">
-                <div className="analytics-popular-question">{q.question}</div>
-                {q.top3.map(([answer, count], ai) => {
-                  const pct = Math.round((count / total) * 100);
-                  return (
-                    <div key={ai} className="analytics-popular-answer-row">
-                      <div className="analytics-popular-bar-wrap">
-                        <div className="analytics-popular-bar" style={{ width: `${pct}%` }} />
-                        <span className="analytics-popular-answer-text">{answer}</span>
-                      </div>
-                      <span className="analytics-popular-count">{count}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
+          <div className="analytics-section-title">{t.analyticsEmailDomains || "Email домены"}</div>
+          <div className="analytics-domain-bars">
+            {analytics.topDomains.map(([domain, count], i) => {
+              const pct = Math.round((count / total) * 100);
+              return (
+                <div key={i} className="analytics-dist-row">
+                  <div className="analytics-dist-label">@{domain}</div>
+                  <div className="analytics-dist-track">
+                    <div className="analytics-dist-fill analytics-dist-fill--domain" style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className="analytics-dist-pct">{pct}%</span>
+                  <span className="analytics-dist-count">{count}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -1731,7 +1872,7 @@ export function RequestsPage() {
 
       {activeTab === "analytics" && (
         <div className="workspace-tab-panel">
-          {items.length > 0 ? <AnalyticsBlock items={items} t={t} /> : <p className="muted">{t.noRequestsForForm}</p>}
+          <AnalyticsBlock items={items} scenario={scenario} t={t} lang={lang} />
         </div>
       )}
 
