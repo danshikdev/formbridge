@@ -597,6 +597,7 @@ html {
 }
 
 .solution-page {
+  width: min(1240px, 100%);
   display: grid;
   gap: 26px;
   min-height: calc(100vh - 170px);
