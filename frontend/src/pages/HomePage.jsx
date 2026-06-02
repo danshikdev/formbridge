@@ -84,9 +84,9 @@ const copy = {
     finalText: "FormBridge арқылы өтініштерді кәсіби түрде басқарыңыз.",
     footerText: "Google Forms негізіндегі өтініштерді басқаруға арналған кәсіби платформа.",
     footerGroups: [
-      ["Өнім", "Мүмкіндіктер", "Қалай жұмыс істейді", "Баға"],
-      ["Компания", "Біз туралы", "Байланыс"],
-      ["Ресурстар", "Құжаттама", "Нұсқаулықтар", "Қолдау"]
+      ["Өнім", "Жұмыс кеңістігі", "ЖИ көмекші", "Есептер", "Қалай жұмыс істейді"],
+      ["Шешімдер", "Қабылдау", "Клиент өтініштері", "HR", "Сауалнама"],
+      ["Компания", "Біз туралы", "Байланыс", "Бастау"]
     ],
     copyright: "© 2026 FormBridge. Барлық құқықтар қорғалған.",
     screenshotAlt: "FormBridge жұмыс кеңістігінің нақты көрінісі"
@@ -147,7 +147,11 @@ const copy = {
     finalTitle: "Расширьте возможности Google Forms",
     finalText: "Управляйте заявками профессионально через FormBridge.",
     footerText: "Профессиональная платформа для управления заявками на базе Google Forms.",
-    footerGroups: [["Продукт", "Функции", "Как работает", "Цены"], ["Компания", "О нас", "Контакты"], ["Ресурсы", "Документация", "Гайды", "Поддержка"]],
+    footerGroups: [
+      ["Продукт", "Рабочее пространство", "AI помощник", "Отчёты", "Как работает"],
+      ["Решения", "Приёмная комиссия", "Клиентские заявки", "HR", "Опросы"],
+      ["Компания", "О нас", "Контакты", "Начать"]
+    ],
     copyright: "© 2026 FormBridge. Все права защищены.",
     screenshotAlt: "Реальный вид рабочего пространства FormBridge"
   },
@@ -202,7 +206,11 @@ const copy = {
     finalTitle: "Expand what Google Forms can do",
     finalText: "Manage requests professionally with FormBridge.",
     footerText: "Professional request management platform for Google Forms.",
-    footerGroups: [["Product", "Features", "How it works", "Pricing"], ["Company", "About", "Contact"], ["Resources", "Documentation", "Guides", "Support"]],
+    footerGroups: [
+      ["Product", "Workspace", "AI Assistant", "Reports", "How it works"],
+      ["Solutions", "Admissions", "Client requests", "HR", "Surveys"],
+      ["Company", "About", "Contact", "Get started"]
+    ],
     copyright: "© 2026 FormBridge. All rights reserved.",
     screenshotAlt: "Real FormBridge workspace dashboard"
   }
@@ -213,9 +221,9 @@ const workflowIcons = [DocumentTextIcon, BoltIcon, CpuChipIcon, ChartBarSquareIc
 
 // Footer link targets by group/item position (language-agnostic)
 const FOOTER_HREFS = [
-  ["/#features", "/#workflow", "/#pricing"],
-  ["/#about", "/#about"],
-  ["/health", "/health", "/#about"],
+  ["/#workspace", "/#ai", "/#reports", "/#workflow"],
+  ["/solutions/admissions", "/solutions/client_requests", "/solutions/hr", "/solutions/survey"],
+  ["/#about", "/#about", "/#pricing"],
 ];
 
 function ProductPreview({ variant = "hero", alt, src }) {

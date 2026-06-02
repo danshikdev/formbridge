@@ -83,10 +83,10 @@ function TopBar({ t, lang, setLang, isHome }) {
   const [langOpen, setLangOpen] = useState(false);
   const [canOpenAdmin, setCanOpenAdmin] = useState(false);
   const homeNav = {
-    kk: ["Мүмкіндіктер", "Қалай жұмыс істейді", "Шешімдер", "Баға", "Ресурстар", "Біз туралы"],
-    ru: ["Функции", "Как работает", "Решения", "Цены", "Ресурсы", "О нас"],
-    en: ["Features", "How it Works", "Solutions", "Pricing", "Resources", "About"]
-  }[lang || "kk"] || ["Features", "How it Works", "Solutions", "Pricing", "Resources", "About"];
+    kk: ["Мүмкіндіктер", "Қалай жұмыс істейді", "Шешімдер", "Бастау", "Ресурстар", "Біз туралы"],
+    ru: ["Функции", "Как работает", "Решения", "Начать", "Ресурсы", "О нас"],
+    en: ["Features", "How it Works", "Solutions", "Get started", "Resources", "About"]
+  }[lang || "kk"] || ["Features", "How it Works", "Solutions", "Get started", "Resources", "About"];
   const homeNavTargets = ["#features", "#workflow", "#solutions", "#pricing", "#resources", "#about"];
 
   useEffect(() => {
