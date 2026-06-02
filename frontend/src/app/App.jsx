@@ -18,6 +18,12 @@ import { IconCheck } from "../shared/icons.jsx";
 import { LANGUAGES } from "../shared/i18n";
 import { useLocale } from "../shared/useLocale";
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
+
 function ProtectedRoute({ children }) {
   const token = getStoredToken();
   return token ? children : <Navigate to="/login" replace />;
@@ -285,6 +291,7 @@ export function App() {
 
   return (
     <div className={`app-shell${isHome ? " home-shell" : ""}${isWorkspace ? " workspace-app-shell" : ""}`}>
+      <ScrollToTop />
       <TopBar t={t} lang={lang || "en"} setLang={setLang} isHome={isHome} />
       {toast ? (
         <div className={`toast${toastClosing ? " toast-closing" : ""}`} role="status" aria-live="polite">

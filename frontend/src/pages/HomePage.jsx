@@ -211,7 +211,7 @@ const copy = {
 const whyIcons = [ShieldCheckIcon, ChartBarSquareIcon, SparklesIcon, BoltIcon];
 const workflowIcons = [DocumentTextIcon, BoltIcon, CpuChipIcon, ChartBarSquareIcon, CheckCircleIcon];
 
-function ProductPreview({ variant = "hero", alt }) {
+function ProductPreview({ variant = "hero", alt, src }) {
   return (
     <div className={`product-preview product-preview--${variant}`}>
       <div className="product-preview-bar">
@@ -219,7 +219,7 @@ function ProductPreview({ variant = "hero", alt }) {
         <span />
         <span />
       </div>
-      <img src={SCREENSHOT_SRC} alt={alt} loading={variant === "hero" ? "eager" : "lazy"} />
+      <img src={src || SCREENSHOT_SRC} alt={alt} loading={variant === "hero" ? "eager" : "lazy"} />
     </div>
   );
 }
@@ -253,7 +253,7 @@ export function HomePage() {
             {text.workspaceFeatures.map((item) => <span key={item}><CheckCircleIcon />{item}</span>)}
           </div>
         </div>
-        <ProductPreview variant="wide" alt={text.screenshotAlt} />
+        <ProductPreview variant="wide" alt={text.screenshotAlt} src="/setup-screenshots/feature-ai.png" />
       </section>
 
       <section className="landing-ai" id="ai">
