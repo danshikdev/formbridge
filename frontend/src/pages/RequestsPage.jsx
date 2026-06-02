@@ -315,6 +315,14 @@ function doExportJSON(filteredItems, t) {
   downloadBlob(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }), buildFileName("json"));
 }
 
+function reportHtml(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 // ─── Scenario Select Banner ───────────────────────────────────────────────────
 
 function ScenarioSelectBanner({ formId, lang, t, onSelected }) {
@@ -639,6 +647,7 @@ function generateWordReport(formTitle, scenario, items, t, lang) {
   }
   
   const questionLabels = collectAllQuestions(items, t);
+  const useStackedLayout = questionLabels.length > 5;
 
   const rowsHtml = items.map((item) => {
     const answerMap = {};
@@ -647,30 +656,58 @@ function generateWordReport(formTitle, scenario, items, t, lang) {
     }
     
     const answersHtml = questionLabels.map((q) => {
-      return `<td>${answerMap[q] || "-"}</td>`;
+      return `<td>${reportHtml(answerMap[q] || "-")}</td>`;
     }).join("");
 
     return `
       <tr>
-        <td>${formatDate(item.submittedAt || item.createdAt)}</td>
-        <td>${item.respondentEmail || "-"}</td>
-        <td><b>${statusLabel(item.status, t)}</b></td>
+        <td>${reportHtml(formatDate(item.submittedAt || item.createdAt))}</td>
+        <td>${reportHtml(item.respondentEmail || "-")}</td>
+        <td><b>${reportHtml(statusLabel(item.status, t))}</b></td>
         ${answersHtml}
       </tr>
     `;
   }).join("");
 
   const headersHtml = [t.submitted, t.email, t.status, ...questionLabels]
-    .map(h => `<th>${h}</th>`).join("");
+    .map(h => `<th>${reportHtml(h)}</th>`).join("");
+
+  const stackedHtml = items.map((item, index) => {
+    const answers = answersForView(item.answers || [], t);
+    const answerRows = answers.length
+      ? answers.map(({ label, value }) => `
+        <tr>
+          <th>${reportHtml(label)}</th>
+          <td>${reportHtml(value)}</td>
+        </tr>
+      `).join("")
+      : `<tr><td colspan="2">-</td></tr>`;
+
+    return `
+      <div class="response-card">
+        <h3>${index + 1}. ${reportHtml(item.respondentEmail || item.id || "-")}</h3>
+        <table class="meta-table">
+          <tbody>
+            <tr><th>${reportHtml(t.submitted)}</th><td>${reportHtml(formatDate(item.submittedAt || item.createdAt))}</td></tr>
+            <tr><th>${reportHtml(t.email)}</th><td>${reportHtml(item.respondentEmail || "-")}</td></tr>
+            <tr><th>${reportHtml(t.status)}</th><td><b>${reportHtml(statusLabel(item.status, t))}</b></td></tr>
+          </tbody>
+        </table>
+        <table class="answers-table">
+          <tbody>${answerRows}</tbody>
+        </table>
+      </div>
+    `;
+  }).join("");
 
   const statusListHtml = Object.entries(statusCounts)
-    .map(([status, count]) => `<li><b>${statusLabel(status, t)}:</b> ${count}</li>`)
+    .map(([status, count]) => `<li><b>${reportHtml(statusLabel(status, t))}:</b> ${count}</li>`)
     .join("");
 
   return `
     <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
     <head>
-      <title>${formTitle || "FormBridge Report"}</title>
+      <title>${reportHtml(formTitle || "FormBridge Report")}</title>
       <!--[if gte mso 9]>
       <xml>
         <w:WordDocument>
@@ -682,7 +719,7 @@ function generateWordReport(formTitle, scenario, items, t, lang) {
       <![endif]-->
       <style>
         @page Section1 {
-          size: 11in 8.5in;
+          size: ${useStackedLayout ? "8.5in 11in" : "11in 8.5in"};
           margin: 0.5in;
           mso-header-margin: 0.5in;
           mso-footer-margin: 0.5in;
@@ -727,7 +764,7 @@ function generateWordReport(formTitle, scenario, items, t, lang) {
           border-collapse: collapse;
           margin-top: 12pt;
           margin-bottom: 12pt;
-          table-layout: auto;
+          table-layout: fixed;
         }
         th, td {
           border: 1px solid #d9e2dc;
@@ -744,30 +781,54 @@ function generateWordReport(formTitle, scenario, items, t, lang) {
           color: #475851;
           font-weight: bold;
         }
+        .wide-table th,
+        .wide-table td {
+          font-size: 7.5pt;
+          padding: 4pt 5pt;
+        }
+        .response-card {
+          page-break-inside: avoid;
+          margin: 12pt 0 16pt;
+          padding-top: 4pt;
+          border-top: 1px solid #d9e2dc;
+        }
+        h3 {
+          font-size: 11pt;
+          color: #123b2f;
+          margin: 0 0 6pt;
+        }
+        .meta-table th {
+          width: 28%;
+        }
+        .answers-table th {
+          width: 34%;
+        }
       </style>
     </head>
     <body>
       <div class="Section1">
-        <h1>${formTitle || "FormBridge Report"}</h1>
-        <p><b>${t.reportGeneratedAt}:</b> ${new Date().toLocaleString()}</p>
-        <p><b>${t.totalRequests}:</b> ${items.length} | <b>${t.analyticsToday}:</b> ${todayCount}</p>
+        <h1>${reportHtml(formTitle || "FormBridge Report")}</h1>
+        <p><b>${reportHtml(t.reportGeneratedAt)}:</b> ${reportHtml(new Date().toLocaleString())}</p>
+        <p><b>${reportHtml(t.totalRequests)}:</b> ${items.length} | <b>${reportHtml(t.analyticsToday)}:</b> ${todayCount}</p>
         
-        <h2>${t.analyticsStatusDist}</h2>
+        <h2>${reportHtml(t.analyticsStatusDist)}</h2>
         <ul>
           ${statusListHtml || "<li>-</li>"}
         </ul>
 
-        <h2>${scenario === "survey" ? t.surveyResponsesLabel : t.requestsTitle}</h2>
-        <table>
-          <thead>
-            <tr>
-              ${headersHtml}
-            </tr>
-          </thead>
-          <tbody>
-            ${rowsHtml}
-          </tbody>
-        </table>
+        <h2>${reportHtml(scenario === "survey" ? t.surveyResponsesLabel : t.requestsTitle)}</h2>
+        ${useStackedLayout ? stackedHtml : `
+          <table class="wide-table">
+            <thead>
+              <tr>
+                ${headersHtml}
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+        `}
       </div>
     </body>
     </html>
