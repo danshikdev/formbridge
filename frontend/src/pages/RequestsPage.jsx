@@ -1438,26 +1438,6 @@ export function RequestsPage() {
     return result;
   }, [items, query, t, dateFilter, dateFrom, dateTo]);
 
-  const stats = useMemo(() => {
-    const now = new Date();
-    const attentionSet = new Set(ATTENTION_STATUSES[scenario] || ["new"]);
-    return {
-      total: items.length,
-      fresh: items.filter((item) => item.status === "new").length,
-      inProgress: items.filter((item) => item.status === "in_progress").length,
-      done: items.filter((item) => item.status === "done").length,
-      today: items.filter((item) => {
-        const d = new Date(item.submittedAt || item.createdAt);
-        return !Number.isNaN(d.getTime()) && d.toDateString() === now.toDateString();
-      }).length,
-      week: items.filter((item) => {
-        const d = new Date(item.submittedAt || item.createdAt);
-        return !Number.isNaN(d.getTime()) && d >= new Date(now - 7 * 86400000);
-      }).length,
-      attention: items.filter((item) => attentionSet.size > 0 && attentionSet.has(item.status)).length
-    };
-  }, [items, scenario]);
-
   // Determine statuses to show in filter dropdown
   const scenarioStatuses = useMemo(() => {
     const base = ["new", "in_progress", "done"];
@@ -1563,31 +1543,6 @@ export function RequestsPage() {
               )}
             </div>
           </div>
-        </div>
-        <div className="ws-stats-row">
-          <div className="ws-stat">
-            <span>{scenario === "survey" ? t.surveyResponsesLabel : t.totalRequests}</span>
-            <b>{stats.total}</b>
-          </div>
-          <div className="ws-stat">
-            <span>{t.analyticsToday}</span>
-            <b>{stats.today}</b>
-          </div>
-          <div className="ws-stat">
-            <span>{t.analyticsWeek}</span>
-            <b>{stats.week}</b>
-          </div>
-          {scenario === "survey" ? (
-            <div className="ws-stat">
-              <span>{t.newRequests}</span>
-              <b>{stats.fresh}</b>
-            </div>
-          ) : (
-            <div className={`ws-stat${stats.attention > 0 ? " ws-stat--attention" : ""}`}>
-              <span>{t.needsAttention}</span>
-              <b>{stats.attention}</b>
-            </div>
-          )}
         </div>
       </div>
 
