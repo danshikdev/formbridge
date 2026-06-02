@@ -17,6 +17,7 @@ import { HomePage } from "../pages/HomePage.jsx";
 import { AboutPage } from "../pages/AboutPage.jsx";
 import { ContactPage } from "../pages/ContactPage.jsx";
 import { SolutionPage } from "../pages/SolutionPage.jsx";
+import { PrivacyPage } from "../pages/PrivacyPage.jsx";
 import { ProfilePage } from "../pages/ProfilePage.jsx";
 import { RequestsPage } from "../pages/RequestsPage.jsx";
 import { MyFormsPage } from "../pages/MyFormsPage.jsx";
@@ -525,6 +526,7 @@ export function App() {
             <Route path="/about" element={<AboutPage />} />
             <Route path="/contact" element={<ContactPage />} />
             <Route path="/solutions/:solutionId" element={<SolutionPage />} />
+            <Route path="/privacy" element={<PrivacyPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         )}
