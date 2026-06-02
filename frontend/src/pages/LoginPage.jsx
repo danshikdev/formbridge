@@ -8,7 +8,7 @@ export function LoginPage({ t }) {
   const { lang } = useLocale();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const [mode, setMode] = useState("login");
+  const [mode, setMode] = useState(() => searchParams.get("mode") === "register" ? "register" : "login");
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
