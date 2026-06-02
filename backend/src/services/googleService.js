@@ -12,9 +12,7 @@ export const GOOGLE_SCOPES = [
   "https://www.googleapis.com/auth/drive.metadata.readonly",
   "https://www.googleapis.com/auth/forms.body.readonly",
   "https://www.googleapis.com/auth/forms.responses.readonly",
-  "https://www.googleapis.com/auth/spreadsheets",
-  "https://www.googleapis.com/auth/script.projects",
-  "https://www.googleapis.com/auth/script.scriptapp"
+  "https://www.googleapis.com/auth/spreadsheets"
 ];
 
 export function isGoogleConfigured() {

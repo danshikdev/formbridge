@@ -5107,6 +5107,33 @@ body {
   .analytics-stats-row {
     grid-template-columns: 1fr 1fr;
   }
+  .analytics-insights-row {
+    grid-template-columns: 1fr;
+  }
+  .analytics-wrap {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .analytics-stats-row {
+    grid-template-columns: 1fr;
+  }
+  .analytics-donut-wrap {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .analytics-donut-chart-area {
+    width: 80px;
+    height: 80px;
+  }
+  .analytics-dist-row {
+    grid-template-columns: minmax(60px, 1fr) 1fr 30px 24px;
+    gap: 6px;
+  }
+  .analytics-stat-card strong {
+    font-size: 1.25rem;
+  }
 }
 
 /* ── Reports Panel ── */
