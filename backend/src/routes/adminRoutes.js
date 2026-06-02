@@ -1,11 +1,15 @@
 import { Router } from "express";
 import { Op } from "sequelize";
+import { sequelize } from "../config/database.js";
 import { requireAuth } from "../middleware/auth.js";
 import { requireAdmin } from "../middleware/admin.js";
 import { User } from "../models/user.js";
 import { FormIntegration } from "../models/formIntegration.js";
 import { Request } from "../models/request.js";
 import { FormFeedback } from "../models/formFeedback.js";
+import { GoogleAccount } from "../models/googleAccount.js";
+import { IntegrationEvent } from "../models/integrationEvent.js";
+import { NotificationSettings } from "../models/notificationSettings.js";
 import { env } from "../config/env.js";
 
 export const adminRoutes = Router();
@@ -121,6 +125,136 @@ adminRoutes.get("/feedback", async (_req, res) => {
   } catch (err) {
     console.error("[admin/feedback]", err);
     res.status(500).json({ error: "Failed to load feedback" });
+  }
+});
+
+adminRoutes.post("/users/clear-data", async (req, res) => {
+  const email = String(req.body?.email || "").trim().toLowerCase();
+  const confirmEmail = String(req.body?.confirmEmail || "").trim().toLowerCase();
+
+  if (!email || !email.includes("@")) {
+    return res.status(400).json({ error: "Valid email is required" });
+  }
+
+  if (email !== confirmEmail) {
+    return res.status(400).json({ error: "Email confirmation does not match" });
+  }
+
+  if (email === String(req.user.email || "").trim().toLowerCase()) {
+    return res.status(400).json({ error: "You cannot clear your own admin account from this screen" });
+  }
+
+  try {
+    const result = await sequelize.transaction(async (transaction) => {
+      const user = await User.findOne({
+        where: sequelize.where(sequelize.fn("lower", sequelize.col("email")), email),
+        transaction
+      });
+
+      if (!user) {
+        return {
+          found: false,
+          email,
+          deleted: {
+            users: 0,
+            googleAccounts: 0,
+            integrations: 0,
+            requests: 0,
+            integrationEvents: 0,
+            notificationSettings: 0,
+            feedback: 0
+          }
+        };
+      }
+
+      const integrations = await FormIntegration.findAll({
+        where: { userId: user.id },
+        attributes: ["id", "formId"],
+        transaction
+      });
+      const integrationIds = integrations.map((item) => item.id);
+      const formIds = integrations.map((item) => item.formId).filter(Boolean);
+
+      const requests = formIds.length
+        ? await Request.findAll({
+            where: { formId: { [Op.in]: formIds } },
+            attributes: ["id"],
+            transaction
+          })
+        : [];
+      const requestIds = requests.map((item) => item.id);
+
+      let integrationEvents = 0;
+      if (integrationIds.length || requestIds.length) {
+        integrationEvents = await IntegrationEvent.destroy({
+          where: {
+            [Op.or]: [
+              integrationIds.length ? { integrationId: { [Op.in]: integrationIds } } : null,
+              requestIds.length ? { requestId: { [Op.in]: requestIds } } : null
+            ].filter(Boolean)
+          },
+          transaction
+        });
+      }
+
+      const notificationSettings = await NotificationSettings.destroy({
+        where: {
+          [Op.or]: [
+            { userId: user.id },
+            formIds.length ? { formId: { [Op.in]: formIds } } : null
+          ].filter(Boolean)
+        },
+        transaction
+      });
+
+      const feedback = await FormFeedback.destroy({
+        where: {
+          [Op.or]: [
+            { userId: user.id },
+            formIds.length ? { formId: { [Op.in]: formIds } } : null
+          ].filter(Boolean)
+        },
+        transaction
+      });
+
+      const deletedRequests = formIds.length
+        ? await Request.destroy({ where: { formId: { [Op.in]: formIds } }, transaction })
+        : 0;
+
+      const deletedIntegrations = await FormIntegration.destroy({
+        where: { userId: user.id },
+        transaction
+      });
+
+      const googleAccounts = await GoogleAccount.destroy({
+        where: { userId: user.id },
+        transaction
+      });
+
+      const users = await User.destroy({
+        where: { id: user.id },
+        transaction
+      });
+
+      return {
+        found: true,
+        email,
+        deleted: {
+          users,
+          googleAccounts,
+          integrations: deletedIntegrations,
+          requests: deletedRequests,
+          integrationEvents,
+          notificationSettings,
+          feedback
+        }
+      };
+    });
+
+    res.json({ ok: true, ...result });
+  } catch (err) {
+    console.error("[admin/users/clear-data]", err);
+    res.status(500).json({ error: "Failed to clear user data" });
   }
 });
 

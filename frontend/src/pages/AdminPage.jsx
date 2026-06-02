@@ -30,6 +30,11 @@ export function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [denied, setDenied] = useState(false);
   const [error, setError] = useState("");
+  const [clearEmail, setClearEmail] = useState("");
+  const [confirmEmail, setConfirmEmail] = useState("");
+  const [clearLoading, setClearLoading] = useState(false);
+  const [clearResult, setClearResult] = useState(null);
+  const [clearError, setClearError] = useState("");
 
   useEffect(() => {
     Promise.all([
@@ -56,6 +61,40 @@ export function AdminPage() {
       setFeedback((prev) => prev.map((f) => f.id === id ? { ...f, status } : f));
     } catch {
       // silent
+    }
+  }
+
+  async function clearUserData(event) {
+    event.preventDefault();
+    const email = clearEmail.trim();
+    const confirm = confirmEmail.trim();
+
+    setClearError("");
+    setClearResult(null);
+
+    if (!email || email.toLowerCase() !== confirm.toLowerCase()) {
+      setClearError(t.adminClearUserMismatch);
+      return;
+    }
+
+    if (!window.confirm(`${t.adminClearUserConfirm} ${email}?`)) return;
+
+    setClearLoading(true);
+    try {
+      const { data } = await api.post("/api/admin/users/clear-data", {
+        email,
+        confirmEmail: confirm
+      });
+      setClearResult(data);
+      setClearEmail("");
+      setConfirmEmail("");
+
+      const overviewResponse = await api.get("/api/admin/overview");
+      setOverview(overviewResponse.data);
+    } catch (err) {
+      setClearError(err.response?.data?.error || t.adminClearUserFailed);
+    } finally {
+      setClearLoading(false);
     }
   }
 
@@ -147,6 +186,48 @@ export function AdminPage() {
           <span className="admin-system-val">{system.openaiModel}</span>
         </div>
       </div>
+
+      <div className="admin-section-title">
+        <IconUser size={16} />
+        {t.adminClearUserTitle}
+      </div>
+      <form className="admin-system-card" onSubmit={clearUserData}>
+        <div className="admin-system-row">
+          <span>{t.adminClearUserEmail}</span>
+          <input
+            type="email"
+            value={clearEmail}
+            onChange={(e) => setClearEmail(e.target.value)}
+            placeholder="user@example.com"
+            style={{ maxWidth: 360, width: "100%" }}
+          />
+        </div>
+        <div className="admin-system-row">
+          <span>{t.adminClearUserConfirmEmail}</span>
+          <input
+            type="email"
+            value={confirmEmail}
+            onChange={(e) => setConfirmEmail(e.target.value)}
+            placeholder="user@example.com"
+            style={{ maxWidth: 360, width: "100%" }}
+          />
+        </div>
+        <div className="admin-system-row">
+          <span>{t.adminClearUserHint}</span>
+          <button className="admin-action-btn" type="submit" disabled={clearLoading}>
+            {clearLoading ? t.loading : t.adminClearUserButton}
+          </button>
+        </div>
+        {clearError ? <div className="admin-system-row"><span className="admin-system-val admin-warn">{clearError}</span></div> : null}
+        {clearResult ? (
+          <div className="admin-system-row">
+            <span>{clearResult.found ? t.adminClearUserDone : t.adminClearUserNotFound}</span>
+            <span className="admin-system-val">
+              users: {clearResult.deleted?.users || 0}, forms: {clearResult.deleted?.integrations || 0}, requests: {clearResult.deleted?.requests || 0}
+            </span>
+          </div>
+        ) : null}
+      </form>
 
       {/* Recent users */}
       <div className="admin-section-title">
