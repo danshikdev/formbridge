@@ -12,6 +12,9 @@ import {
   UsersIcon,
 } from "@heroicons/react/24/outline";
 import { useLocale } from "../shared/useLocale";
+import { Breadcrumb } from "../shared/Breadcrumb";
+
+const SOL_NAV = { kk: "Шешімдер", ru: "Решения", en: "Solutions" };
 
 const STATUS_COLOR = {
   new: "blue",
@@ -686,6 +689,8 @@ export function SolutionPage() {
 
   return (
     <section className="sol-page">
+
+      <Breadcrumb items={[["FormBridge", "/"], [SOL_NAV[lang] || "Solutions", "/#solutions"], [s.title]]} />
 
       {/* Hero */}
       <div className="sol-hero">

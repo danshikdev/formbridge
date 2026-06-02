@@ -84,7 +84,7 @@ const copy = {
     finalText: "FormBridge арқылы өтініштерді кәсіби түрде басқарыңыз.",
     aboutKicker: "Біз туралы",
     aboutTitle: "FormBridge дегеніміз не?",
-    aboutDesc: "FormBridge — Google Forms жауаптарын бір жұмыс кеңістігінде жинап, талдап, басқаруға арналған платформа. Диплом жобасы ретінде жасалды, бірақ нақты бизнес-мәселелерді шешеді.",
+    aboutDesc: "FormBridge — Google Forms жауаптарын бір жұмыс кеңістігінде жинап, талдап, басқаруға арналған платформа. Нақты бизнес-мәселелерді шешуге арналған.",
     aboutLearnMore: "Толығырақ →",
     aboutCreatorLabel: "Жасаушы",
     footerText: "Google Forms негізіндегі өтініштерді басқаруға арналған кәсіби платформа.",
@@ -153,7 +153,7 @@ const copy = {
     finalText: "Управляйте заявками профессионально через FormBridge.",
     aboutKicker: "О нас",
     aboutTitle: "Что такое FormBridge?",
-    aboutDesc: "FormBridge — платформа для сбора, анализа и управления ответами Google Forms в едином рабочем пространстве. Создана как дипломный проект, но решает реальные бизнес-задачи.",
+    aboutDesc: "FormBridge — платформа для сбора, анализа и управления ответами Google Forms в едином рабочем пространстве. Создана для реальных бизнес-задач.",
     aboutLearnMore: "Подробнее →",
     aboutCreatorLabel: "Разработчик",
     footerText: "Профессиональная платформа для управления заявками на базе Google Forms.",
@@ -217,7 +217,7 @@ const copy = {
     finalText: "Manage requests professionally with FormBridge.",
     aboutKicker: "About",
     aboutTitle: "What is FormBridge?",
-    aboutDesc: "FormBridge is a platform for collecting, analyzing and managing Google Forms responses in one workspace. Built as a diploma project, it solves real business problems.",
+    aboutDesc: "FormBridge is a platform for collecting, analyzing and managing Google Forms responses in one workspace. Built for real business problems.",
     aboutLearnMore: "Learn more →",
     aboutCreatorLabel: "Developer",
     footerText: "Professional request management platform for Google Forms.",
@@ -327,8 +327,10 @@ export function HomePage() {
             const Icon = workflowIcons[index];
             return (
               <article key={title}>
-                <div><Icon /></div>
-                <b>{index + 1}</b>
+                <div className="wf-step-top">
+                  <div className="wf-step-icon"><Icon /></div>
+                  <span className="wf-step-num">{index + 1}</span>
+                </div>
                 <h3>{title}</h3>
                 <p>{desc}</p>
               </article>

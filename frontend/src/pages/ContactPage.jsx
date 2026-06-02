@@ -3,9 +3,11 @@ import { Link } from "react-router-dom";
 import { CheckCircleIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
 import { useLocale } from "../shared/useLocale";
 import { api } from "../api/client";
+import { Breadcrumb } from "../shared/Breadcrumb";
 
 const copy = {
   kk: {
+    breadcrumb: [["FormBridge", "/"], ["Байланыс"]],
     kicker: "Байланыс",
     title: "Хабарлама жіберіңіз",
     subtitle: "Сұрақ, ұсыныс немесе пікір болса — жазыңыз, жауап береміз.",
@@ -26,6 +28,7 @@ const copy = {
     messageRequired: "Хабарлама жазыңыз",
   },
   ru: {
+    breadcrumb: [["FormBridge", "/"], ["Контакты"]],
     kicker: "Контакты",
     title: "Напишите нам",
     subtitle: "Есть вопрос, предложение или отзыв — мы читаем всё и отвечаем.",
@@ -46,6 +49,7 @@ const copy = {
     messageRequired: "Напишите сообщение",
   },
   en: {
+    breadcrumb: [["FormBridge", "/"], ["Contact"]],
     kicker: "Contact",
     title: "Get in touch",
     subtitle: "Have a question, suggestion or feedback — write to us and we will reply.",
@@ -119,6 +123,7 @@ export function ContactPage() {
 
   return (
     <div className="contact-page">
+      <Breadcrumb items={t.breadcrumb} />
       <section className="contact-hero">
         <span className="section-kicker">{t.kicker}</span>
         <h1>{t.title}</h1>

@@ -6,9 +6,11 @@ import {
   SparklesIcon
 } from "@heroicons/react/24/outline";
 import { useLocale } from "../shared/useLocale";
+import { Breadcrumb } from "../shared/Breadcrumb";
 
 const copy = {
   kk: {
+    breadcrumb: [["FormBridge", "/"], ["Біз туралы"]],
     kicker: "Біз туралы",
     title: "Google Forms-ті кәсіби деңгейге көтереміз",
     subtitle: "FormBridge — Google Forms жауаптарын бір жұмыс кеңістігінде жинап, талдап, басқаруға мүмкіндік беретін платформа.",
@@ -30,7 +32,7 @@ const copy = {
       ["Дерекқор", "PostgreSQL"],
       ["AI", "OpenAI API (gpt-5-nano)"],
       ["Интеграция", "Google Forms API, Google OAuth 2.0"],
-      ["Хабарландыру", "WhatsApp Business API"],
+      ["Хабарландыру", "WhatsApp-web.js"],
     ],
     ctaTitle: "Байқап көріңіз",
     ctaText: "Формаңызды FormBridge-ке бірнеше секундта қосыңыз.",
@@ -38,6 +40,7 @@ const copy = {
     ctaContact: "Байланыс",
   },
   ru: {
+    breadcrumb: [["FormBridge", "/"], ["О нас"]],
     kicker: "О нас",
     title: "Превращаем Google Forms в профессиональный инструмент",
     subtitle: "FormBridge — платформа для сбора, анализа и управления ответами Google Forms в едином рабочем пространстве.",
@@ -67,6 +70,7 @@ const copy = {
     ctaContact: "Контакты",
   },
   en: {
+    breadcrumb: [["FormBridge", "/"], ["About"]],
     kicker: "About",
     title: "Taking Google Forms to a professional level",
     subtitle: "FormBridge is a platform for collecting, analyzing and managing Google Forms responses in one workspace.",
@@ -105,6 +109,7 @@ export function AboutPage() {
 
   return (
     <div className="about-page">
+      <Breadcrumb items={t.breadcrumb} />
       <section className="about-hero">
         <span className="section-kicker">{t.kicker}</span>
         <h1>{t.title}</h1>
