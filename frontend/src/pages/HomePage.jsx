@@ -158,6 +158,8 @@ function ProductPreview({ variant = "hero", alt }) {
 export function HomePage() {
   const { lang } = useLocale();
   const text = copy[lang] || copy.kk;
+  const isLoggedIn = Boolean(localStorage.getItem("fb_token"));
+  const connectTo = isLoggedIn ? "/forms" : "/login";
 
   return (
     <section className={`home-page home-lang-${lang || "kk"}`}>
@@ -167,7 +169,7 @@ export function HomePage() {
           <h1>{text.title}</h1>
           <p>{text.subtitle}</p>
           <div className="home-actions">
-            <Link className="primary-btn home-primary" to="/login">{text.connect}</Link>
+            <Link className="primary-btn home-primary" to={connectTo}>{text.connect}</Link>
           </div>
         </div>
         <ProductPreview variant="hero" alt={text.screenshotAlt} />
@@ -244,7 +246,7 @@ export function HomePage() {
           <p>{text.finalText}</p>
         </div>
         <div className="home-actions">
-          <Link className="primary-btn cta-light-btn" to="/login">{text.connect}</Link>
+          <Link className="primary-btn cta-light-btn" to={connectTo}>{text.connect}</Link>
         </div>
       </section>
 
