@@ -876,6 +876,86 @@ html {
   margin-top: 2px;
 }
 
+.sol-ai-screenshot {
+  min-width: 0;
+}
+
+.sol-ai-demo {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  background: #ffffff;
+  box-shadow: 0 30px 82px rgba(15, 23, 42, 0.12);
+}
+
+.sol-ai-demo-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 0 18px;
+  border-bottom: 1px solid var(--border);
+  background: #fbfdfb;
+}
+
+.sol-ai-demo-top span {
+  color: var(--text-primary);
+  font-weight: 900;
+}
+
+.sol-ai-demo-top i {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #e8f2eb;
+  color: var(--brand);
+  font-size: 0.78rem;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.sol-ai-demo-chat {
+  display: grid;
+  gap: 16px;
+  min-height: 250px;
+  padding: 24px;
+  background:
+    linear-gradient(180deg, rgba(248, 250, 249, 0.92), rgba(255, 255, 255, 0.96));
+}
+
+.sol-ai-demo-message {
+  width: fit-content;
+  max-width: min(92%, 520px);
+  border-radius: 18px;
+  padding: 14px 16px;
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+.sol-ai-demo-message--user {
+  justify-self: end;
+  background: var(--brand);
+  color: #ffffff;
+  border-bottom-right-radius: 6px;
+  font-weight: 800;
+}
+
+.sol-ai-demo-message--assistant {
+  justify-self: start;
+  border: 1px solid #dfe8e2;
+  background: #f8fbf9;
+  color: var(--text-primary);
+  border-bottom-left-radius: 6px;
+}
+
+.sol-ai-demo-message--assistant p {
+  margin: 0;
+}
+
+.sol-ai-demo-message--assistant p + p {
+  margin-top: 6px;
+}
+
 /* CTA */
 .sol-cta {
   display: grid;

@@ -62,6 +62,180 @@ const STATUS_LABELS = {
   },
 };
 
+const AI_DEMOS = {
+  universal: {
+    kk: {
+      question: "Қандай жауаптар назар аударуды қажет етеді?",
+      answer: [
+        "3 жауапты бірінші қарау керек:",
+        "1. Байланыс нөмірі көрсетілмеген өтініш.",
+        "2. Комментарийде шұғыл жауап сұралған өтініш.",
+        "3. Толық емес дерекпен жіберілген форма."
+      ]
+    },
+    ru: {
+      question: "Какие ответы требуют внимания?",
+      answer: [
+        "Сначала стоит проверить 3 ответа:",
+        "1. Заявка без телефона для связи.",
+        "2. Ответ, где в комментарии просят срочно связаться.",
+        "3. Форма с неполными данными."
+      ]
+    },
+    en: {
+      question: "Which answers need attention?",
+      answer: [
+        "Review these 3 submissions first:",
+        "1. A request without a contact phone.",
+        "2. A response marked as urgent in the comment.",
+        "3. A form submission with incomplete details."
+      ]
+    }
+  },
+  admissions: {
+    kk: {
+      question: "Қандай абитуриенттерге бірінші хабарласу керек?",
+      answer: [
+        "Бірінші 2 абитуриентке хабарласқан дұрыс:",
+        "1. Нурислам Бекенов — фото 3x4 жетіспейді.",
+        "2. Айгерим Садыкова — аттестат пен фото керек.",
+        "Қалған толық құжаттары бар өтініштерді қабылдау кезеңіне өткізуге болады."
+      ]
+    },
+    ru: {
+      question: "С кем из абитуриентов связаться первым?",
+      answer: [
+        "В первую очередь свяжитесь с 2 абитуриентами:",
+        "1. Нурислам Бекенов — не хватает фото 3x4.",
+        "2. Айгерим Садыкова — нужен аттестат и фото.",
+        "Заявки с полным пакетом документов можно переводить к решению."
+      ]
+    },
+    en: {
+      question: "Which applicants should we contact first?",
+      answer: [
+        "Contact these 2 applicants first:",
+        "1. Nurislam Bekenov — missing a 3x4 photo.",
+        "2. Aigerim Sadykova — needs transcript and photo.",
+        "Applications with complete documents can move to review."
+      ]
+    }
+  },
+  hr: {
+    kk: {
+      question: "Shortlist үшін ең мықты кандидаттар кімдер?",
+      answer: [
+        "Shortlist-ке 3 кандидатты ұсынуға болады:",
+        "1. Дана Ахметова — тәжірибесі релевантты, портфолио дайын.",
+        "2. Арман Қасым — техникалық дағдылары жақсы.",
+        "3. Алия Тулегенова — коммуникациясы және мотивациясы жоғары."
+      ]
+    },
+    ru: {
+      question: "Кого добавить в shortlist?",
+      answer: [
+        "В shortlist лучше добавить 3 кандидатов:",
+        "1. Дана Ахметова — релевантный опыт и готовое портфолио.",
+        "2. Арман Касым — сильные технические навыки.",
+        "3. Алия Тулегенова — высокая мотивация и хорошая коммуникация."
+      ]
+    },
+    en: {
+      question: "Who should be shortlisted?",
+      answer: [
+        "I would shortlist 3 candidates:",
+        "1. Dana Akhmetova — relevant experience and portfolio.",
+        "2. Arman Kasym — strong technical skills.",
+        "3. Aliya Tulegenova — high motivation and clear communication."
+      ]
+    }
+  },
+  survey: {
+    kk: {
+      question: "Сауалнама бойынша негізгі қорытынды қандай?",
+      answer: [
+        "Негізгі қорытынды:",
+        "Көпшілік қызмет жылдамдығын жақсы бағалаған, бірақ қолдау жауаптарының уақытына шағым бар.",
+        "Ұсыныс: FAQ қосып, күрделі сұрақтарға жауап беру уақытын қысқарту."
+      ]
+    },
+    ru: {
+      question: "Какой главный вывод по опросу?",
+      answer: [
+        "Главный вывод:",
+        "Большинство довольны скоростью сервиса, но есть жалобы на время ответа поддержки.",
+        "Рекомендация: добавить FAQ и сократить время реакции на сложные вопросы."
+      ]
+    },
+    en: {
+      question: "What is the main survey insight?",
+      answer: [
+        "Main insight:",
+        "Most respondents like the service speed, but support response time is a recurring issue.",
+        "Recommendation: add an FAQ and reduce response time for complex questions."
+      ]
+    }
+  },
+  client_requests: {
+    kk: {
+      question: "Қандай өтініштер шұғыл?",
+      answer: [
+        "2 өтініш шұғыл болып көрінеді:",
+        "1. Төлем жасалған, бірақ тапсырыс статусы жаңармаған.",
+        "2. Клиент бүгін жеткізу керек екенін жазған.",
+        "Бірінші осы екеуіне жауап берген дұрыс."
+      ]
+    },
+    ru: {
+      question: "Какие заявки срочные?",
+      answer: [
+        "Срочными выглядят 2 заявки:",
+        "1. Клиент оплатил заказ, но статус не обновился.",
+        "2. Клиент указал, что доставка нужна сегодня.",
+        "Лучше ответить им первыми."
+      ]
+    },
+    en: {
+      question: "Which requests are urgent?",
+      answer: [
+        "2 requests look urgent:",
+        "1. The client paid, but the order status was not updated.",
+        "2. The client says delivery is needed today.",
+        "Reply to these first."
+      ]
+    }
+  },
+  event: {
+    kk: {
+      question: "Кімдерді растау керек?",
+      answer: [
+        "Растау керек қатысушылар:",
+        "1. 4 адам төлемді күтіп тұр.",
+        "2. 2 адам байланыс нөмірін толық жазбаған.",
+        "Ұйымдастырушыға confirmed тізімін бөлек жіберуге болады."
+      ]
+    },
+    ru: {
+      question: "Кого нужно подтвердить?",
+      answer: [
+        "Нужно подтвердить несколько участников:",
+        "1. 4 человека ожидают проверки оплаты.",
+        "2. У 2 участников неполный номер телефона.",
+        "Список confirmed можно отдельно отправить организатору."
+      ]
+    },
+    en: {
+      question: "Who needs confirmation?",
+      answer: [
+        "Several participants need confirmation:",
+        "1. 4 people are waiting for payment verification.",
+        "2. 2 participants have incomplete phone numbers.",
+        "The confirmed list can be sent to the organizer separately."
+      ]
+    }
+  }
+};
+
 const SCENARIOS = {
   universal: {
     Icon: Squares2X2Icon,
@@ -466,6 +640,29 @@ const SCENARIOS = {
   },
 };
 
+function SolutionAiDemo({ scenarioId, lang }) {
+  const demo = AI_DEMOS[scenarioId]?.[lang] || AI_DEMOS[scenarioId]?.kk || AI_DEMOS.universal.kk;
+
+  return (
+    <div className="sol-ai-demo" aria-label="AI Assistant demo">
+      <div className="sol-ai-demo-top">
+        <span>FormBridge AI</span>
+        <i>{lang === "ru" ? "Демо" : lang === "en" ? "Demo" : "Демо"}</i>
+      </div>
+      <div className="sol-ai-demo-chat">
+        <div className="sol-ai-demo-message sol-ai-demo-message--user">
+          {demo.question}
+        </div>
+        <div className="sol-ai-demo-message sol-ai-demo-message--assistant">
+          {demo.answer.map((line) => (
+            <p key={line}>{line}</p>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function StatusPill({ status, lang }) {
   const labels = STATUS_LABELS[lang] || STATUS_LABELS.kk;
   const color = STATUS_COLOR[status] || "gray";
@@ -545,14 +742,7 @@ export function SolutionPage() {
           </ul>
         </div>
         <div className="sol-ai-screenshot">
-          <div className="product-preview product-preview--wide">
-            <div className="product-preview-bar"><span /><span /><span /></div>
-            <img
-              src="/setup-screenshots/feature-ai.jpg"
-              alt="FormBridge AI Assistant"
-              loading="lazy"
-            />
-          </div>
+          <SolutionAiDemo scenarioId={solutionId} lang={lang} />
         </div>
       </div>
 
