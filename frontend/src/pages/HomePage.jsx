@@ -3,6 +3,7 @@ import {
   BoltIcon,
   ChartBarSquareIcon,
   CheckCircleIcon,
+  CpuChipIcon,
   DocumentTextIcon,
   ShieldCheckIcon,
   SparklesIcon,
@@ -41,6 +42,20 @@ const copy = {
       ["Бизнес", "Клиенттік өтініштер, тапсырыстар, кері байланыс және қолдау сұрақтары."],
       ["Кадр бөлімі", "Үміткерлермен жұмыс, сауалнамалар және ішкі процестер."]
     ],
+    aiLabel: "ЖИ кемекші",
+    aiTitle: "Форма деректерінен ақылды жауаптар алыңыз",
+    aiText: "Әр жұмыс кеңістігінде кірістірілген ЖИ бар — ол форманың барлық жауаптарын оқиды және сұрақтарыңызға нақты жауап береді.",
+    aiFeatures: [
+      "Өтінішті автоматты талдап, негізгі деректерді бөліп алады",
+      "«Неше адам бүгін жіберді?» деген сауалдарға жауап береді",
+      "Тенденцияларды анықтап, ұсыныстар береді",
+      "Сценарийге сәйкес бейімделген сұрақтар ұсынады"
+    ],
+    aiScreenshotAlt: "FormBridge ЖИ кемекші интерфейсі",
+    reportsLabel: "Есептер",
+    reportsTitle: "Дайын есептерді бір шертумен жүктеп алыңыз",
+    reportsText: "Форма деректерін Word немесе Excel форматтарында экспорттаңыз. Есепте барлық жауаптар, статустар және талдау нәтижелері болады.",
+    reportsScreenshotAlt: "FormBridge есеп алдын ала қарау",
     whyLabel: "Неліктен FormBridge?",
     whyTitle: "Неліктен FormBridge?",
     why: [
@@ -87,6 +102,20 @@ const copy = {
       ["Бизнес", "Клиентские заявки, заказы, обратная связь и вопросы поддержки."],
       ["HR", "Работа с кандидатами, анкеты и внутренние процессы."]
     ],
+    aiLabel: "ЖИ-помощник",
+    aiTitle: "Получайте умные ответы из данных формы",
+    aiText: "В каждом рабочем пространстве встроен AI — он читает все ответы формы и отвечает на ваши вопросы точно и быстро.",
+    aiFeatures: [
+      "Автоматически анализирует заявку и выделяет ключевые данные",
+      "Отвечает на вопросы типа «Сколько человек отправили сегодня?»",
+      "Выявляет тенденции и даёт рекомендации",
+      "Предлагает вопросы, адаптированные под сценарий"
+    ],
+    aiScreenshotAlt: "Интерфейс ЖИ-помощника FormBridge",
+    reportsLabel: "Отчёты",
+    reportsTitle: "Готовые отчёты одним кликом",
+    reportsText: "Экспортируйте данные формы в форматах Word или Excel. В отчёт входят все ответы, статусы и результаты аналитики.",
+    reportsScreenshotAlt: "Предпросмотр отчёта FormBridge",
     whyLabel: "Почему FormBridge?",
     whyTitle: "Почему FormBridge?",
     why: [
@@ -125,6 +154,20 @@ const copy = {
     solutionsLabel: "Solutions",
     solutionsTitle: "Solutions for every industry",
     solutions: [["Education", "Admissions, registrations, feedback and student requests."], ["Business", "Client requests, orders, feedback and support questions."], ["HR", "Candidate workflows, surveys and internal processes."]],
+    aiLabel: "AI Assistant",
+    aiTitle: "Get smart answers from your form data",
+    aiText: "Every workspace has a built-in AI that reads all form responses and answers your questions accurately and instantly.",
+    aiFeatures: [
+      "Automatically analyzes requests and extracts key data",
+      "Answers questions like \"How many people submitted today?\"",
+      "Identifies trends and provides recommendations",
+      "Suggests questions tailored to your scenario"
+    ],
+    aiScreenshotAlt: "FormBridge AI Assistant interface",
+    reportsLabel: "Reports",
+    reportsTitle: "Download ready reports in one click",
+    reportsText: "Export form data as Word or Excel files. Reports include all responses, statuses and analytics results.",
+    reportsScreenshotAlt: "FormBridge report preview",
     whyLabel: "Why FormBridge?",
     whyTitle: "Why FormBridge?",
     why: [["Real time", "See requests instantly and act faster."], ["Smart analytics", "Turn form data into useful insights."], ["AI analysis", "Analyze requests and receive recommendations."], ["Automation", "Save time on repetitive workflows."]],
@@ -185,6 +228,39 @@ export function HomePage() {
           </div>
         </div>
         <ProductPreview variant="wide" alt={text.screenshotAlt} />
+      </section>
+
+      <section className="landing-ai" id="ai">
+        <div className="landing-ai-screenshot">
+          <div className="product-preview product-preview--wide">
+            <div className="product-preview-bar"><span /><span /><span /></div>
+            <img src="/feature-ai.png" alt={text.aiScreenshotAlt} loading="lazy" />
+          </div>
+        </div>
+        <div className="landing-ai-copy">
+          <span className="section-kicker">{text.aiLabel}</span>
+          <h2>{text.aiTitle}</h2>
+          <p>{text.aiText}</p>
+          <ul className="landing-ai-features">
+            {text.aiFeatures.map((f) => (
+              <li key={f}><SparklesIcon /><span>{f}</span></li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section className="landing-reports" id="reports">
+        <div className="landing-reports-copy">
+          <span className="section-kicker">{text.reportsLabel}</span>
+          <h2>{text.reportsTitle}</h2>
+          <p>{text.reportsText}</p>
+        </div>
+        <div className="landing-reports-screenshot">
+          <div className="product-preview product-preview--modal">
+            <div className="product-preview-bar"><span /><span /><span /></div>
+            <img src="/feature-reports.png" alt={text.reportsScreenshotAlt} loading="lazy" />
+          </div>
+        </div>
       </section>
 
       <section className="landing-workflow" id="workflow">

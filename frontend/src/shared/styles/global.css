@@ -285,6 +285,89 @@ html {
   color: var(--brand);
 }
 
+/* ── AI section ─────────────────────────────── */
+.landing-ai {
+  display: grid;
+  grid-template-columns: minmax(520px, 1.3fr) minmax(300px, 0.7fr);
+  gap: 56px;
+  align-items: center;
+  scroll-margin-top: 96px;
+  background: var(--surface-2, #f8faf9);
+  border-radius: 20px;
+  padding: 56px 48px;
+}
+.landing-ai-copy {
+  display: grid;
+  gap: 20px;
+  order: 2;
+}
+.landing-ai-screenshot {
+  order: 1;
+}
+.landing-ai h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: clamp(1.7rem, 3vw, 2.5rem);
+  line-height: 1.13;
+}
+.landing-ai p {
+  color: var(--text-secondary);
+  font-size: 1.02rem;
+  line-height: 1.65;
+  margin: 0;
+}
+.landing-ai-features {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+.landing-ai-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  line-height: 1.5;
+}
+.landing-ai-features li svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--brand);
+  margin-top: 2px;
+}
+
+/* ── Reports section ─────────────────────────── */
+.landing-reports {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.65fr) minmax(480px, 1.35fr);
+  gap: 56px;
+  align-items: center;
+  scroll-margin-top: 96px;
+}
+.landing-reports-copy {
+  display: grid;
+  gap: 18px;
+}
+.landing-reports h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: clamp(1.7rem, 3vw, 2.5rem);
+  line-height: 1.13;
+}
+.landing-reports p {
+  color: var(--text-secondary);
+  font-size: 1.02rem;
+  line-height: 1.65;
+  margin: 0;
+}
+.product-preview--modal {
+  max-width: 720px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.10);
+}
+
 .landing-workflow {
   display: grid;
   gap: 20px;
@@ -8689,9 +8772,16 @@ select {
 
 @media (max-width: 980px) {
   .landing-hero,
-  .landing-workspace {
+  .landing-workspace,
+  .landing-ai,
+  .landing-reports {
     grid-template-columns: 1fr;
   }
+  .landing-ai {
+    padding: 36px 24px;
+  }
+  .landing-ai-copy { order: 1; }
+  .landing-ai-screenshot { order: 2; }
 
   .landing-hero {
     min-height: 0;

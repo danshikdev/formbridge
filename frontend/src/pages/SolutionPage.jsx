@@ -95,6 +95,7 @@ export function SolutionPage() {
   if (!item) return <Navigate to="/" replace />;
 
   const Icon = icons[solutionId] || AcademicCapIcon;
+  const connectTo = localStorage.getItem("fb_token") ? "/forms" : "/login";
 
   return (
     <section className="solution-page">
@@ -104,7 +105,7 @@ export function SolutionPage() {
         <h1>{item.title}</h1>
         <p>{item.subtitle}</p>
         <div className="solution-page-actions">
-          <Link className="primary-btn home-primary" to="/login">{text.connect}</Link>
+          <Link className="primary-btn home-primary" to={connectTo}>{text.connect}</Link>
           <Link className="ghost-btn" to="/">{text.back}</Link>
         </div>
       </div>
