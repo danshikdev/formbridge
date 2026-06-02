@@ -82,6 +82,11 @@ const copy = {
     ],
     finalTitle: "Google Forms мүмкіндігін кеңейтіңіз",
     finalText: "FormBridge арқылы өтініштерді кәсіби түрде басқарыңыз.",
+    aboutKicker: "Біз туралы",
+    aboutTitle: "FormBridge дегеніміз не?",
+    aboutDesc: "FormBridge — Google Forms жауаптарын бір жұмыс кеңістігінде жинап, талдап, басқаруға арналған платформа. Диплом жобасы ретінде жасалды, бірақ нақты бизнес-мәселелерді шешеді.",
+    aboutLearnMore: "Толығырақ →",
+    aboutCreatorLabel: "Жасаушы",
     footerText: "Google Forms негізіндегі өтініштерді басқаруға арналған кәсіби платформа.",
     footerGroups: [
       ["Өнім", "Жұмыс кеңістігі", "ЖИ көмекші", "Есептер", "Қалай жұмыс істейді"],
@@ -147,6 +152,11 @@ const copy = {
     ],
     finalTitle: "Расширьте возможности Google Forms",
     finalText: "Управляйте заявками профессионально через FormBridge.",
+    aboutKicker: "О нас",
+    aboutTitle: "Что такое FormBridge?",
+    aboutDesc: "FormBridge — платформа для сбора, анализа и управления ответами Google Forms в едином рабочем пространстве. Создана как дипломный проект, но решает реальные бизнес-задачи.",
+    aboutLearnMore: "Подробнее →",
+    aboutCreatorLabel: "Разработчик",
     footerText: "Профессиональная платформа для управления заявками на базе Google Forms.",
     footerGroups: [
       ["Продукт", "Рабочее пространство", "AI помощник", "Отчёты", "Как работает"],
@@ -207,6 +217,11 @@ const copy = {
     why: [["Real time", "See requests instantly and act faster."], ["Smart analytics", "Turn form data into useful insights."], ["AI analysis", "Analyze requests and receive recommendations."], ["Automation", "Save time on repetitive workflows."]],
     finalTitle: "Expand what Google Forms can do",
     finalText: "Manage requests professionally with FormBridge.",
+    aboutKicker: "About",
+    aboutTitle: "What is FormBridge?",
+    aboutDesc: "FormBridge is a platform for collecting, analyzing and managing Google Forms responses in one workspace. Built as a diploma project, it solves real business problems.",
+    aboutLearnMore: "Learn more →",
+    aboutCreatorLabel: "Developer",
     footerText: "Professional request management platform for Google Forms.",
     footerGroups: [
       ["Product", "Workspace", "AI Assistant", "Reports", "How it works"],
@@ -371,6 +386,26 @@ export function HomePage() {
         </div>
       </section>
 
+      <section className="landing-about" id="about">
+        <div className="landing-about-left">
+          <span className="section-kicker">{text.aboutKicker}</span>
+          <h2>{text.aboutTitle}</h2>
+          <p>{text.aboutDesc}</p>
+          <Link className="landing-about-link" to="/about">{text.aboutLearnMore}</Link>
+        </div>
+        <div className="landing-about-right">
+          <span className="landing-about-creator-label">{text.aboutCreatorLabel}</span>
+          <a className="landing-about-shora" href="https://shora.site" target="_blank" rel="noopener noreferrer">
+            <strong>Shora</strong>
+            <span>shora.site</span>
+          </a>
+          <div className="landing-about-contacts">
+            <a href="tel:+77085381689">+7 708 538 1689</a>
+            <a href="mailto:shora.inc@outlook.com">shora.inc@outlook.com</a>
+          </div>
+        </div>
+      </section>
+
       <footer className="landing-footer" id="resources">
         <div className="landing-footer-brand">
           <strong>FormBridge</strong>
@@ -386,7 +421,7 @@ export function HomePage() {
             </nav>
           ))}
         </div>
-        <div className="landing-footer-bottom" id="about">
+        <div className="landing-footer-bottom">
           <span>{text.copyright}</span>
           <div>
             <button type="button" onClick={() => setLang("kk")} className={lang === "kk" ? "active" : ""}>Қазақша</button>

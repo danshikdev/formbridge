@@ -9579,6 +9579,105 @@ select {
 }
 
 /* ═══════════════════════════════════════════
+   Landing About Section
+═══════════════════════════════════════════ */
+.landing-about {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: start;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: clamp(28px, 4vw, 48px);
+  background: #fff;
+}
+
+.landing-about-left {
+  display: grid;
+  gap: 16px;
+}
+
+.landing-about-left h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: clamp(1.4rem, 2.5vw, 2rem);
+  line-height: 1.15;
+}
+
+.landing-about-left p {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.7;
+  font-size: 1rem;
+}
+
+.landing-about-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--brand);
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: none;
+  transition: opacity 0.15s;
+}
+.landing-about-link:hover { opacity: 0.7; }
+
+.landing-about-right {
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+  background: var(--brand-soft);
+  border-radius: 18px;
+}
+
+.landing-about-creator-label {
+  color: var(--brand);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.landing-about-shora {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+}
+.landing-about-shora strong { font-size: 1.25rem; }
+.landing-about-shora span {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+.landing-about-shora:hover strong { color: var(--brand); }
+
+.landing-about-contacts {
+  display: grid;
+  gap: 8px;
+}
+.landing-about-contacts a {
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.landing-about-contacts a:hover { color: var(--brand); }
+
+@media (max-width: 680px) {
+  .landing-about {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+}
+
+@media (max-width: 400px) {
+  .landing-about { padding: 20px 16px; border-radius: 16px; }
+}
+
+/* ═══════════════════════════════════════════
    Contact Page
 ═══════════════════════════════════════════ */
 .contact-page {
