@@ -5513,6 +5513,7 @@ body {
   max-width: 440px;
   border: 1px solid #c7e8d4;
   position: relative;
+  white-space: pre-line;
 }
 
 .notif-preview-bubble::before {

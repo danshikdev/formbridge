@@ -9,28 +9,28 @@ import { syncFormIntegration } from "./googleFormsSyncService.js";
 
 let schedulerStarted = false;
 
-const STATUS_LABELS_KK = {
-  new: "Жаңа",
-  in_progress: "Өңделуде",
-  done: "Аяқталды",
+const STATUS_LABELS_RU = {
+  new: "Новые",
+  in_progress: "В работе",
+  done: "Готово",
   test: "Тест",
-  contacted: "Байланысылды",
-  documents_needed: "Құжат керек",
-  accepted: "Қабылданды",
-  rejected: "Қабылданбады",
-  shortlisted: "Іріктелді",
-  interview: "Сұхбат",
-  hired: "Жұмысқа алынды",
-  urgent: "Шұғыл",
-  waiting_client: "Клиент күтілуде",
-  confirmed: "Расталды",
-  waiting_payment: "Төлем күтілуде",
-  cancelled: "Бас тартылды",
-  attended: "Қатысты"
+  contacted: "Связались",
+  documents_needed: "Нужны документы",
+  accepted: "Принято",
+  rejected: "Отклонено",
+  shortlisted: "В shortlist",
+  interview: "Интервью",
+  hired: "Нанят",
+  urgent: "Срочно",
+  waiting_client: "Ждём клиента",
+  confirmed: "Подтверждено",
+  waiting_payment: "Ожидает оплату",
+  cancelled: "Отменено",
+  attended: "Участвовал"
 };
 
-function getStatusLabelKK(status) {
-  return STATUS_LABELS_KK[status] || (String(status).charAt(0).toUpperCase() + String(status).slice(1).replace(/_/g, " "));
+function getStatusLabel(status) {
+  return STATUS_LABELS_RU[status] || (String(status).charAt(0).toUpperCase() + String(status).slice(1).replace(/_/g, " "));
 }
 
 function almatyParts(date = new Date()) {
@@ -88,7 +88,9 @@ async function buildDailySummaryMessage(setting, today) {
   }
 
   const lines = [
-    `FormBridge: бүгін «${title}» формасына ${total} өтініш түсті.`
+    "FormBridge ежедневная сводка",
+    `Форма: «${title}»`,
+    `Сегодня заявок: ${total}`
   ];
 
   // Order statuses by scenario flow first, then append any remaining active statuses
@@ -102,12 +104,12 @@ async function buildDailySummaryMessage(setting, today) {
   for (const status of displayStatuses) {
     const count = statusCounts[status] || 0;
     if (count > 0) {
-      lines.push(`${getStatusLabelKK(status)}: ${count}`);
+      lines.push(`${getStatusLabel(status)}: ${count}`);
     }
   }
 
   lines.push("");
-  lines.push(`Ашу: ${formRequestsUrl(setting.formId, title)}`);
+  lines.push(`Открыть dashboard: ${formRequestsUrl(setting.formId, title)}`);
 
   return lines.join("\n");
 }
