@@ -548,7 +548,7 @@ export function SolutionPage() {
           <div className="product-preview product-preview--wide">
             <div className="product-preview-bar"><span /><span /><span /></div>
             <img
-              src="/setup-screenshots/feature-ai.png"
+              src="/setup-screenshots/feature-ai.jpg"
               alt="FormBridge AI Assistant"
               loading="lazy"
             />

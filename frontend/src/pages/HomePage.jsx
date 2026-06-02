@@ -15,7 +15,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useLocale } from "../shared/useLocale";
 
-const SCREENSHOT_SRC = "/setup-screenshots/forms-dashboard.png";
+const SCREENSHOT_SRC = "/setup-screenshots/forms-dashboard.jpg";
 
 const SOLUTIONS = [
   { id: "admissions",      Icon: AcademicCapIcon    },
@@ -211,6 +211,13 @@ const copy = {
 const whyIcons = [ShieldCheckIcon, ChartBarSquareIcon, SparklesIcon, BoltIcon];
 const workflowIcons = [DocumentTextIcon, BoltIcon, CpuChipIcon, ChartBarSquareIcon, CheckCircleIcon];
 
+// Footer link targets by group/item position (language-agnostic)
+const FOOTER_HREFS = [
+  ["/#features", "/#workflow", "/#pricing"],
+  ["/#about", "/#about"],
+  ["/health", "/health", "/#about"],
+];
+
 function ProductPreview({ variant = "hero", alt, src }) {
   return (
     <div className={`product-preview product-preview--${variant}`}>
@@ -225,7 +232,7 @@ function ProductPreview({ variant = "hero", alt, src }) {
 }
 
 export function HomePage() {
-  const { lang } = useLocale();
+  const { lang, setLang } = useLocale();
   const text = copy[lang] || copy.kk;
   const isLoggedIn = Boolean(localStorage.getItem("fb_token"));
   const connectTo = isLoggedIn ? "/forms" : "/login";
@@ -253,14 +260,14 @@ export function HomePage() {
             {text.workspaceFeatures.map((item) => <span key={item}><CheckCircleIcon />{item}</span>)}
           </div>
         </div>
-        <ProductPreview variant="wide" alt={text.screenshotAlt} src="/setup-screenshots/product-dashboard.png" />
+        <ProductPreview variant="wide" alt={text.screenshotAlt} src="/setup-screenshots/product-dashboard.jpg" />
       </section>
 
       <section className="landing-ai" id="ai">
         <div className="landing-ai-screenshot">
           <div className="product-preview product-preview--wide">
             <div className="product-preview-bar"><span /><span /><span /></div>
-            <img src="/setup-screenshots/feature-ai.png" alt={text.aiScreenshotAlt} loading="lazy" />
+            <img src="/setup-screenshots/feature-ai.jpg" alt={text.aiScreenshotAlt} loading="lazy" />
           </div>
         </div>
         <div className="landing-ai-copy">
@@ -284,7 +291,7 @@ export function HomePage() {
         <div className="landing-reports-screenshot">
           <div className="product-preview product-preview--modal">
             <div className="product-preview-bar"><span /><span /><span /></div>
-            <img src="/setup-screenshots/feature-reports.png" alt={text.reportsScreenshotAlt} loading="lazy" />
+            <img src="/setup-screenshots/feature-reports.jpg" alt={text.reportsScreenshotAlt} loading="lazy" />
           </div>
         </div>
       </section>
@@ -358,19 +365,21 @@ export function HomePage() {
           <p>{text.footerText}</p>
         </div>
         <div className="landing-footer-groups">
-          {text.footerGroups.map(([title, ...items]) => (
+          {text.footerGroups.map(([title, ...items], gi) => (
             <nav key={title}>
               <b>{title}</b>
-              {items.map((item) => <a key={item} href="#">{item}</a>)}
+              {items.map((item, ii) => (
+                <a key={item} href={FOOTER_HREFS[gi]?.[ii] || "#"}>{item}</a>
+              ))}
             </nav>
           ))}
         </div>
         <div className="landing-footer-bottom" id="about">
           <span>{text.copyright}</span>
           <div>
-            <button type="button">Қазақша</button>
-            <button type="button">Русский</button>
-            <button type="button">English</button>
+            <button type="button" onClick={() => setLang("kk")} className={lang === "kk" ? "active" : ""}>Қазақша</button>
+            <button type="button" onClick={() => setLang("ru")} className={lang === "ru" ? "active" : ""}>Русский</button>
+            <button type="button" onClick={() => setLang("en")} className={lang === "en" ? "active" : ""}>English</button>
           </div>
         </div>
       </footer>
