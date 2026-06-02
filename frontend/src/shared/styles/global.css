@@ -112,9 +112,10 @@ html {
   max-width: 720px;
   margin: 0;
   color: var(--text-primary);
-  font-size: clamp(2.55rem, 4.8vw, 4.55rem);
+  font-size: clamp(2.55rem, 4.8vw, 3.75rem);
   line-height: 1.08;
   letter-spacing: 0;
+  overflow-wrap: break-word;
 }
 
 .home-lang-kk .landing-hero-copy h1 {
@@ -9294,8 +9295,6 @@ select {
   }
   .home-badge {
     flex-wrap: wrap;
-    width: 100%;
-    border-radius: 12px;
   }
   .landing-hero-copy h1,
   .home-lang-kk .landing-hero-copy h1 {
