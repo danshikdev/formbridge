@@ -11,19 +11,19 @@ import {
   ShieldCheckIcon,
   SparklesIcon,
   Squares2X2Icon,
-  UsersIcon
+  UsersIcon,
 } from "@heroicons/react/24/outline";
 import { useLocale } from "../shared/useLocale";
 
 const SCREENSHOT_SRC = "/setup-screenshots/forms-dashboard.jpg";
 
 const SOLUTIONS = [
-  { id: "admissions",      Icon: AcademicCapIcon    },
-  { id: "client_requests", Icon: BriefcaseIcon      },
-  { id: "hr",              Icon: UsersIcon           },
-  { id: "survey",          Icon: ChartBarSquareIcon  },
-  { id: "event",           Icon: CalendarDaysIcon    },
-  { id: "universal",       Icon: Squares2X2Icon      },
+  { id: "admissions", Icon: AcademicCapIcon },
+  { id: "client_requests", Icon: BriefcaseIcon },
+  { id: "hr", Icon: UsersIcon },
+  { id: "survey", Icon: ChartBarSquareIcon },
+  { id: "event", Icon: CalendarDaysIcon },
+  { id: "universal", Icon: Squares2X2Icon },
 ];
 
 const copy = {
@@ -31,46 +31,95 @@ const copy = {
     badge: "ЖАҢА",
     badgeText: "Google Forms үшін кәсіби өтініш платформасы",
     title: "Google Forms жауаптарын кәсіби басқару жүйесіне айналдырыңыз",
-    subtitle: "Жауаптарды бақылаңыз, процестерді автоматтандырыңыз, деректерді талдаңыз және өтініштерді бір жұмыс кеңістігінде басқарыңыз.",
+    subtitle:
+      "Жауаптарды бақылаңыз, процестерді автоматтандырыңыз, деректерді талдаңыз және өтініштерді бір жұмыс кеңістігінде басқарыңыз.",
     connect: "Форманы қосу",
-    stats: [["1,248+", "Өтініштер"], ["24+", "Белсенді формалар"], ["96.3%", "ЖИ дәлдігі"], ["24/7", "Мониторинг"]],
+    stats: [
+      ["1,248+", "Өтініштер"],
+      ["24+", "Белсенді формалар"],
+      ["96.3%", "ЖИ дәлдігі"],
+      ["24/7", "Мониторинг"],
+    ],
     workspaceLabel: "Жұмыс кеңістігі",
     workspaceTitle: "Барлық өтініштер бір жерде",
-    workspaceText: "Өтініштерді бақылаңыз, талдаңыз және тиімді шешім қабылдаңыз. Жұмыс процестерін жеңіл әрі ыңғайлы етіңіз.",
-    workspaceFeatures: ["ЖИ негізіндегі талдау", "Ақылды сүзгілер", "Статустарды басқару", "Нақты уақыттағы жаңарту", "Командалық жұмыс"],
+    workspaceText:
+      "Өтініштерді бақылаңыз, талдаңыз және тиімді шешім қабылдаңыз. Жұмыс процестерін жеңіл әрі ыңғайлы етіңіз.",
+    workspaceFeatures: [
+      "ЖИ негізіндегі талдау",
+      "Ақылды сүзгілер",
+      "Статустарды басқару",
+      "Нақты уақыттағы жаңарту",
+      "Командалық жұмыс",
+    ],
     workflowLabel: "Қалай жұмыс істейді",
-    workflowTitle: "Google Forms деректері FormBridge ішінде қалай жұмыс істейді",
+    workflowTitle:
+      "Google Forms деректері FormBridge ішінде қалай жұмыс істейді",
     workflowSteps: [
-      ["Google Forms қосу", "FormBridge Google аккаунтыңызға қосылып, формаңызды автоматты анықтайды."],
-      ["Google Forms API арқылы синхрондау", "Жауаптар Google Forms API арқылы тікелей оқылады — Sheets немесе Apps Script қажет емес."],
-      ["Деректерді өңдеу", "Өтініштер сақталып, статус пен жауапты адамға бөлінеді."],
-      ["Аналитика және ЖИ", "Жүйе деректерді талдап, қысқаша ұсыныстар береді."],
-      ["Өтініштерді басқару", "Команда барлық өтінішті бір жұмыс кеңістігінде бақылайды."]
+      [
+        "Google Forms қосу",
+        "FormBridge Google аккаунтыңызға қосылып, формаңызды автоматты анықтайды.",
+      ],
+      [
+        "Google Forms API арқылы синхрондау",
+        "Жауаптар Google Forms API арқылы тікелей оқылады — Sheets немесе Apps Script қажет емес.",
+      ],
+      [
+        "Деректерді өңдеу",
+        "Өтініштер сақталып, статус пен жауапты адамға бөлінеді.",
+      ],
+      [
+        "Аналитика және ЖИ",
+        "Жүйе деректерді талдап, қысқаша ұсыныстар береді.",
+      ],
+      [
+        "Өтініштерді басқару",
+        "Команда барлық өтінішті бір жұмыс кеңістігінде бақылайды.",
+      ],
     ],
     solutionsLabel: "Шешімдер",
     solutionsTitle: "Кез келген салаға арналған шешімдер",
     solutionsMore: "Толығырақ",
     solutions: {
-      admissions:      ["Қабылдау комиссиясы",  "Абитуриент өтініштерін жылдам өңдеп, қабылдау процесін толық бақылаңыз."],
-      client_requests: ["Клиент өтініштері",     "Клиент хабарларын жоғалтпаңыз — шұғылдарды бірінші өңдеңіз."],
-      hr:              ["HR / Рекрутинг",         "Үміткерлерді іріктеп, shortlist жасаңыз — ЖИ ең үздікті табады."],
-      survey:          ["Сауалнама / Анкета",     "ЖИ жауаптардан паттерн табады, диаграммалар жасайды, есеп дайындайды."],
-      event:           ["Іс-шара тіркеу",         "Қатысушылар тізімін басқарып, растаңыз және есеп алыңыз."],
-      universal:       ["Жалпылама режим",        "Кез келген форма үшін — статустар, ЖИ талдау және есептер."],
+      admissions: [
+        "Қабылдау комиссиясы",
+        "Абитуриент өтініштерін жылдам өңдеп, қабылдау процесін толық бақылаңыз.",
+      ],
+      client_requests: [
+        "Клиент өтініштері",
+        "Клиент хабарларын жоғалтпаңыз — шұғылдарды бірінші өңдеңіз.",
+      ],
+      hr: [
+        "HR / Рекрутинг",
+        "Үміткерлерді іріктеп, shortlist жасаңыз — ЖИ ең үздікті табады.",
+      ],
+      survey: [
+        "Сауалнама / Анкета",
+        "ЖИ жауаптардан паттерн табады, диаграммалар жасайды, есеп дайындайды.",
+      ],
+      event: [
+        "Іс-шара тіркеу",
+        "Қатысушылар тізімін басқарып, растаңыз және есеп алыңыз.",
+      ],
+      universal: [
+        "Жалпылама режим",
+        "Кез келген форма үшін — статустар, ЖИ талдау және есептер.",
+      ],
     },
     aiLabel: "ЖИ кемекші",
     aiTitle: "Форма деректерінен ақылды жауаптар алыңыз",
-    aiText: "Әр жұмыс кеңістігінде кірістірілген ЖИ бар — ол форманың барлық жауаптарын оқиды және сұрақтарыңызға нақты жауап береді.",
+    aiText:
+      "Әр жұмыс кеңістігінде кірістірілген ЖИ бар — ол форманың барлық жауаптарын оқиды және сұрақтарыңызға нақты жауап береді.",
     aiFeatures: [
       "Өтінішті автоматты талдап, негізгі деректерді бөліп алады",
       "«Неше адам бүгін жіберді?» деген сауалдарға жауап береді",
       "Тенденцияларды анықтап, ұсыныстар береді",
-      "Сценарийге сәйкес бейімделген сұрақтар ұсынады"
+      "Сценарийге сәйкес бейімделген сұрақтар ұсынады",
     ],
     aiScreenshotAlt: "FormBridge ЖИ кемекші интерфейсі",
     reportsLabel: "Есептер",
     reportsTitle: "Дайын есептерді бір шертумен жүктеп алыңыз",
-    reportsText: "Форма деректерін Word немесе Excel форматтарында экспорттаңыз. Есепте барлық жауаптар, статустар және талдау нәтижелері болады.",
+    reportsText:
+      "Форма деректерін Word немесе Excel форматтарында экспорттаңыз. Есепте барлық жауаптар, статустар және талдау нәтижелері болады.",
     reportsScreenshotAlt: "FormBridge есеп алдын ала қарау",
     whyLabel: "Неліктен FormBridge?",
     whyTitle: "Неліктен FormBridge?",
@@ -78,68 +127,136 @@ const copy = {
       ["Нақты уақыт", "Өтініштерді нақты уақытта көріп, жедел әрекет етіңіз."],
       ["Ақылды аналитика", "Деректерден құнды ақпарат алып, шешім қабылдаңыз."],
       ["ЖИ талдау", "Өтініштерді автоматты талдап, ұсыныстар алыңыз."],
-      ["Автоматтандыру", "Қайталанатын процестерді автоматтандырып, уақытты үнемдеңіз."]
+      [
+        "Автоматтандыру",
+        "Қайталанатын процестерді автоматтандырып, уақытты үнемдеңіз.",
+      ],
     ],
     finalTitle: "Google Forms мүмкіндігін кеңейтіңіз",
     finalText: "FormBridge арқылы өтініштерді кәсіби түрде басқарыңыз.",
     aboutKicker: "Біз туралы",
     aboutTitle: "FormBridge дегеніміз не?",
-    aboutDesc: "FormBridge — Google Forms жауаптарын бір жұмыс кеңістігінде жинап, талдап, басқаруға арналған платформа. Нақты бизнес-мәселелерді шешуге арналған.",
+    aboutDesc:
+      "FormBridge — Google Forms жауаптарын бір жұмыс кеңістігінде жинап, талдап, басқаруға арналған платформа. Нақты бизнес-мәселелерді шешуге арналған.",
     aboutLearnMore: "Толығырақ →",
     aboutCreatorLabel: "Жасаушы",
-    footerText: "Google Forms негізіндегі өтініштерді басқаруға арналған кәсіби платформа.",
+    footerText:
+      "Google Forms негізіндегі өтініштерді басқаруға арналған кәсіби платформа.",
     footerGroups: [
-      ["Өнім", "Жұмыс кеңістігі", "ЖИ көмекші", "Есептер", "Қалай жұмыс істейді"],
-      ["Шешімдер", "Қабылдау", "Клиент өтініштері", "HR", "Сауалнама", "Іс-шара", "Универсал"],
+      [
+        "Өнім",
+        "Жұмыс кеңістігі",
+        "ЖИ көмекші",
+        "Есептер",
+        "Қалай жұмыс істейді",
+      ],
+      [
+        "Шешімдер",
+        "Қабылдау",
+        "Клиент өтініштері",
+        "HR",
+        "Сауалнама",
+        "Іс-шара",
+        "Универсал",
+      ],
       ["Компания", "Біз туралы", "Байланыс", "Бастау"],
     ],
     copyright: "© 2026 FormBridge. Барлық құқықтар қорғалған.",
-    screenshotAlt: "FormBridge жұмыс кеңістігінің нақты көрінісі"
+    screenshotAlt: "FormBridge жұмыс кеңістігінің нақты көрінісі",
   },
   ru: {
     badge: "НОВОЕ",
     badgeText: "Профессиональная платформа для Google Forms",
-    title: "Превратите Google Forms в профессиональную систему управления заявками",
-    subtitle: "Отслеживайте ответы, автоматизируйте процессы, анализируйте данные и управляйте заявками из одного рабочего пространства.",
+    title:
+      "Превратите Google Forms в профессиональную систему управления заявками",
+    subtitle:
+      "Отслеживайте ответы, автоматизируйте процессы, анализируйте данные и управляйте заявками из одного рабочего пространства.",
     connect: "Подключить форму",
-    stats: [["1,248+", "Заявки"], ["24+", "Активные формы"], ["96.3%", "Точность AI"], ["24/7", "Мониторинг"]],
+    stats: [
+      ["1,248+", "Заявки"],
+      ["24+", "Активные формы"],
+      ["96.3%", "Точность AI"],
+      ["24/7", "Мониторинг"],
+    ],
     workspaceLabel: "Рабочее пространство",
     workspaceTitle: "Все заявки в одном месте",
-    workspaceText: "Контролируйте заявки, анализируйте данные и принимайте решения быстрее. Рабочие процессы становятся понятными и удобными.",
-    workspaceFeatures: ["AI-анализ", "Умные фильтры", "Управление статусами", "Обновления в реальном времени", "Командная работа"],
+    workspaceText:
+      "Контролируйте заявки, анализируйте данные и принимайте решения быстрее. Рабочие процессы становятся понятными и удобными.",
+    workspaceFeatures: [
+      "AI-анализ",
+      "Умные фильтры",
+      "Управление статусами",
+      "Обновления в реальном времени",
+      "Командная работа",
+    ],
     workflowLabel: "Как работает",
     workflowTitle: "Как данные Google Forms попадают в FormBridge",
     workflowSteps: [
-      ["Подключение Google Forms", "FormBridge подключается к вашему Google-аккаунту и автоматически находит форму."],
-      ["Синхронизация через Google Forms API", "Ответы читаются напрямую через Google Forms API — без Sheets и Apps Script."],
-      ["Обработка данных", "Заявки сохраняются, получают статус и ответственного."],
-      ["Аналитика и AI", "Система анализирует данные и показывает краткие рекомендации."],
-      ["Управление заявками", "Команда работает с заявками в одном пространстве."]
+      [
+        "Подключение Google Forms",
+        "FormBridge подключается к вашему Google-аккаунту и автоматически находит форму.",
+      ],
+      [
+        "Синхронизация через Google Forms API",
+        "Ответы читаются напрямую через Google Forms API — без Sheets и Apps Script.",
+      ],
+      [
+        "Обработка данных",
+        "Заявки сохраняются, получают статус и ответственного.",
+      ],
+      [
+        "Аналитика и AI",
+        "Система анализирует данные и показывает краткие рекомендации.",
+      ],
+      [
+        "Управление заявками",
+        "Команда работает с заявками в одном пространстве.",
+      ],
     ],
     solutionsLabel: "Решения",
     solutionsTitle: "Решения для разных сфер",
     solutionsMore: "Подробнее",
     solutions: {
-      admissions:      ["Приемная комиссия",     "Быстро обрабатывайте заявки абитуриентов и контролируйте процесс поступления."],
-      client_requests: ["Клиентские заявки",     "Не теряйте клиентские обращения — срочные обрабатывайте первыми."],
-      hr:              ["HR / Рекрутинг",         "Отбирайте кандидатов и делайте шортлисты — AI находит лучших."],
-      survey:          ["Опрос / Анкета",         "AI находит паттерны в ответах, строит графики и готовит выводы."],
-      event:           ["Регистрация на событие", "Управляйте списком участников, подтверждайте, получайте отчёты."],
-      universal:       ["Универсальный режим",    "Для любой формы — статусы, AI-анализ и экспорт отчётов."],
+      admissions: [
+        "Приемная комиссия",
+        "Быстро обрабатывайте заявки абитуриентов и контролируйте процесс поступления.",
+      ],
+      client_requests: [
+        "Клиентские заявки",
+        "Не теряйте клиентские обращения — срочные обрабатывайте первыми.",
+      ],
+      hr: [
+        "HR / Рекрутинг",
+        "Отбирайте кандидатов и делайте шортлисты — AI находит лучших.",
+      ],
+      survey: [
+        "Опрос / Анкета",
+        "AI находит паттерны в ответах, строит графики и готовит выводы.",
+      ],
+      event: [
+        "Регистрация на событие",
+        "Управляйте списком участников, подтверждайте, получайте отчёты.",
+      ],
+      universal: [
+        "Универсальный режим",
+        "Для любой формы — статусы, AI-анализ и экспорт отчётов.",
+      ],
     },
     aiLabel: "ЖИ-помощник",
     aiTitle: "Получайте умные ответы из данных формы",
-    aiText: "В каждом рабочем пространстве встроен AI — он читает все ответы формы и отвечает на ваши вопросы точно и быстро.",
+    aiText:
+      "В каждом рабочем пространстве встроен AI — он читает все ответы формы и отвечает на ваши вопросы точно и быстро.",
     aiFeatures: [
       "Автоматически анализирует заявку и выделяет ключевые данные",
       "Отвечает на вопросы типа «Сколько человек отправили сегодня?»",
       "Выявляет тенденции и даёт рекомендации",
-      "Предлагает вопросы, адаптированные под сценарий"
+      "Предлагает вопросы, адаптированные под сценарий",
     ],
     aiScreenshotAlt: "Интерфейс ЖИ-помощника FormBridge",
     reportsLabel: "Отчёты",
     reportsTitle: "Готовые отчёты одним кликом",
-    reportsText: "Экспортируйте данные формы в форматах Word или Excel. В отчёт входят все ответы, статусы и результаты аналитики.",
+    reportsText:
+      "Экспортируйте данные формы в форматах Word или Excel. В отчёт входят все ответы, статусы и результаты аналитики.",
     reportsScreenshotAlt: "Предпросмотр отчёта FormBridge",
     whyLabel: "Почему FormBridge?",
     whyTitle: "Почему FormBridge?",
@@ -147,97 +264,186 @@ const copy = {
       ["Реальное время", "Видите заявки сразу и быстрее реагируете."],
       ["Умная аналитика", "Получаете полезные данные для решений."],
       ["AI-анализ", "AI помогает анализировать заявки и рекомендации."],
-      ["Автоматизация", "Повторяющиеся процессы занимают меньше времени."]
+      ["Автоматизация", "Повторяющиеся процессы занимают меньше времени."],
     ],
     finalTitle: "Расширьте возможности Google Forms",
     finalText: "Управляйте заявками профессионально через FormBridge.",
     aboutKicker: "О нас",
     aboutTitle: "Что такое FormBridge?",
-    aboutDesc: "FormBridge — платформа для сбора, анализа и управления ответами Google Forms в едином рабочем пространстве. Создана для реальных бизнес-задач.",
+    aboutDesc:
+      "FormBridge — платформа для сбора, анализа и управления ответами Google Forms в едином рабочем пространстве. Создана для реальных бизнес-задач.",
     aboutLearnMore: "Подробнее →",
     aboutCreatorLabel: "Разработчик",
-    footerText: "Профессиональная платформа для управления заявками на базе Google Forms.",
+    footerText:
+      "Профессиональная платформа для управления заявками на базе Google Forms.",
     footerGroups: [
-      ["Продукт", "Рабочее пространство", "AI помощник", "Отчёты", "Как работает"],
-      ["Решения", "Приёмная комиссия", "Клиентские заявки", "HR", "Опросы", "Мероприятие", "Универсал"],
+      [
+        "Продукт",
+        "Рабочее пространство",
+        "AI помощник",
+        "Отчёты",
+        "Как работает",
+      ],
+      [
+        "Решения",
+        "Приёмная комиссия",
+        "Клиентские заявки",
+        "HR",
+        "Опросы",
+        "Мероприятие",
+        "Универсал",
+      ],
       ["Компания", "О нас", "Контакты", "Начать"],
     ],
     copyright: "© 2026 FormBridge. Все права защищены.",
-    screenshotAlt: "Реальный вид рабочего пространства FormBridge"
+    screenshotAlt: "Реальный вид рабочего пространства FormBridge",
   },
   en: {
     badge: "NEW",
     badgeText: "Professional platform for Google Forms",
-    title: "Transform Google Forms Into a Professional Request Management Platform",
-    subtitle: "Monitor responses, automate workflows, analyze data and manage requests from one centralized workspace.",
+    title:
+      "Transform Google Forms Into a Professional Request Management Platform",
+    subtitle:
+      "Monitor responses, automate workflows, analyze data and manage requests from one centralized workspace.",
     connect: "Connect Form",
-    stats: [["1,248+", "Requests"], ["24+", "Active Forms"], ["96.3%", "AI Accuracy"], ["24/7", "Monitoring"]],
+    stats: [
+      ["1,248+", "Requests"],
+      ["24+", "Active Forms"],
+      ["96.3%", "AI Accuracy"],
+      ["24/7", "Monitoring"],
+    ],
     workspaceLabel: "Workspace",
     workspaceTitle: "All requests in one place",
-    workspaceText: "Track requests, analyze data and make decisions faster from one clean workspace.",
-    workspaceFeatures: ["AI-based analysis", "Smart filters", "Status management", "Real-time updates", "Team collaboration"],
+    workspaceText:
+      "Track requests, analyze data and make decisions faster from one clean workspace.",
+    workspaceFeatures: [
+      "AI-based analysis",
+      "Smart filters",
+      "Status management",
+      "Real-time updates",
+      "Team collaboration",
+    ],
     workflowLabel: "How it works",
     workflowTitle: "How Google Forms data flows into FormBridge",
     workflowSteps: [
-      ["Connect Google Forms", "FormBridge connects to your Google account and detects your form automatically."],
-      ["Sync via Google Forms API", "Responses are read directly through the Google Forms API — no Sheets or Apps Script needed."],
-      ["Data processing", "Requests are stored, assigned a status and an owner."],
-      ["Analytics and AI", "The platform analyzes data and returns concise recommendations."],
-      ["Request management", "Teams manage every request from one workspace."]
+      [
+        "Connect Google Forms",
+        "FormBridge connects to your Google account and detects your form automatically.",
+      ],
+      [
+        "Sync via Google Forms API",
+        "Responses are read directly through the Google Forms API — no Sheets or Apps Script needed.",
+      ],
+      [
+        "Data processing",
+        "Requests are stored, assigned a status and an owner.",
+      ],
+      [
+        "Analytics and AI",
+        "The platform analyzes data and returns concise recommendations.",
+      ],
+      ["Request management", "Teams manage every request from one workspace."],
     ],
     solutionsLabel: "Solutions",
     solutionsTitle: "Solutions for every industry",
     solutionsMore: "Learn more",
     solutions: {
-      admissions:      ["Admissions",           "Process applicant submissions quickly and control the full admissions workflow."],
-      client_requests: ["Client requests",      "Never miss a client request — handle urgent ones first."],
-      hr:              ["HR / Recruiting",       "Screen candidates and build shortlists — AI finds the best ones."],
-      survey:          ["Survey / Questionnaire","AI finds patterns, builds charts and writes conclusions from responses."],
-      event:           ["Event registration",   "Manage participant lists, send confirmations and get reports."],
-      universal:       ["Universal mode",       "For any form — statuses, AI analysis and report export."],
+      admissions: [
+        "Admissions",
+        "Process applicant submissions quickly and control the full admissions workflow.",
+      ],
+      client_requests: [
+        "Client requests",
+        "Never miss a client request — handle urgent ones first.",
+      ],
+      hr: [
+        "HR / Recruiting",
+        "Screen candidates and build shortlists — AI finds the best ones.",
+      ],
+      survey: [
+        "Survey / Questionnaire",
+        "AI finds patterns, builds charts and writes conclusions from responses.",
+      ],
+      event: [
+        "Event registration",
+        "Manage participant lists, send confirmations and get reports.",
+      ],
+      universal: [
+        "Universal mode",
+        "For any form — statuses, AI analysis and report export.",
+      ],
     },
     aiLabel: "AI Assistant",
     aiTitle: "Get smart answers from your form data",
-    aiText: "Every workspace has a built-in AI that reads all form responses and answers your questions accurately and instantly.",
+    aiText:
+      "Every workspace has a built-in AI that reads all form responses and answers your questions accurately and instantly.",
     aiFeatures: [
       "Automatically analyzes requests and extracts key data",
-      "Answers questions like \"How many people submitted today?\"",
+      'Answers questions like "How many people submitted today?"',
       "Identifies trends and provides recommendations",
-      "Suggests questions tailored to your scenario"
+      "Suggests questions tailored to your scenario",
     ],
     aiScreenshotAlt: "FormBridge AI Assistant interface",
     reportsLabel: "Reports",
     reportsTitle: "Download ready reports in one click",
-    reportsText: "Export form data as Word or Excel files. Reports include all responses, statuses and analytics results.",
+    reportsText:
+      "Export form data as Word or Excel files. Reports include all responses, statuses and analytics results.",
     reportsScreenshotAlt: "FormBridge report preview",
     whyLabel: "Why FormBridge?",
     whyTitle: "Why FormBridge?",
-    why: [["Real time", "See requests instantly and act faster."], ["Smart analytics", "Turn form data into useful insights."], ["AI analysis", "Analyze requests and receive recommendations."], ["Automation", "Save time on repetitive workflows."]],
+    why: [
+      ["Real time", "See requests instantly and act faster."],
+      ["Smart analytics", "Turn form data into useful insights."],
+      ["AI analysis", "Analyze requests and receive recommendations."],
+      ["Automation", "Save time on repetitive workflows."],
+    ],
     finalTitle: "Expand what Google Forms can do",
     finalText: "Manage requests professionally with FormBridge.",
     aboutKicker: "About",
     aboutTitle: "What is FormBridge?",
-    aboutDesc: "FormBridge is a platform for collecting, analyzing and managing Google Forms responses in one workspace. Built for real business problems.",
+    aboutDesc:
+      "FormBridge is a platform for collecting, analyzing and managing Google Forms responses in one workspace. Built for real business problems.",
     aboutLearnMore: "Learn more →",
     aboutCreatorLabel: "Developer",
     footerText: "Professional request management platform for Google Forms.",
     footerGroups: [
       ["Product", "Workspace", "AI Assistant", "Reports", "How it works"],
-      ["Solutions", "Admissions", "Client requests", "HR", "Surveys", "Events", "Universal"],
+      [
+        "Solutions",
+        "Admissions",
+        "Client requests",
+        "HR",
+        "Surveys",
+        "Events",
+        "Universal",
+      ],
       ["Company", "About", "Contact", "Get started"],
     ],
     copyright: "© 2026 FormBridge. All rights reserved.",
-    screenshotAlt: "Real FormBridge workspace dashboard"
-  }
+    screenshotAlt: "Real FormBridge workspace dashboard",
+  },
 };
 
 const whyIcons = [ShieldCheckIcon, ChartBarSquareIcon, SparklesIcon, BoltIcon];
-const workflowIcons = [DocumentTextIcon, BoltIcon, CpuChipIcon, ChartBarSquareIcon, CheckCircleIcon];
+const workflowIcons = [
+  DocumentTextIcon,
+  BoltIcon,
+  CpuChipIcon,
+  ChartBarSquareIcon,
+  CheckCircleIcon,
+];
 
 // Footer link targets by group/item position (language-agnostic)
 const FOOTER_HREFS = [
   ["/#workspace", "/#ai", "/#reports", "/#workflow"],
-  ["/solutions/admissions", "/solutions/client_requests", "/solutions/hr", "/solutions/survey", "/solutions/event", "/solutions/universal"],
+  [
+    "/solutions/admissions",
+    "/solutions/client_requests",
+    "/solutions/hr",
+    "/solutions/survey",
+    "/solutions/event",
+    "/solutions/universal",
+  ],
   ["/about", "/contact", "/login"],
 ];
 
@@ -249,7 +455,11 @@ function ProductPreview({ variant = "hero", alt, src }) {
         <span />
         <span />
       </div>
-      <img src={src || SCREENSHOT_SRC} alt={alt} loading={variant === "hero" ? "eager" : "lazy"} />
+      <img
+        src={src || SCREENSHOT_SRC}
+        alt={alt}
+        loading={variant === "hero" ? "eager" : "lazy"}
+      />
     </div>
   );
 }
@@ -263,15 +473,20 @@ export function HomePage() {
   return (
     <section className={`home-page home-lang-${lang || "kk"}`}>
       <section className="landing-hero">
+        <ProductPreview variant="hero" alt={text.screenshotAlt} />
         <div className="landing-hero-copy">
-          <span className="home-badge"><b>{text.badge}</b>{text.badgeText}</span>
+          <span className="home-badge">
+            <b>{text.badge}</b>
+            {text.badgeText}
+          </span>
           <h1>{text.title}</h1>
           <p>{text.subtitle}</p>
           <div className="home-actions">
-            <Link className="primary-btn home-primary" to={connectTo}>{text.connect}</Link>
+            <Link className="primary-btn home-primary" to={connectTo}>
+              {text.connect}
+            </Link>
           </div>
         </div>
-        <ProductPreview variant="hero" alt={text.screenshotAlt} />
       </section>
 
       <section className="landing-workspace" id="workspace">
@@ -280,17 +495,34 @@ export function HomePage() {
           <h2>{text.workspaceTitle}</h2>
           <p>{text.workspaceText}</p>
           <div className="landing-check-list">
-            {text.workspaceFeatures.map((item) => <span key={item}><CheckCircleIcon />{item}</span>)}
+            {text.workspaceFeatures.map((item) => (
+              <span key={item}>
+                <CheckCircleIcon />
+                {item}
+              </span>
+            ))}
           </div>
         </div>
-        <ProductPreview variant="wide" alt={text.screenshotAlt} src="/setup-screenshots/product-dashboard.jpg" />
+        <ProductPreview
+          variant="wide"
+          alt={text.screenshotAlt}
+          src="/setup-screenshots/product-dashboard.jpg"
+        />
       </section>
 
       <section className="landing-ai" id="ai">
         <div className="landing-ai-screenshot">
           <div className="product-preview product-preview--wide">
-            <div className="product-preview-bar"><span /><span /><span /></div>
-            <img src="/setup-screenshots/feature-ai.jpg" alt={text.aiScreenshotAlt} loading="lazy" />
+            <div className="product-preview-bar">
+              <span />
+              <span />
+              <span />
+            </div>
+            <img
+              src="/setup-screenshots/feature-ai.jpg"
+              alt={text.aiScreenshotAlt}
+              loading="lazy"
+            />
           </div>
         </div>
         <div className="landing-ai-copy">
@@ -299,7 +531,10 @@ export function HomePage() {
           <p>{text.aiText}</p>
           <ul className="landing-ai-features">
             {text.aiFeatures.map((f) => (
-              <li key={f}><SparklesIcon /><span>{f}</span></li>
+              <li key={f}>
+                <SparklesIcon />
+                <span>{f}</span>
+              </li>
             ))}
           </ul>
         </div>
@@ -313,8 +548,16 @@ export function HomePage() {
         </div>
         <div className="landing-reports-screenshot">
           <div className="product-preview product-preview--modal">
-            <div className="product-preview-bar"><span /><span /><span /></div>
-            <img src="/setup-screenshots/feature-reports.jpg" alt={text.reportsScreenshotAlt} loading="lazy" />
+            <div className="product-preview-bar">
+              <span />
+              <span />
+              <span />
+            </div>
+            <img
+              src="/setup-screenshots/feature-reports.jpg"
+              alt={text.reportsScreenshotAlt}
+              loading="lazy"
+            />
           </div>
         </div>
       </section>
@@ -328,7 +571,9 @@ export function HomePage() {
             return (
               <article key={title}>
                 <div className="wf-step-top">
-                  <div className="wf-step-icon"><Icon /></div>
+                  <div className="wf-step-icon">
+                    <Icon />
+                  </div>
                   <span className="wf-step-num">{index + 1}</span>
                 </div>
                 <h3>{title}</h3>
@@ -380,7 +625,9 @@ export function HomePage() {
           <p>{text.finalText}</p>
         </div>
         <div className="home-actions">
-          <Link className="primary-btn cta-light-btn" to={connectTo}>{text.connect}</Link>
+          <Link className="primary-btn cta-light-btn" to={connectTo}>
+            {text.connect}
+          </Link>
         </div>
       </section>
 
@@ -389,11 +636,20 @@ export function HomePage() {
           <span className="section-kicker">{text.aboutKicker}</span>
           <h2>{text.aboutTitle}</h2>
           <p>{text.aboutDesc}</p>
-          <Link className="landing-about-link" to="/about">{text.aboutLearnMore}</Link>
+          <Link className="landing-about-link" to="/about">
+            {text.aboutLearnMore}
+          </Link>
         </div>
         <div className="landing-about-right">
-          <span className="landing-about-creator-label">{text.aboutCreatorLabel}</span>
-          <a className="landing-about-shora" href="https://shora.site" target="_blank" rel="noopener noreferrer">
+          <span className="landing-about-creator-label">
+            {text.aboutCreatorLabel}
+          </span>
+          <a
+            className="landing-about-shora"
+            href="https://shora.site"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             <strong>Shora</strong>
             <span>shora.site</span>
           </a>
@@ -410,9 +666,22 @@ export function HomePage() {
           <p>{text.footerText}</p>
           <div className="footer-dev-card">
             <span className="footer-dev-label">{text.aboutCreatorLabel}</span>
-            <a className="footer-dev-name" href="https://shora.site" target="_blank" rel="noopener noreferrer">Shora</a>
+            <a
+              className="footer-dev-name"
+              href="https://shora.site"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Shora
+            </a>
             <div className="footer-dev-contacts">
-              <a href="https://shora.site" target="_blank" rel="noopener noreferrer">shora.site</a>
+              <a
+                href="https://shora.site"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                shora.site
+              </a>
               <a href="tel:+77085381689">+7 708 538 1689</a>
               <a href="mailto:shora.inc@outlook.com">shora.inc@outlook.com</a>
             </div>
@@ -423,7 +692,9 @@ export function HomePage() {
             <nav key={title}>
               <b>{title}</b>
               {items.map((item, ii) => (
-                <a key={item} href={FOOTER_HREFS[gi]?.[ii] || "#"}>{item}</a>
+                <a key={item} href={FOOTER_HREFS[gi]?.[ii] || "#"}>
+                  {item}
+                </a>
               ))}
             </nav>
           ))}
@@ -431,9 +702,27 @@ export function HomePage() {
         <div className="landing-footer-bottom">
           <span>{text.copyright}</span>
           <div>
-            <button type="button" onClick={() => setLang("kk")} className={lang === "kk" ? "active" : ""}>Қазақша</button>
-            <button type="button" onClick={() => setLang("ru")} className={lang === "ru" ? "active" : ""}>Русский</button>
-            <button type="button" onClick={() => setLang("en")} className={lang === "en" ? "active" : ""}>English</button>
+            <button
+              type="button"
+              onClick={() => setLang("kk")}
+              className={lang === "kk" ? "active" : ""}
+            >
+              Қазақша
+            </button>
+            <button
+              type="button"
+              onClick={() => setLang("ru")}
+              className={lang === "ru" ? "active" : ""}
+            >
+              Русский
+            </button>
+            <button
+              type="button"
+              onClick={() => setLang("en")}
+              className={lang === "en" ? "active" : ""}
+            >
+              English
+            </button>
           </div>
         </div>
       </footer>
