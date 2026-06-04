@@ -11,6 +11,7 @@ DEMO_SCRIPT.md
 DIPLOMA.md
 DIPLOMA_BOLIM3.md
 DIPLOMA_*.md
+*.docx
 secrets/
 logs/
 .pids/
