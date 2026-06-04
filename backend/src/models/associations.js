@@ -21,6 +21,18 @@ FormIntegration.belongsTo(GoogleAccount, { foreignKey: "googleAccountId" });
 
 
 
+// FormIntegration 1:N Request (string formId key — no FK constraint)
+FormIntegration.hasMany(Request, { foreignKey: "formId", sourceKey: "formId", constraints: false });
+Request.belongsTo(FormIntegration, { foreignKey: "formId", targetKey: "formId", constraints: false });
+
+// FormIntegration 1:N FormFeedback (string formId key — no FK constraint)
+FormIntegration.hasMany(FormFeedback, { foreignKey: "formId", sourceKey: "formId", constraints: false });
+FormFeedback.belongsTo(FormIntegration, { foreignKey: "formId", targetKey: "formId", constraints: false });
+
+// FormIntegration 1:N NotificationSettings (string formId key — no FK constraint)
+FormIntegration.hasMany(NotificationSettings, { foreignKey: "formId", sourceKey: "formId", constraints: false });
+NotificationSettings.belongsTo(FormIntegration, { foreignKey: "formId", targetKey: "formId", constraints: false });
+
 // FormIntegration 1:N IntegrationEvent
 FormIntegration.hasMany(IntegrationEvent, { foreignKey: "integrationId" });
 IntegrationEvent.belongsTo(FormIntegration, { foreignKey: "integrationId" });
