@@ -475,6 +475,11 @@ function AIChatBlock({ formId, formTitle, scenario, scenarioMeta, lang, t }) {
     }
   }
 
+  function clearChat() {
+    setMessages([]);
+    localStorage.removeItem(storageKey);
+  }
+
   return (
     <div className="ai-chat-block">
       <div className="ai-chat-header">
@@ -483,6 +488,11 @@ function AIChatBlock({ formId, formTitle, scenario, scenarioMeta, lang, t }) {
           <span className="ai-chat-scenario-tag">
             {(SCENARIO_LABELS_STATIC[scenario] || {})[lang] || scenario}
           </span>
+        )}
+        {messages.length > 0 && (
+          <button className="ai-chat-clear-btn official-link-btn" type="button" onClick={clearChat}>
+            {t.aiChatClear}
+          </button>
         )}
       </div>
 

@@ -6455,6 +6455,16 @@ body {
   border-bottom: 1px solid #e3ebe6;
 }
 
+.ai-chat-clear-btn {
+  margin-left: auto;
+  font-size: 0.78rem;
+  opacity: 0.6;
+  padding: 2px 6px;
+}
+.ai-chat-clear-btn:hover {
+  opacity: 1;
+}
+
 .ai-chat-title {
   font-size: 0.9rem;
   font-weight: 800;
