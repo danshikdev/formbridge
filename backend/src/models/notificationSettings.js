@@ -9,7 +9,8 @@ export const NotificationSettings = sequelize.define("NotificationSettings", {
   },
   userId: {
     type: DataTypes.UUID,
-    allowNull: false
+    allowNull: false,
+    references: { model: "users", key: "id" }
   },
   formId: {
     type: DataTypes.STRING,

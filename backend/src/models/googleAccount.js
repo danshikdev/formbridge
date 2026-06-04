@@ -10,7 +10,8 @@ export const GoogleAccount = sequelize.define("GoogleAccount", {
   userId: {
     type: DataTypes.UUID,
     allowNull: false,
-    unique: true
+    unique: true,
+    references: { model: "users", key: "id" }
   },
   googleUserId: {
     type: DataTypes.STRING,

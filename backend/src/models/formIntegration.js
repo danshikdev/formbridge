@@ -9,11 +9,13 @@ export const FormIntegration = sequelize.define("FormIntegration", {
   },
   userId: {
     type: DataTypes.UUID,
-    allowNull: true
+    allowNull: true,
+    references: { model: "users", key: "id" }
   },
   googleAccountId: {
     type: DataTypes.UUID,
-    allowNull: true
+    allowNull: true,
+    references: { model: "google_accounts", key: "id" }
   },
   formUrl: {
     type: DataTypes.TEXT,

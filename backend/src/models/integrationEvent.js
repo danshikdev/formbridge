@@ -9,11 +9,13 @@ export const IntegrationEvent = sequelize.define("IntegrationEvent", {
   },
   integrationId: {
     type: DataTypes.UUID,
-    allowNull: true
+    allowNull: true,
+    references: { model: "form_integrations", key: "id" }
   },
   requestId: {
     type: DataTypes.UUID,
-    allowNull: true
+    allowNull: true,
+    references: { model: "requests", key: "id" }
   },
   responseId: {
     type: DataTypes.STRING,
