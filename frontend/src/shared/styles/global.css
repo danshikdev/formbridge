@@ -5888,8 +5888,8 @@ body {
 
 .my-forms-page {
   width: min(1100px, 100%);
-  margin: 0 auto;
   display: grid;
+  margin: 0 auto;
   gap: 12px;
 }
 
