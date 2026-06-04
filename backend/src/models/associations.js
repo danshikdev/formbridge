@@ -37,10 +37,6 @@ FormFeedback.belongsTo(User, { foreignKey: "userId" });
 User.hasMany(NotificationSettings, { foreignKey: "userId" });
 NotificationSettings.belongsTo(User, { foreignKey: "userId" });
 
-// FormIntegration 1:N NotificationSettings (string key)
-FormIntegration.hasMany(NotificationSettings, { foreignKey: "formId", sourceKey: "formId" });
-NotificationSettings.belongsTo(FormIntegration, { foreignKey: "formId", targetKey: "formId" });
-
 // FormMember associations
 FormMember.belongsTo(User, { foreignKey: "memberId", as: "member" });
 FormMember.belongsTo(User, { foreignKey: "ownerId", as: "owner" });
