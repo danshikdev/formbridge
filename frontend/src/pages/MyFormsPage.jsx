@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import { useLocale } from "../shared/useLocale";
 import { GuidedSetupModal } from "../components/GuidedSetupModal";
+import { ShareModal } from "../components/ShareModal";
 
 function formatShortDate(value) {
   if (!value) return null;
@@ -98,6 +99,7 @@ export function MyFormsPage() {
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [setupModal, setSetupModal] = useState(null); // { formId, formTitle, integration, googleEmail }
+  const [shareModal, setShareModal] = useState(null); // { formId, formTitle }
 
   async function loadIntegrations() {
     const { data } = await api.get("/api/integrations/forms");
@@ -266,6 +268,15 @@ export function MyFormsPage() {
                         >
                           {t.openWorkspace}
                         </Link>
+                        {integration?.scenarioConfiguredAt && (
+                          <button
+                            className="official-link-btn"
+                            type="button"
+                            onClick={() => setShareModal({ formId: form.id, formTitle: form.name })}
+                          >
+                            {t.share || "Поделиться"}
+                          </button>
+                        )}
                         <button
                           className="official-link-btn danger-btn"
                           type="button"
@@ -320,6 +331,39 @@ export function MyFormsPage() {
         </div>
       )}
 
+      {/* Shared forms section */}
+      {integrations.some((i) => i.isShared) && (
+        <div className="forms-list-card" style={{ marginTop: "1.5rem" }}>
+          <div className="official-card-title">
+            <h2>{t.sharedWithMe || "Общий доступ"}</h2>
+            <span>{integrations.filter((i) => i.isShared).length}</span>
+          </div>
+          <div className="forms-list">
+            {integrations.filter((i) => i.isShared).map((integration) => (
+              <article key={integration.id} className="form-management-row">
+                <div className="form-row-info">
+                  <h3>{integration.formTitle}</h3>
+                  <p>
+                    <span className="form-status-connected">{t.sharedAccess || "Общий доступ"}</span>
+                  </p>
+                </div>
+                <div className="form-row-actions">
+                  <span className="scenario-mini-badge">
+                    {scenarioLabel(integration.scenario, lang)}
+                  </span>
+                  <Link
+                    className="primary-btn compact-action-btn"
+                    to={`/forms/${encodeURIComponent(integration.formId)}/requests?formTitle=${encodeURIComponent(integration.formTitle || "")}`}
+                  >
+                    {t.openWorkspace}
+                  </Link>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      )}
+
       {setupModal && (
         <GuidedSetupModal
           mode="forms_api_polling"
@@ -329,6 +373,14 @@ export function MyFormsPage() {
           googleEmail={setupModal.googleEmail}
           onClose={() => setSetupModal(null)}
           onRefresh={loadIntegrations}
+        />
+      )}
+
+      {shareModal && (
+        <ShareModal
+          formId={shareModal.formId}
+          formTitle={shareModal.formTitle}
+          onClose={() => setShareModal(null)}
         />
       )}
     </section>

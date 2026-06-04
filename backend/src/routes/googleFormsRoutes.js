@@ -14,6 +14,11 @@ import {
   getNotificationSettings,
   upsertNotificationSettings
 } from "../controllers/notificationSettingsController.js";
+import {
+  listMembers,
+  inviteMember,
+  removeMember
+} from "../controllers/formMembersController.js";
 import { requireAuth } from "../middleware/auth.js";
 
 export const googleFormsRoutes = Router();
@@ -31,3 +36,8 @@ googleFormsRoutes.post("/:formId/feedback", requireAuth, createFeedback);
 
 googleFormsRoutes.get("/:formId/notification-settings", requireAuth, getNotificationSettings);
 googleFormsRoutes.put("/:formId/notification-settings", requireAuth, upsertNotificationSettings);
+
+// Team access (owner only)
+googleFormsRoutes.get("/:formId/members", requireAuth, listMembers);
+googleFormsRoutes.post("/:formId/members", requireAuth, inviteMember);
+googleFormsRoutes.delete("/:formId/members/:memberId", requireAuth, removeMember);

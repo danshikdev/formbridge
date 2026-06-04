@@ -8,6 +8,8 @@ import "./models/googleAccount.js";
 import "./models/integrationEvent.js";
 import "./models/notificationSettings.js";
 import "./models/formFeedback.js";
+import "./models/formMember.js";
+import "./models/associations.js";
 import { initClient } from "./services/whatsappService.js";
 import { startNotificationScheduler } from "./services/notificationScheduler.js";
 import { startGoogleFormsPollingScheduler } from "./services/googleFormsPollingScheduler.js";

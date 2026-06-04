@@ -1,4 +1,6 @@
+import { Op } from "sequelize";
 import { FormIntegration } from "../models/formIntegration.js";
+import { FormMember } from "../models/formMember.js";
 import { GoogleAccount } from "../models/googleAccount.js";
 import { IntegrationEvent } from "../models/integrationEvent.js";
 import { Request } from "../models/request.js";
@@ -99,13 +101,36 @@ async function verifyIntegrationRecord(item) {
 
 
 export async function listIntegrations(req, res) {
-  const userId = req.user?.id || null;
-  const items = await FormIntegration.findAll({
+  const userId = req.userId || null;
+
+  // Own forms
+  const ownItems = await FormIntegration.findAll({
     where: userId ? { userId } : {},
     order: [["createdAt", "DESC"]]
   });
 
-  return res.json({ items: items.map(publicIntegration) });
+  // Shared forms (only configured ones — scenarioConfiguredAt is not null)
+  const memberships = userId
+    ? await FormMember.findAll({ where: { memberId: userId } })
+    : [];
+
+  const sharedFormIds = memberships.map((m) => m.formId);
+  const sharedItems = sharedFormIds.length
+    ? await FormIntegration.findAll({
+        where: { formId: sharedFormIds, scenarioConfiguredAt: { [Op.ne]: null } },
+        order: [["createdAt", "DESC"]]
+      })
+    : [];
+
+  const ownSet = new Set(ownItems.map((i) => i.formId));
+  const combined = [
+    ...ownItems.map((i) => ({ ...publicIntegration(i), isShared: false })),
+    ...sharedItems
+      .filter((i) => !ownSet.has(i.formId))
+      .map((i) => ({ ...publicIntegration(i), isShared: true }))
+  ];
+
+  return res.json({ items: combined });
 }
 
 export async function createIntegration(req, res) {

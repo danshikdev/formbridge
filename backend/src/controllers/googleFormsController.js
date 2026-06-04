@@ -1,5 +1,6 @@
 import { FormIntegration } from "../models/formIntegration.js";
 import { FormFeedback } from "../models/formFeedback.js";
+import { FormMember } from "../models/formMember.js";
 import { IntegrationEvent } from "../models/integrationEvent.js";
 import { Request } from "../models/request.js";
 import { SCENARIO_IDS, getScenario } from "../config/formScenarios.js";
@@ -231,9 +232,18 @@ export async function debugLastRequests(_req, res) {
 
 export async function getWorkspace(req, res) {
   const { formId } = req.params;
-  const userId = req.user?.id;
+  const userId = req.userId;
 
-  const integration = await FormIntegration.findOne({ where: { formId, userId } });
+  // Owner OR shared member
+  let integration = await FormIntegration.findOne({ where: { formId, userId } });
+  let isSharedViewer = false;
+  if (!integration) {
+    const membership = await FormMember.findOne({ where: { formId, memberId: userId } });
+    if (membership) {
+      integration = await FormIntegration.findOne({ where: { formId } });
+      isSharedViewer = true;
+    }
+  }
   if (!integration) {
     return res.status(404).json({ error: "Form integration not found or access denied" });
   }
@@ -291,7 +301,8 @@ export async function getWorkspace(req, res) {
       today: todayCount,
       week: weekCount,
       new: newCount
-    }
+    },
+    isSharedViewer
   });
 }
 
