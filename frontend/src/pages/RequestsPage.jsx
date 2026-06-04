@@ -1969,7 +1969,7 @@ export function RequestsPage() {
                     onKeyDown={(e) => { if (e.key === "Enter") openDetails(item.id); }}
                   >
                     <td>{formatDate(item.submittedAt || item.createdAt)}</td>
-                    <td>{item.respondentEmail || t.noEmail}</td>
+                    <td>{item.respondentEmail || (item.answers || []).find(a => /email/i.test(a.question) || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a.answer))?.answer || t.noEmail}</td>
                     <td className="preview-cell">{preview(item, t)}</td>
                     <td>
                       <span className={`official-badge status-${item.status}`}>{statusLabel(item.status, t)}</span>
