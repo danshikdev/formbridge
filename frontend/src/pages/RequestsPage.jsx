@@ -1993,14 +1993,14 @@ export function RequestsPage() {
             <>
               <div className="official-detail-head">
                 <div>
-                  <h3>{selected.item.formTitle || displayTitle}</h3>
+                  <h3>{displayTitle}</h3>
                 </div>
                 <span className={`official-badge status-${selected.item.status}`}>{statusLabel(selected.item.status, t)}</span>
               </div>
 
               <div className="official-detail-meta">
                 <div><span>{t.submitted}</span><b>{formatDate(selected.item.submittedAt || selected.item.createdAt)}</b></div>
-                <div><span>{t.email}</span><b>{selected.item.respondentEmail || "-"}</b></div>
+                <div><span>{t.email}</span><b>{selected.item.respondentEmail || (selected.item.answers || []).find(a => /email/i.test(a.question) || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a.answer))?.answer || "-"}</b></div>
               </div>
 
               <div className="detail-status-row">
