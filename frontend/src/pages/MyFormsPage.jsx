@@ -193,6 +193,16 @@ export function MyFormsPage() {
     return result;
   }, [forms, search, filterType, integrationByFormId]);
 
+  const formBridgeOnlyIntegrations = useMemo(() => {
+    const googleFormIds = new Set(forms.map((form) => form.id));
+    return integrations.filter((integration) => (
+      !integration.isShared
+      && !googleFormIds.has(integration.formId)
+      && (!search.trim() || String(integration.formTitle || "").toLowerCase().includes(search.trim().toLowerCase()))
+      && (filterType !== "not_connected")
+    ));
+  }, [forms, integrations, search, filterType]);
+
   if (loading) return <FormsPageSkeleton />;
 
   return (
@@ -327,6 +337,42 @@ export function MyFormsPage() {
                 </article>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {formBridgeOnlyIntegrations.length > 0 && (
+        <div className="forms-list-card" style={{ marginTop: "1.5rem" }}>
+          <div className="official-card-title">
+            <h2>{lang === "kk" ? "FormBridge формалары" : lang === "en" ? "FormBridge forms" : "Формы FormBridge"}</h2>
+            <span>{formBridgeOnlyIntegrations.length}</span>
+          </div>
+          <div className="forms-list">
+            {formBridgeOnlyIntegrations.map((integration) => (
+              <article key={integration.id} className="form-management-row">
+                <div className="form-row-info">
+                  <h3>{integration.formTitle || integration.formId}</h3>
+                  <p>
+                    <span className="form-status-connected">
+                      {integration.setupMode === "seed_demo"
+                        ? (lang === "kk" ? "Демо деректер" : lang === "en" ? "Demo data" : "Демо-данные")
+                        : "FormBridge"}
+                    </span>
+                  </p>
+                </div>
+                <div className="form-row-actions">
+                  <span className="scenario-mini-badge">
+                    {scenarioLabel(integration.scenario, lang)}
+                  </span>
+                  <Link
+                    className="primary-btn compact-action-btn"
+                    to={`/forms/${encodeURIComponent(integration.formId)}/requests?formTitle=${encodeURIComponent(integration.formTitle || "")}`}
+                  >
+                    {t.openWorkspace}
+                  </Link>
+                </div>
+              </article>
+            ))}
           </div>
         </div>
       )}
