@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon --watch src/server.js",
     "start": "node src/server.js",
-    "seed:admissions-demo": "node src/scripts/seedAdmissionsDemo.js"
+    "seed:admissions-demo": "node src/scripts/seedAdmissionsDemo.js",
+    "seed:scenario-demos": "node src/scripts/seedScenarioDemos.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
