@@ -344,7 +344,7 @@ export function MyFormsPage() {
       {formBridgeOnlyIntegrations.length > 0 && (
         <div className="forms-list-card" style={{ marginTop: "1.5rem" }}>
           <div className="official-card-title">
-            <h2>{lang === "kk" ? "FormBridge формалары" : lang === "en" ? "FormBridge forms" : "Формы FormBridge"}</h2>
+            <h2>{t.formBridgeForms}</h2>
             <span>{formBridgeOnlyIntegrations.length}</span>
           </div>
           <div className="forms-list">
@@ -355,7 +355,7 @@ export function MyFormsPage() {
                   <p>
                     <span className="form-status-connected">
                       {integration.setupMode === "seed_demo"
-                        ? (lang === "kk" ? "Демо деректер" : lang === "en" ? "Demo data" : "Демо-данные")
+                        ? t.demoData
                         : "FormBridge"}
                     </span>
                   </p>
