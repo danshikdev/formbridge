@@ -2,6 +2,7 @@ import "../models/associations.js";
 import { sequelize } from "../config/database.js";
 import { env } from "../config/env.js";
 import { User } from "../models/user.js";
+import { GoogleAccount } from "../models/googleAccount.js";
 import { FormIntegration } from "../models/formIntegration.js";
 import { Request } from "../models/request.js";
 
@@ -26,7 +27,8 @@ const people = [
 const scenarios = [
   {
     id: "universal",
-    title: "Общие обращения — демо",
+    formId: "159zxqVr48py9P1XYO98ntCloTKI6i2RowoUBSy4HB7M",
+    title: "Курсқа тіркелу",
     statuses: ["new", "in_progress", "done"],
     questions: ["ФИО", "Телефон", "Тема обращения", "Сообщение"],
     values: [
@@ -38,7 +40,8 @@ const scenarios = [
   },
   {
     id: "admissions",
-    title: "Приемная комиссия — демо",
+    formId: "1s41ZV6bSAUBq97AcPO4BVvCBOqlPJjik3Uo8F11ljhA",
+    title: "Студентті тіркеу",
     statuses: ["new", "contacted", "documents_needed", "accepted", "rejected"],
     questions: ["ФИО абитуриента", "Телефон", "Специальность", "Документы"],
     values: [
@@ -50,7 +53,8 @@ const scenarios = [
   },
   {
     id: "hr",
-    title: "Подбор сотрудников — демо",
+    formId: "1-YyUcB98UrqZeTvLKqIIzXKmGOJTjTtJTLKaeYtLFpw",
+    title: "Жұмысқа өтінім",
     statuses: ["new", "shortlisted", "interview", "rejected", "hired"],
     questions: ["Имя кандидата", "Телефон", "Вакансия", "Опыт"],
     values: [
@@ -62,7 +66,8 @@ const scenarios = [
   },
   {
     id: "survey",
-    title: "Опрос качества сервиса — демо",
+    formId: "1qKUHGZNlkfFu6ZrmdF7BoRrsW9BP9ZEZKeckx3t8l8g",
+    title: "Кері байланыс формасы",
     statuses: ["new"],
     questions: ["Участник", "Email", "Оценка сервиса", "Что улучшить?"],
     values: [
@@ -74,7 +79,8 @@ const scenarios = [
   },
   {
     id: "client_requests",
-    title: "Заявки клиентов — демо",
+    formId: "1J3TGUQFalaRJoFnqbEzimoFte_xM9ejKjF188aOIF60",
+    title: "Байланыс формасы",
     statuses: ["new", "urgent", "in_progress", "waiting_client", "done"],
     questions: ["Клиент", "Телефон", "Тип заявки", "Описание"],
     values: [
@@ -86,7 +92,8 @@ const scenarios = [
   },
   {
     id: "event",
-    title: "Регистрация на конференцию — демо",
+    formId: "1JfSYWW8eYmyhDxTXmv3FaQRMXSSSqR0nDW-z7ztx2s0",
+    title: "Іс-шараға тіркелу",
     statuses: ["new", "confirmed", "waiting_payment", "cancelled", "attended"],
     questions: ["Участник", "Телефон", "Формат участия", "Комментарий"],
     values: [
@@ -114,44 +121,46 @@ async function seed() {
 
   const user = await User.findOne({ where: { email: targetEmail } });
   if (!user) throw new Error(`User not found: ${targetEmail}`);
+  const googleAccount = await GoogleAccount.findOne({ where: { userId: user.id } });
+  if (!googleAccount) throw new Error(`Google account not found for: ${targetEmail}`);
 
   let createdForms = 0;
   let createdRequests = 0;
 
   for (const scenario of scenarios) {
-    const formId = `demo-${scenario.id}-erdana-2026`;
+    const formId = scenario.formId;
     const formUrl = `https://docs.google.com/forms/d/${formId}/edit`;
-    const formSchema = {
-      info: { title: scenario.title, documentTitle: scenario.title },
-      items: scenario.questions.map((title, index) => ({
-        itemId: `${scenario.id}-item-${index + 1}`,
-        title,
-        questionId: `${scenario.id}-question-${index + 1}`,
-        type: "textQuestion"
-      }))
-    };
 
     const [integration, wasCreated] = await FormIntegration.findOrCreate({
       where: { formId },
-      defaults: { userId: user.id, formId, formTitle: scenario.title, formUrl }
+      defaults: {
+        userId: user.id,
+        googleAccountId: googleAccount.id,
+        formId,
+        formTitle: scenario.title,
+        formUrl,
+        setupMode: "forms_api_polling",
+        status: "ready",
+        healthStatus: "connected",
+        syncEnabled: true
+      }
     });
     if (wasCreated) createdForms += 1;
 
     await integration.update({
       userId: user.id,
-      googleAccountId: null,
+      googleAccountId: googleAccount.id,
       formTitle: scenario.title,
       formUrl,
-      setupMode: "seed_demo",
+      setupMode: "forms_api_polling",
       status: "ready",
       healthStatus: "connected",
-      syncEnabled: false,
+      syncEnabled: true,
       syncStatus: "idle",
       lastSyncError: null,
       scenario: scenario.id,
       scenarioConfiguredAt: integration.scenarioConfiguredAt || new Date(),
-      formSchema,
-      setupChecklist: { form: true, formSchema: true, responses: true, demoData: true }
+      setupChecklist: { ...(integration.setupChecklist || {}), googleAccount: true, form: true, responses: true, polling: true }
     });
 
     for (const [index, person] of people.entries()) {
@@ -196,8 +205,15 @@ async function seed() {
     }
   }
 
-  console.log(`Scenario demos ready for ${targetEmail}: ${createdForms} new forms, ${createdRequests} new responses.`);
-  console.log(`Stable total: ${scenarios.length} forms, ${scenarios.length * people.length} responses.`);
+  const legacyFormIds = scenarios.map((scenario) => `demo-${scenario.id}-erdana-2026`);
+  const removedLegacyRequests = await Request.destroy({ where: { formId: legacyFormIds } });
+  const removedLegacyForms = await FormIntegration.destroy({
+    where: { userId: user.id, formId: legacyFormIds, setupMode: "seed_demo" }
+  });
+
+  console.log(`Scenario demo responses ready for ${targetEmail}: ${createdForms} connected forms, ${createdRequests} new responses.`);
+  console.log(`Stable total: ${scenarios.length} Google forms, ${scenarios.length * people.length} seed responses.`);
+  console.log(`Legacy cleanup: ${removedLegacyForms} FormBridge-only forms, ${removedLegacyRequests} responses removed.`);
 }
 
 seed()
