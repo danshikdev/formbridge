@@ -6,6 +6,7 @@ import { Request } from "./request.js";
 import { IntegrationEvent } from "./integrationEvent.js";
 import { FormFeedback } from "./formFeedback.js";
 import { NotificationSettings } from "./notificationSettings.js";
+import { FormChatHistory } from "./formChatHistory.js";
 
 // User 1:1 GoogleAccount
 User.hasOne(GoogleAccount, { foreignKey: "userId" });
@@ -54,3 +55,11 @@ FormMember.belongsTo(User, { foreignKey: "memberId", as: "member" });
 FormMember.belongsTo(User, { foreignKey: "ownerId", as: "owner" });
 User.hasMany(FormMember, { foreignKey: "memberId", as: "sharedForms" });
 User.hasMany(FormMember, { foreignKey: "ownerId", as: "ownedShares" });
+
+// User 1:N FormChatHistory
+User.hasMany(FormChatHistory, { foreignKey: "userId" });
+FormChatHistory.belongsTo(User, { foreignKey: "userId" });
+
+// FormIntegration 1:N FormChatHistory (string formId — no FK constraint)
+FormIntegration.hasMany(FormChatHistory, { foreignKey: "formId", sourceKey: "formId", constraints: false });
+FormChatHistory.belongsTo(FormIntegration, { foreignKey: "formId", targetKey: "formId", constraints: false });

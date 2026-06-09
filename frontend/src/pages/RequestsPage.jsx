@@ -415,9 +415,10 @@ function AIChatBlock({ formId, formTitle, scenario, scenarioMeta, lang, t }) {
 
   const suggestedQuestions = (scenarioMeta?.suggestedQuestions || {})[lang] || [];
 
+  // Sync to localStorage whenever messages change (fast cache)
   useEffect(() => {
     try {
-      localStorage.setItem(storageKey, JSON.stringify(messages.slice(-40)));
+      localStorage.setItem(storageKey, JSON.stringify(messages.slice(-100)));
     } catch {
       // storage quota exceeded — ignore
     }
@@ -427,47 +428,26 @@ function AIChatBlock({ formId, formTitle, scenario, scenarioMeta, lang, t }) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Auto-retry: if last saved message is from user (no AI reply yet), re-send it without duplicating
+  // Load history from backend on mount
   useEffect(() => {
-    if (messages.length === 0) return;
-    const last = messages[messages.length - 1];
-    if (last.role !== "user") return;
-
-    const msg = last.text;
-    const history = messages
-      .slice(0, -1) // exclude the last user message — it becomes the current message
-      .filter((m) => m.role === "user" || m.role === "ai")
-      .map((m) => ({ role: m.role === "ai" ? "assistant" : "user", content: m.text }));
-
-    setLoading(true);
-    api.post("/api/ai/form-chat", {
-      formId, formTitle,
-      scenario: scenario || "universal",
-      message: msg,
-      history,
-      lang: lang || "ru"
-    }).then(({ data }) => {
-      const reply = String(data.reply || "").trim();
-      setMessages((prev) => [...prev, reply
-        ? { role: "ai", text: reply }
-        : { role: "error", text: t.aiChatErrorGeneral }
-      ]);
-    }).catch((err) => {
-      const status = err.response?.status;
-      let errText = t.aiChatErrorGeneral;
-      if (status === 503) errText = t.aiChatError503;
-      else if (status === 502) errText = t.aiChatError502;
-      setMessages((prev) => [...prev, { role: "error", text: errText }]);
-    }).finally(() => setLoading(false));
+    api.get(`/api/ai/chat-history/${formId}`)
+      .then(({ data }) => {
+        if (data.messages && data.messages.length > 0) {
+          setMessages(data.messages);
+        }
+      })
+      .catch(() => {
+        // backend unavailable — localStorage cache is already shown
+      });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [formId]);
 
   async function send(text) {
     const msg = (text || input).trim();
     if (!msg || loading) return;
 
     setInput("");
-    
+
     const history = messages
       .filter((m) => m.role === "user" || m.role === "ai")
       .map((m) => ({
@@ -475,7 +455,8 @@ function AIChatBlock({ formId, formTitle, scenario, scenarioMeta, lang, t }) {
         content: m.text
       }));
 
-    setMessages((prev) => [...prev, { role: "user", text: msg }]);
+    const userMsg = { role: "user", text: msg };
+    setMessages((prev) => [...prev, userMsg]);
     setLoading(true);
 
     try {
@@ -488,16 +469,29 @@ function AIChatBlock({ formId, formTitle, scenario, scenarioMeta, lang, t }) {
         lang: lang || "ru"
       });
       const reply = String(data.reply || "").trim();
-      setMessages((prev) => [...prev, reply
+      const aiMsg = reply
         ? { role: "ai", text: reply }
-        : { role: "error", text: t.aiChatErrorGeneral }
-      ]);
+        : { role: "error", text: t.aiChatErrorGeneral };
+      setMessages((prev) => [...prev, aiMsg]);
+
+      // Save both messages to backend (fire and forget)
+      api.post("/api/ai/chat-history", {
+        formId,
+        messages: [userMsg, aiMsg]
+      }).catch(() => {});
     } catch (err) {
       const status = err.response?.status;
       let errText = t.aiChatErrorGeneral;
       if (status === 503) errText = t.aiChatError503;
       else if (status === 502) errText = t.aiChatError502;
-      setMessages((prev) => [...prev, { role: "error", text: errText }]);
+      const errMsg = { role: "error", text: errText };
+      setMessages((prev) => [...prev, errMsg]);
+
+      // Save user message + error to backend so history stays consistent
+      api.post("/api/ai/chat-history", {
+        formId,
+        messages: [userMsg, errMsg]
+      }).catch(() => {});
     } finally {
       setLoading(false);
     }
@@ -513,6 +507,7 @@ function AIChatBlock({ formId, formTitle, scenario, scenarioMeta, lang, t }) {
   function clearChat() {
     setMessages([]);
     localStorage.removeItem(storageKey);
+    api.delete(`/api/ai/chat-history/${formId}`).catch(() => {});
   }
 
   return (
