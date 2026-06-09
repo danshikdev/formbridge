@@ -427,6 +427,16 @@ function AIChatBlock({ formId, formTitle, scenario, scenarioMeta, lang, t }) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Auto-retry: if last saved message is from user (no AI reply yet), re-send it
+  useEffect(() => {
+    if (messages.length === 0) return;
+    const last = messages[messages.length - 1];
+    if (last.role === "user") {
+      send(last.text);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   async function send(text) {
     const msg = (text || input).trim();
     if (!msg || loading) return;
