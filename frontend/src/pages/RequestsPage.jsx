@@ -427,13 +427,38 @@ function AIChatBlock({ formId, formTitle, scenario, scenarioMeta, lang, t }) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Auto-retry: if last saved message is from user (no AI reply yet), re-send it
+  // Auto-retry: if last saved message is from user (no AI reply yet), re-send it without duplicating
   useEffect(() => {
     if (messages.length === 0) return;
     const last = messages[messages.length - 1];
-    if (last.role === "user") {
-      send(last.text);
-    }
+    if (last.role !== "user") return;
+
+    const msg = last.text;
+    const history = messages
+      .slice(0, -1) // exclude the last user message — it becomes the current message
+      .filter((m) => m.role === "user" || m.role === "ai")
+      .map((m) => ({ role: m.role === "ai" ? "assistant" : "user", content: m.text }));
+
+    setLoading(true);
+    api.post("/api/ai/form-chat", {
+      formId, formTitle,
+      scenario: scenario || "universal",
+      message: msg,
+      history,
+      lang: lang || "ru"
+    }).then(({ data }) => {
+      const reply = String(data.reply || "").trim();
+      setMessages((prev) => [...prev, reply
+        ? { role: "ai", text: reply }
+        : { role: "error", text: t.aiChatErrorGeneral }
+      ]);
+    }).catch((err) => {
+      const status = err.response?.status;
+      let errText = t.aiChatErrorGeneral;
+      if (status === 503) errText = t.aiChatError503;
+      else if (status === 502) errText = t.aiChatError502;
+      setMessages((prev) => [...prev, { role: "error", text: errText }]);
+    }).finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
