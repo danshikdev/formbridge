@@ -11,6 +11,8 @@ import { IntegrationEvent } from "./models/integrationEvent.js";
 import { NotificationSettings } from "./models/notificationSettings.js";
 import { FormFeedback } from "./models/formFeedback.js";
 import { FormMember } from "./models/formMember.js";
+import { FormChatHistory } from "./models/formChatHistory.js";
+import { AIChatJob } from "./models/aiChatJob.js";
 import "./models/associations.js";
 
 import { initClient } from "./services/whatsappService.js";
@@ -31,6 +33,8 @@ async function boot() {
     await NotificationSettings.sync({ alter: env.db.syncAlter });
     await FormFeedback.sync({ alter: env.db.syncAlter });
     await FormMember.sync({ alter: env.db.syncAlter });
+    await FormChatHistory.sync({ alter: env.db.syncAlter });
+    await AIChatJob.sync({ alter: env.db.syncAlter });
 
     console.log("DB synced");
 
