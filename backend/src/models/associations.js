@@ -7,6 +7,7 @@ import { IntegrationEvent } from "./integrationEvent.js";
 import { FormFeedback } from "./formFeedback.js";
 import { NotificationSettings } from "./notificationSettings.js";
 import { FormChatHistory } from "./formChatHistory.js";
+import { AIChatJob } from "./aiChatJob.js";
 
 // User 1:1 GoogleAccount
 User.hasOne(GoogleAccount, { foreignKey: "userId" });
@@ -63,3 +64,11 @@ FormChatHistory.belongsTo(User, { foreignKey: "userId" });
 // FormIntegration 1:N FormChatHistory (string formId — no FK constraint)
 FormIntegration.hasMany(FormChatHistory, { foreignKey: "formId", sourceKey: "formId", constraints: false });
 FormChatHistory.belongsTo(FormIntegration, { foreignKey: "formId", targetKey: "formId", constraints: false });
+
+// User 1:N AIChatJob
+User.hasMany(AIChatJob, { foreignKey: "userId" });
+AIChatJob.belongsTo(User, { foreignKey: "userId" });
+
+// FormIntegration 1:N AIChatJob (string formId — no FK constraint)
+FormIntegration.hasMany(AIChatJob, { foreignKey: "formId", sourceKey: "formId", constraints: false });
+AIChatJob.belongsTo(FormIntegration, { foreignKey: "formId", targetKey: "formId", constraints: false });

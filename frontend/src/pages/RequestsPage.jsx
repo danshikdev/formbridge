@@ -401,6 +401,8 @@ function ScenarioSelectBanner({ formId, lang, t, onSelected }) {
 
 function AIChatBlock({ formId, formTitle, scenario, scenarioMeta, lang, t }) {
   const storageKey = `fb_ai_${formId}`;
+  const jobKey = `fb_pending_job_${formId}`;
+
   const [messages, setMessages] = useState(() => {
     try {
       const saved = localStorage.getItem(storageKey);
@@ -411,11 +413,12 @@ function AIChatBlock({ formId, formTitle, scenario, scenarioMeta, lang, t }) {
   });
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [pendingJobId, setPendingJobId] = useState(null);
   const messagesEndRef = useRef(null);
 
   const suggestedQuestions = (scenarioMeta?.suggestedQuestions || {})[lang] || [];
 
-  // Sync to localStorage whenever messages change (fast cache)
+  // Sync to localStorage as fast cache
   useEffect(() => {
     try {
       localStorage.setItem(storageKey, JSON.stringify(messages.slice(-100)));
@@ -428,19 +431,74 @@ function AIChatBlock({ formId, formTitle, scenario, scenarioMeta, lang, t }) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Load history from backend on mount
+  // Load history from backend on mount, resume pending job if any
   useEffect(() => {
     api.get(`/api/ai/chat-history/${formId}`)
       .then(({ data }) => {
+        const savedJobId = localStorage.getItem(jobKey);
         if (data.messages && data.messages.length > 0) {
           setMessages(data.messages);
+          if (savedJobId) {
+            const last = data.messages[data.messages.length - 1];
+            if (last.role !== "user") {
+              // AI already replied while we were away — no need to poll
+              localStorage.removeItem(jobKey);
+            } else {
+              // Still waiting for AI response
+              setLoading(true);
+              setPendingJobId(savedJobId);
+            }
+          }
+        } else if (savedJobId) {
+          setLoading(true);
+          setPendingJobId(savedJobId);
         }
       })
       .catch(() => {
-        // backend unavailable — localStorage cache is already shown
+        // Backend unavailable — check localStorage for pending job
+        const savedJobId = localStorage.getItem(jobKey);
+        if (savedJobId) {
+          setLoading(true);
+          setPendingJobId(savedJobId);
+        }
       });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formId]);
+
+  // Poll for job completion every 2s
+  useEffect(() => {
+    if (!pendingJobId) return;
+
+    const interval = setInterval(() => {
+      api.get(`/api/ai/chat-job/${pendingJobId}`)
+        .then(({ data }) => {
+          if (data.status === "done") {
+            clearInterval(interval);
+            setPendingJobId(null);
+            localStorage.removeItem(jobKey);
+            setLoading(false);
+            if (data.reply) {
+              setMessages((prev) => [...prev, { role: "ai", text: data.reply }]);
+            } else {
+              setMessages((prev) => [...prev, { role: "error", text: t.aiChatErrorGeneral }]);
+            }
+          } else if (data.status === "error") {
+            clearInterval(interval);
+            setPendingJobId(null);
+            localStorage.removeItem(jobKey);
+            setLoading(false);
+            setMessages((prev) => [...prev, { role: "error", text: t.aiChatErrorGeneral }]);
+          }
+          // status === "pending" → keep polling
+        })
+        .catch(() => {
+          // network error — keep polling, don't stop
+        });
+    }, 2000);
+
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingJobId]);
 
   async function send(text) {
     const msg = (text || input).trim();
@@ -455,12 +513,11 @@ function AIChatBlock({ formId, formTitle, scenario, scenarioMeta, lang, t }) {
         content: m.text
       }));
 
-    const userMsg = { role: "user", text: msg };
-    setMessages((prev) => [...prev, userMsg]);
+    setMessages((prev) => [...prev, { role: "user", text: msg }]);
     setLoading(true);
 
     try {
-      const { data } = await api.post("/api/ai/form-chat", {
+      const { data } = await api.post("/api/ai/form-chat-async", {
         formId,
         formTitle,
         scenario: scenario || "universal",
@@ -468,31 +525,16 @@ function AIChatBlock({ formId, formTitle, scenario, scenarioMeta, lang, t }) {
         history,
         lang: lang || "ru"
       });
-      const reply = String(data.reply || "").trim();
-      const aiMsg = reply
-        ? { role: "ai", text: reply }
-        : { role: "error", text: t.aiChatErrorGeneral };
-      setMessages((prev) => [...prev, aiMsg]);
 
-      // Save both messages to backend (fire and forget)
-      api.post("/api/ai/chat-history", {
-        formId,
-        messages: [userMsg, aiMsg]
-      }).catch(() => {});
+      // Save jobId — survives page refresh
+      localStorage.setItem(jobKey, data.jobId);
+      setPendingJobId(data.jobId);
     } catch (err) {
       const status = err.response?.status;
       let errText = t.aiChatErrorGeneral;
       if (status === 503) errText = t.aiChatError503;
       else if (status === 502) errText = t.aiChatError502;
-      const errMsg = { role: "error", text: errText };
-      setMessages((prev) => [...prev, errMsg]);
-
-      // Save user message + error to backend so history stays consistent
-      api.post("/api/ai/chat-history", {
-        formId,
-        messages: [userMsg, errMsg]
-      }).catch(() => {});
-    } finally {
+      setMessages((prev) => [...prev, { role: "error", text: errText }]);
       setLoading(false);
     }
   }
@@ -507,6 +549,9 @@ function AIChatBlock({ formId, formTitle, scenario, scenarioMeta, lang, t }) {
   function clearChat() {
     setMessages([]);
     localStorage.removeItem(storageKey);
+    localStorage.removeItem(jobKey);
+    setPendingJobId(null);
+    setLoading(false);
     api.delete(`/api/ai/chat-history/${formId}`).catch(() => {});
   }
 
