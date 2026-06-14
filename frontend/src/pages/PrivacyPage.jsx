@@ -11,7 +11,7 @@ const copy = {
     sections: [
       {
         title: "Жалпы ақпарат",
-        text: "FormBridge (formbridge.nlrk.online) — Google Forms жауаптарын басқаруға арналған платформа. Осы Құпиялылық саясаты платформаны пайдалану кезінде қандай деректер жиналатынын, қалай сақталатынын және қорғалатынын түсіндіреді.",
+        text: "FormBridge (formbridge.shora.site) — Google Forms жауаптарын басқаруға арналған платформа. Осы Құпиялылық саясаты платформаны пайдалану кезінде қандай деректер жиналатынын, қалай сақталатынын және қорғалатынын түсіндіреді.",
       },
       {
         title: "Қандай деректер жиналады",
@@ -65,7 +65,7 @@ const copy = {
     sections: [
       {
         title: "Общая информация",
-        text: "FormBridge (formbridge.nlrk.online) — платформа для управления ответами Google Forms. Эта Политика конфиденциальности объясняет, какие данные собираются при использовании платформы, как они хранятся и защищаются.",
+        text: "FormBridge (formbridge.shora.site) — платформа для управления ответами Google Forms. Эта Политика конфиденциальности объясняет, какие данные собираются при использовании платформы, как они хранятся и защищаются.",
       },
       {
         title: "Какие данные собираются",
@@ -119,7 +119,7 @@ const copy = {
     sections: [
       {
         title: "Overview",
-        text: "FormBridge (formbridge.nlrk.online) is a platform for managing Google Forms responses. This Privacy Policy explains what data is collected when using the platform, how it is stored, and how it is protected.",
+        text: "FormBridge (formbridge.shora.site) is a platform for managing Google Forms responses. This Privacy Policy explains what data is collected when using the platform, how it is stored, and how it is protected.",
       },
       {
         title: "What data is collected",

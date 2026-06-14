@@ -2,7 +2,7 @@
 set -euo pipefail
 
 APP_DIR="/var/www/formbridge"
-DOMAIN="https://formbridge.nlrk.online"
+DOMAIN="https://formbridge.shora.site"
 BACKEND_PORT="4001"
 PM2_APP="formbridge-backend"
 NGINX_SITE="formbridge"
