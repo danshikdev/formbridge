@@ -17,6 +17,8 @@ logs/
 .pids/
 backend/whatsapp-session/
 .DS_Store
+PROMPT_FOR_NEW_SESSION.md
+*.py
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
