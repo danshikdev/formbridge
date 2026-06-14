@@ -118,7 +118,7 @@ export function MyFormsPage() {
       const { data } = await api.get("/api/google/forms");
       setForms(data.items || []);
     } catch (err) {
-      if (err.response?.status === 401 && err.response?.data?.code === "google_token_expired") {
+      if (err.response?.status === 409 && err.response?.data?.code === "google_token_expired") {
         setTokenExpired(true);
       } else {
         throw err;
