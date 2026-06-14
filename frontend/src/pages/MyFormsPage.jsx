@@ -96,6 +96,7 @@ export function MyFormsPage() {
   const [actionId, setActionId] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [tokenExpired, setTokenExpired] = useState(false);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [setupModal, setSetupModal] = useState(null); // { formId, formTitle, integration, googleEmail }
@@ -113,8 +114,16 @@ export function MyFormsPage() {
   }
 
   async function loadForms() {
-    const { data } = await api.get("/api/google/forms");
-    setForms(data.items || []);
+    try {
+      const { data } = await api.get("/api/google/forms");
+      setForms(data.items || []);
+    } catch (err) {
+      if (err.response?.status === 401 && err.response?.data?.code === "google_token_expired") {
+        setTokenExpired(true);
+      } else {
+        throw err;
+      }
+    }
   }
 
   async function boot() {
@@ -207,11 +216,13 @@ export function MyFormsPage() {
       {error ? <p className="error official-message">{error}</p> : null}
       {message ? <p className="ok-msg official-message">{message}</p> : null}
 
-      {!googleStatus?.account ? (
+      {!googleStatus?.account || tokenExpired ? (
         <div className="forms-access-card">
-          <h2>{t.formsAccessTitle}</h2>
-          <p>{t.formsAccessText}</p>
-          <button className="primary-btn" type="button" onClick={connectGoogle}>{t.grantFormsAccess}</button>
+          <h2>{tokenExpired ? t.googleTokenExpiredTitle : t.formsAccessTitle}</h2>
+          <p>{tokenExpired ? t.googleTokenExpiredText : t.formsAccessText}</p>
+          <button className="primary-btn" type="button" onClick={connectGoogle}>
+            {tokenExpired ? t.googleReconnect : t.grantFormsAccess}
+          </button>
         </div>
       ) : (
         <div className="forms-list-card">

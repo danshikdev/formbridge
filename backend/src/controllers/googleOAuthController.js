@@ -119,6 +119,10 @@ export async function googleFormsList(req, res) {
     account.status = "broken";
     account.lastError = err.message;
     await account.save();
+    const isTokenError = /expired|revoked|invalid_grant/i.test(err.message);
+    if (isTokenError) {
+      return res.status(401).json({ error: `Google Forms list failed: ${err.message}`, code: "google_token_expired" });
+    }
     return res.status(502).json({ error: `Google Forms list failed: ${err.message}` });
   }
 }
