@@ -69,9 +69,8 @@ else
 fi
 
 echo "[8/9] Health checks with retry"
-curl -fsS -I "$DOMAIN" | head -n 5
 for i in {1..30}; do
-  if curl -fsS "$DOMAIN/health" >/dev/null; then
+  if curl -fsS "http://127.0.0.1:$BACKEND_PORT/health" >/dev/null; then
     echo "Backend health is ready"
     break
   fi
