@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: formbridge
+      POSTGRES_PASSWORD: formbridge
+      POSTGRES_DB: formbridge
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U formbridge"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    env_file: .env.docker
+    environment:
+      NODE_ENV: development
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_NAME: formbridge
+      DB_USER: formbridge
+      DB_PASSWORD: formbridge
+      DB_SSL: "false"
+      DB_SYNC_ALTER: "true"
+      PORT: "4000"
+      CORS_ORIGIN: "http://localhost:5173"
+      PUBLIC_BASE_URL: "http://localhost:4000"
+      GOOGLE_REDIRECT_URI: "http://localhost:4000/api/google/oauth/callback"
+      GOOGLE_LOGIN_REDIRECT_URI: "http://localhost:4000/api/auth/google/callback"
+      GOOGLE_OAUTH_SUCCESS_URL: "http://localhost:5173/forms"
+      GOOGLE_OAUTH_ERROR_URL: "http://localhost:5173/forms?google=error"
+      GOOGLE_LOGIN_SUCCESS_URL: "http://localhost:5173/login"
+      GOOGLE_LOGIN_ERROR_URL: "http://localhost:5173/login?google=error"
+    ports:
+      - "4000:4000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - whatsapp_session:/app/whatsapp-session
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  whatsapp_session:
