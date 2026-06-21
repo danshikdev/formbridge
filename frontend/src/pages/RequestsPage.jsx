@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import { useLocale } from "../shared/useLocale";
 import { IconGrid, IconAcademic, IconUser, IconChart, IconMessage, IconCalendar, IconChevronDown, IconFeedback } from "../shared/icons";
+import { WorkspaceSettingsTab } from "../components/WorkspaceSettingsTab";
 
 // ─── Scenario definitions (mirrors backend) ───────────────────────────────────
 
@@ -55,7 +56,7 @@ const ATTENTION_STATUSES = {
 
 const DATE_FILTERS = ["all", "today", "yesterday", "last7", "last30", "custom"];
 
-const WORKSPACE_TABS = ["requests", "analytics", "ai", "whatsapp", "reports", "feedback"];
+const WORKSPACE_TABS = ["requests", "analytics", "ai", "whatsapp", "reports", "feedback", "settings"];
 const WORKSPACE_TAB_STORAGE_PREFIX = "formbridge.workspace.activeTab.";
 
 function workspaceTabStorageKey(formId) {
@@ -189,7 +190,11 @@ function formatDate(value) {
   return d.toLocaleString();
 }
 
-function statusLabel(status, t) {
+function statusLabel(status, t, customStatuses) {
+  if (customStatuses && customStatuses.length > 0) {
+    const custom = customStatuses.find((s) => s.key === status);
+    if (custom) return custom.label;
+  }
   const map = {
     new: t.new,
     in_progress: t.inProgress,
@@ -772,7 +777,7 @@ function generateWordReport(formTitle, scenario, items, t, lang) {
       <tr>
         <td>${reportHtml(formatDate(item.submittedAt || item.createdAt))}</td>
         <td>${reportHtml(item.respondentEmail || "-")}</td>
-        <td><b>${reportHtml(statusLabel(item.status, t))}</b></td>
+        <td><b>${reportHtml(statusLabel(item.status, t, customStatuses))}</b></td>
         ${answersHtml}
       </tr>
     `;
@@ -799,7 +804,7 @@ function generateWordReport(formTitle, scenario, items, t, lang) {
           <tbody>
             <tr><th>${reportHtml(t.submitted)}</th><td>${reportHtml(formatDate(item.submittedAt || item.createdAt))}</td></tr>
             <tr><th>${reportHtml(t.email)}</th><td>${reportHtml(item.respondentEmail || "-")}</td></tr>
-            <tr><th>${reportHtml(t.status)}</th><td><b>${reportHtml(statusLabel(item.status, t))}</b></td></tr>
+            <tr><th>${reportHtml(t.status)}</th><td><b>${reportHtml(statusLabel(item.status, t, customStatuses))}</b></td></tr>
           </tbody>
         </table>
         <table class="answers-table">
@@ -810,7 +815,7 @@ function generateWordReport(formTitle, scenario, items, t, lang) {
   }).join("");
 
   const statusListHtml = Object.entries(statusCounts)
-    .map(([status, count]) => `<li><b>${reportHtml(statusLabel(status, t))}:</b> ${count}</li>`)
+    .map(([status, count]) => `<li><b>${reportHtml(statusLabel(status, t, customStatuses))}:</b> ${count}</li>`)
     .join("");
 
   return `
@@ -1012,7 +1017,7 @@ function ReportPreviewModal({ isOpen, onClose, reportType, items, formTitle, sce
                 </div>
                 {sortedStatuses.slice(0, 2).map(([status, count]) => (
                   <div key={status} className="report-stat-card">
-                    <span>{statusLabel(status, t)}</span>
+                    <span>{statusLabel(status, t, customStatuses)}</span>
                     <strong>{count}</strong>
                   </div>
                 ))}
@@ -1036,7 +1041,7 @@ function ReportPreviewModal({ isOpen, onClose, reportType, items, formTitle, sce
                       <tr key={item.id}>
                         <td style={{ whiteSpace: "nowrap" }}>{formatDate(item.submittedAt || item.createdAt).split(",")[0]}</td>
                         <td>{item.respondentEmail || "-"}</td>
-                        <td><b>{statusLabel(item.status, t)}</b></td>
+                        <td><b>{statusLabel(item.status, t, customStatuses)}</b></td>
                         <td>
                           <div className="report-table-answers">
                             {answersForView(item.answers || [], t).slice(0, 3).map((ans, idx) => (
@@ -1306,7 +1311,7 @@ function DonutChart({ statusCounts, total, t }) {
         {segments.map((seg) => (
           <div key={seg.status} className="analytics-donut-legend-item">
             <span className="analytics-donut-dot" style={{ background: STATUS_COLORS[seg.status] || "#ccc" }} />
-            <span className="analytics-donut-label">{statusLabel(seg.status, t)}</span>
+            <span className="analytics-donut-label">{statusLabel(seg.status, t, customStatuses)}</span>
             <span className="analytics-donut-count">{seg.count}</span>
             <span className="analytics-donut-pct">{Math.round((seg.count / total) * 100)}%</span>
           </div>
@@ -1679,6 +1684,7 @@ export function RequestsPage() {
   const [scenario, setScenario] = useState(null);
   const [scenarioMeta, setScenarioMeta] = useState(null);
   const [scenarioConfiguredAt, setScenarioConfiguredAt] = useState(null);
+  const [customStatuses, setCustomStatuses] = useState(null);
 
   const [items, setItems] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -1736,6 +1742,7 @@ export function RequestsPage() {
       setScenario(data.scenario || "universal");
       setScenarioMeta(data.scenarioMeta || null);
       setScenarioConfiguredAt(data.scenarioConfiguredAt || null);
+      setCustomStatuses(data.customStatuses || null);
     } catch {
       // workspace load failure is non-fatal — page still shows requests
     }
@@ -1827,11 +1834,14 @@ export function RequestsPage() {
 
   // Determine statuses to show in filter dropdown
   const scenarioStatuses = useMemo(() => {
+    if (customStatuses && customStatuses.length > 0) {
+      return ["", ...customStatuses.map((s) => s.key)];
+    }
     const base = ["new", "in_progress", "done"];
     const flow = scenarioMeta?.statusFlow || [];
     const combined = Array.from(new Set([...base, ...flow]));
     return ["", ...combined];
-  }, [scenarioMeta]);
+  }, [scenarioMeta, customStatuses]);
 
   // Labels for scenario
   const scenarioTitle = scenarioMeta?.title?.[lang] || scenarioMeta?.title?.ru || "";
@@ -1845,7 +1855,8 @@ export function RequestsPage() {
     ai: t.aiTab,
     whatsapp: t.whatsappTab,
     reports: t.reportsTab,
-    feedback: t.feedbackTab
+    feedback: t.feedbackTab,
+    settings: t.settingsTab
   };
 
   if (loading) return <RequestsPageSkeleton />;
@@ -1976,7 +1987,7 @@ export function RequestsPage() {
               {t.status}
               <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
                 {scenarioStatuses.map((s) => (
-                  <option key={s || "all"} value={s}>{s ? statusLabel(s, t) : t.all}</option>
+                  <option key={s || "all"} value={s}>{s ? statusLabel(s, t, customStatuses) : t.all}</option>
                 ))}
               </select>
             </label>
@@ -2047,7 +2058,7 @@ export function RequestsPage() {
                     <td>{item.respondentEmail || (item.answers || []).find(a => /email/i.test(a.question) || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a.answer))?.answer || t.noEmail}</td>
                     <td className="preview-cell">{preview(item, t)}</td>
                     <td>
-                      <span className={`official-badge status-${item.status}`}>{statusLabel(item.status, t)}</span>
+                      <span className={`official-badge status-${item.status}`}>{statusLabel(item.status, t, customStatuses)}</span>
                     </td>
                   </tr>
                 ))}
@@ -2070,7 +2081,7 @@ export function RequestsPage() {
                 <div>
                   <h3>{displayTitle}</h3>
                 </div>
-                <span className={`official-badge status-${selected.item.status}`}>{statusLabel(selected.item.status, t)}</span>
+                <span className={`official-badge status-${selected.item.status}`}>{statusLabel(selected.item.status, t, customStatuses)}</span>
               </div>
 
               <div className="official-detail-meta">
@@ -2085,7 +2096,7 @@ export function RequestsPage() {
                   onChange={(e) => changeStatus(selected.item.id, e.target.value)}
                 >
                   {scenarioStatuses.filter(Boolean).map((s) => (
-                    <option key={s} value={s}>{statusLabel(s, t)}</option>
+                    <option key={s} value={s}>{statusLabel(s, t, customStatuses)}</option>
                   ))}
                 </select>
               </div>
@@ -2209,6 +2220,19 @@ export function RequestsPage() {
       {activeTab === "feedback" && (
         <div className="workspace-tab-panel">
           <FeedbackPanel formId={formId} t={t} />
+        </div>
+      )}
+
+      {activeTab === "settings" && (
+        <div className="workspace-tab-panel">
+          <WorkspaceSettingsTab
+            integrationId={workspace?.form?.integrationId}
+            scenario={scenario}
+            scenarioMeta={scenarioMeta}
+            customStatuses={customStatuses}
+            t={t}
+            onStatusesUpdated={(updated) => setCustomStatuses(updated)}
+          />
         </div>
       )}
 

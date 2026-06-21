@@ -9,6 +9,7 @@ import {
   listIntegrations,
   setupGoogleIntegration,
   syncNow,
+  updateStatuses,
   verifyIntegration
 } from "../controllers/integrationsController.js";
 
@@ -24,3 +25,4 @@ integrationsRoutes.post("/forms/:id/enable-polling", enablePolling);
 integrationsRoutes.post("/forms/:id/sync-now", syncNow);
 integrationsRoutes.delete("/forms/:id", deleteIntegration);
 integrationsRoutes.post("/forms/:id/verify", verifyIntegration);
+integrationsRoutes.patch("/forms/:id/statuses", updateStatuses);

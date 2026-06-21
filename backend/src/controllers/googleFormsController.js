@@ -287,6 +287,7 @@ export async function getWorkspace(req, res) {
     },
     scenario: scenarioId,
     scenarioConfiguredAt: integration.scenarioConfiguredAt,
+    customStatuses: integration.customStatuses || null,
     scenarioMeta: {
       id: scenarioMeta.id,
       title: scenarioMeta.title,

@@ -55,6 +55,7 @@ async function findOwnedIntegration(id, userId) {
   if (userId && item.userId && item.userId !== userId) {
     const error = new Error("Forbidden");
     error.status = 403;
+    error.code = "ownership_forbidden";
     throw error;
   }
   return item;
@@ -244,8 +245,9 @@ export async function enablePolling(req, res) {
       lastSyncedAt: result.lastSyncedAt
     });
   } catch (err) {
+    const isOwnForbidden = err.code === "ownership_forbidden";
     const status = err.status || 502;
-    if (status !== 403) {
+    if (!isOwnForbidden) {
       await logIntegrationEvent({
         integrationId: req.params.id,
         type: "enable_polling",
@@ -253,7 +255,7 @@ export async function enablePolling(req, res) {
         message: err.message
       });
     }
-    return res.status(status).json({ error: status === 403 ? "Forbidden" : `Polling setup failed: ${err.message}` });
+    return res.status(status).json({ error: isOwnForbidden ? "Forbidden" : err.message });
   }
 }
 
@@ -286,8 +288,9 @@ export async function syncNow(req, res) {
       lastSyncedAt: result.lastSyncedAt
     });
   } catch (err) {
+    const isOwnForbidden = err.code === "ownership_forbidden";
     const status = err.status || 502;
-    if (status !== 403) {
+    if (!isOwnForbidden) {
       await logIntegrationEvent({
         integrationId: req.params.id,
         type: "sync_now",
@@ -295,7 +298,7 @@ export async function syncNow(req, res) {
         message: err.message
       });
     }
-    return res.status(status).json({ error: status === 403 ? "Forbidden" : `Sync failed: ${err.message}` });
+    return res.status(status).json({ error: isOwnForbidden ? "Forbidden" : err.message });
   }
 }
 
@@ -362,4 +365,30 @@ export async function integrationEvents(req, res) {
   });
 
   return res.json({ items: events });
+}
+
+export async function updateStatuses(req, res) {
+  const { id } = req.params;
+  const userId = req.userId;
+  const { statuses } = req.body;
+
+  if (!Array.isArray(statuses)) {
+    return res.status(400).json({ error: "statuses must be an array" });
+  }
+  for (const s of statuses) {
+    if (!s || typeof s.key !== "string" || !s.key.trim() || typeof s.label !== "string" || !s.label.trim()) {
+      return res.status(400).json({ error: "Each status must have non-empty key and label strings" });
+    }
+  }
+
+  const integration = await FormIntegration.findOne({ where: { id, userId } });
+  if (!integration) {
+    return res.status(404).json({ error: "Integration not found" });
+  }
+
+  // null = reset to scenario defaults
+  const customStatuses = statuses.length > 0 ? statuses : null;
+  await integration.update({ customStatuses });
+
+  return res.json({ ok: true, customStatuses });
 }

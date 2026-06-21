@@ -128,6 +128,11 @@ export const FormIntegration = sequelize.define("FormIntegration", {
   scenarioConfiguredAt: {
     type: DataTypes.DATE,
     allowNull: true
+  },
+  customStatuses: {
+    type: DataTypes.JSONB,
+    allowNull: true,
+    defaultValue: null
   }
 }, {
   tableName: "form_integrations",
