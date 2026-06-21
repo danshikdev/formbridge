@@ -1271,7 +1271,7 @@ const STATUS_COLORS = {
   attended: "#2dd4bf"
 };
 
-function DonutChart({ statusCounts, total, t }) {
+function DonutChart({ statusCounts, total, t, customStatuses }) {
   const R = 38;
   const circumference = 2 * Math.PI * R;
   const entries = Object.entries(statusCounts).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
@@ -1575,7 +1575,7 @@ function AnswerDistributionBlock({ distributions, t }) {
   );
 }
 
-function AnalyticsBlock({ items, scenario, t, lang }) {
+function AnalyticsBlock({ items, scenario, t, lang, customStatuses }) {
   const analytics = useMemo(() => buildAnalytics(items), [items]);
 
   if (items.length === 0) return (
@@ -1613,7 +1613,7 @@ function AnalyticsBlock({ items, scenario, t, lang }) {
       <div className="analytics-charts-row">
         <div className="analytics-section analytics-section--donut">
           <div className="analytics-section-title">{t.analyticsStatusDist}</div>
-          <DonutChart statusCounts={analytics.statusCounts} total={total} t={t} />
+          <DonutChart statusCounts={analytics.statusCounts} total={total} t={t} customStatuses={customStatuses} />
         </div>
         <div className="analytics-section analytics-section--timeline">
           <div className="analytics-section-title">{t.analyticsLast14Days || "Last 14 days"}</div>
@@ -2136,7 +2136,7 @@ export function RequestsPage() {
 
       {activeTab === "analytics" && (
         <div className="workspace-tab-panel">
-          <AnalyticsBlock items={items} scenario={scenario} t={t} lang={lang} />
+          <AnalyticsBlock items={items} scenario={scenario} t={t} lang={lang} customStatuses={customStatuses} />
         </div>
       )}
 
