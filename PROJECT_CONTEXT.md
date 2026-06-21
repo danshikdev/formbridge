@@ -136,6 +136,28 @@ Completed (2026-06-20 11:23 +05):
   - presenter should rehearse once aloud and cut any personally awkward phrasing
   - the Q&A block is intentionally broad; some items can be removed after one practice run
 - Recommended next steps:
+Updated (2026-06-22 00:19 +05):
+- Defense cheat sheet adjusted again after review of slide 2 (`Мәселе`) because the spoken text described the pain clearly but did not immediately say who exactly experiences that pain.
+- Content change:
+  - rewrote the slide 2 spoken paragraph so it now explicitly names the affected users:
+    - admissions committee staff
+    - HR specialist
+    - manager processing client requests
+    - employee analyzing survey results
+  - kept the rest of the pain explanation intact so the transition from “initial problem” to “solution” still sounds natural
+- Updated external deliverables:
+  - `/Users/erdanatursunov/Documents/Диплом лист/Erdana/FormBridge_Qorghau_Shpаrgalka_2026_updated.docx`
+  - `/Users/erdanatursunov/Documents/Диплом лист/Erdana/FormBridge_Qorghau_Shpаrgalka_2026_updated.txt`
+- Checks / commands run:
+  - `git status --short`
+  - rebuilt the updated DOCX/TXT in `/private/tmp/formbridge-defense-2`
+  - rendered the DOCX and visually checked page 1 after the text replacement
+- Files changed in repo:
+  - `PROJECT_CONTEXT.md`
+- Current risks / notes:
+  - slide 2 is now clearer in terms of target user, but it should still be rehearsed once aloud to make sure the list of roles feels natural in personal speech tempo
+- Recommended next steps:
+  - if needed later, soften or shorten the role list to 2-3 examples depending on speaking speed during rehearsal
   - rehearse once with the new deck
   - trim 3-5 unnecessary Q&A items after rehearsal
   - optionally prepare a one-page ultra-short paper cue sheet later
@@ -218,6 +240,43 @@ Updated (2026-06-21 10:20 +05):
   - reviewed current slide text extracted from `FormBridge_Qorghau_2026_slide3_reworked.pptx`
   - listed available PPTX versions in the diploma folder
 - Current risks / notes:
+
+Updated (2026-06-21 23:25 +05):
+- Defense cheat sheet updated again after the deck gained a dedicated QR/demo slide before the final thank-you slide.
+- Main content changes:
+  - adapted the speaking script from 19 slides to 20 slides
+  - added a full spoken block for the QR/demo slide:
+    - live demo availability
+    - current test-mode explanation
+    - Google OAuth production verification note
+    - invitation to add reviewers as Google test users if they want to try their own Forms
+  - strengthened several spoken blocks with clearer technical phrasing:
+    - OAuth 2.0 and Google Forms API polling
+    - OpenAI API / `gpt-5-nano` explanation
+    - `whatsapp-web.js` note for WhatsApp delivery
+    - AWS EC2 + domain + Nginx + PM2 + HTTPS deploy wording
+  - aligned the economic script more closely with the diploma wording and current operational-cost explanation
+  - expanded the Q&A table with short answers about:
+    - deploy/publication
+    - why the site is still in Google test mode
+    - how someone can be added as a test user
+- Updated external deliverables:
+  - `/Users/erdanatursunov/Documents/Диплом лист/Erdana/FormBridge_Qorghau_Shpаrgalka_2026_updated.docx`
+  - `/Users/erdanatursunov/Documents/Диплом лист/Erdana/FormBridge_Qorghau_Shpаrgalka_2026_updated.txt`
+- Checks / commands run:
+  - `git status --short`
+  - extracted current cheat sheet, diploma, and PPTX slide text for review
+  - checked repo sources for OpenAI model, WhatsApp library, polling flow, and deploy details
+  - rebuilt the cheat sheet DOCX/TXT in `/private/tmp/formbridge-defense`
+  - rendered DOCX pages and visually reviewed the updated layout
+- Files changed in repo:
+  - `PROJECT_CONTEXT.md`
+- Current risks / notes:
+  - the updated cheat sheet was saved as `_updated` copies next to the original files; the original cheat sheet file itself was not overwritten
+  - the new QR/test-mode explanation is stronger technically, but it is worth rehearsing once aloud to simplify any sentence that feels too long personally
+- Recommended next steps:
+  - rehearse the transition `18-қорытынды -> 19-QR/demo -> 20-рахмет`
+  - if needed later, make one ultra-short oral version just for the final 3 slides
   - the deck can become too fragmented if every small concept gets its own slide
   - better to spend slide budget on connection demo, CRM, analytics, WhatsApp, and multilingual support than on weaker bridge slides
 - Recommended next steps:
@@ -238,6 +297,77 @@ Completed (2026-06-02):
   - backend/src/controllers/googleFormsController.js — added getFeedback
   - backend/src/routes/googleFormsRoutes.js — added GET /:formId/feedback
   - frontend/src/pages/RequestsPage.jsx — all UI improvements
+
+Updated (2026-06-21 22:04 +0500):
+- Reworked the defense cheat sheet to match the current final 19-slide presentation instead of the outdated 21-slide flow.
+- Main cheat sheet changes:
+  - removed the obsolete `Неге дәл FormBridge?` and `Өз форма конструкторы` slide blocks from the speaking script
+  - renumbered and synced the script to the real deck ending:
+    - `17-слайд. Экономикалық тиімділік`
+    - `18-слайд. Қорытынды`
+    - `19-слайд. Назарларыңызға рахмет!`
+  - rewrote the economics explanation in clearer spoken Kazakh using the thesis calculations:
+    - project self-cost: `912 955 тг`
+    - manual processing: `2 сағат/күн = 480 сағат/жыл`
+    - annual savings: `818 400 тг`
+    - payback logic: `912 955 / 818 400 ≈ 1,1 жыл`
+  - refreshed the Q&A table to remove outdated future-form-builder answers and add clearer answers about:
+    - current MVP level
+    - economic calculation logic
+    - security / OAuth
+    - why it is a programming project
+- External deliverable updated:
+  - `/Users/erdanatursunov/Documents/Диплом лист/Erdana/FormBridge_Qorghau_Shpаrgalka_2026.docx`
+- Backup created before overwrite:
+  - `/Users/erdanatursunov/Documents/Диплом лист/Erdana/FormBridge_Qorghau_Shpаrgalka_2026.backup-20260621-2204.docx`
+- Checks / commands run:
+  - `git status --short`
+  - reviewed `PROJECT_CONTEXT.md`
+  - extracted current PPTX slide text to verify the real 19-slide order
+  - extracted the current cheat sheet DOCX text and Q&A table
+  - re-checked thesis economics paragraphs in `Диплом FormBridge.docx`
+  - rebuilt the cheat sheet DOCX in `/private/tmp`
+  - rendered and visually reviewed all 7 DOCX pages with `render_docx.py`
+- Files changed in repo:
+  - `PROJECT_CONTEXT.md`
+- Current risks / notes:
+  - the PPTX itself was intentionally not edited in this step
+  - the speaking script is now aligned to the current 19-slide deck, but it is still worth rehearsing the economics slide aloud once
+- Recommended next steps:
+  - rehearse slides `16 -> 17 -> 18` once aloud so the technology-to-economics transition sounds natural
+  - if needed later, make one even shorter pocket cheat-sheet version with only cue phrases
+
+Updated (2026-06-21 22:32 +0500):
+- Restored the cheat sheet visual formatting after the previous DOCX rewrite flattened the original run-level styling.
+- What was fixed:
+  - rebuilt the final cheat sheet from the styled backup instead of the flattened version
+  - kept the updated 19-slide speaking text and revised economics explanation
+  - restored the visual hierarchy for the ending section:
+    - green bold slide headings for slides `17`, `18`, `19`
+    - bold label prefixes like `Не үшін бұл слайд:`, `Айтатын мәтін:`, `Келесі слайдқа өту:`
+  - preserved the styled Q&A heading and table formatting
+- External deliverable corrected:
+  - `/Users/erdanatursunov/Documents/Диплом лист/Erdana/FormBridge_Qorghau_Shpаrgalka_2026.docx`
+- Checks / commands run:
+  - compared backup/current DOCX run formatting
+  - rebuilt DOCX from the backup-based styled source
+  - rendered and visually reviewed the corrected pages again
+- Files changed in repo:
+  - `PROJECT_CONTEXT.md`
+- Current risks / notes:
+  - the original backup remains available if any wording from the old version is still needed
+
+Updated (2026-06-21 22:43 +0500):
+- Prepared an extra short defense explanation in chat for the new QR code on the slide.
+- Speaking point prepared:
+  - the QR code leads to the live FormBridge demo site
+  - the site should be described as running in test/demo mode during defense
+  - emphasis should stay on showing availability and practical demo access, not on claiming full production readiness
+- Files changed in repo:
+  - `PROJECT_CONTEXT.md`
+- Checks / commands run:
+  - `git status --short`
+  - reviewed `PROJECT_CONTEXT.md`
   - frontend/src/shared/i18n.js — added analyticsLast14Days, filterApplied keys
   - frontend/src/shared/styles/global.css — new CSS for donut, timeline, reports cards
 
@@ -911,3 +1041,77 @@ Updated (2026-06-21 20:51 +0500):
 - Recommended next steps:
   - open the workspace settings screen and verify the new `KK / RU / EN` layout with real demo data
   - if needed later, extend the same translation-aware status labels into WhatsApp/backend-generated human text
+
+Updated (2026-06-21 21:10 +0500):
+- Defense presentation and cheat sheet were updated again to cover the economics requirement and add a separate final gratitude slide.
+- Updated external files in place:
+  - `/Users/erdanatursunov/Documents/Диплом лист/Erdana/powerpoint/FormBridge_Qorghau_2026.pptx`
+  - `/Users/erdanatursunov/Documents/Диплом лист/Erdana/FormBridge_Qorghau_Shpаrgalka_2026.docx`
+- Presentation changes:
+  - slide 19 added as `Экономикалық тиімділік`
+  - used concrete thesis-backed figures:
+    - manual work baseline: 2 hours/day, 480 hours/year
+    - annual savings: 818 400 тг
+    - payback period: about 1.1 years
+    - operating cost: about 8 000 тг/month
+  - current conclusion kept as a separate slide 20
+  - new slide 21 added as `Назарларыңызға рахмет!`
+- Cheat sheet changes:
+  - synchronized to the new 21-slide order
+  - added full speaking text for the economics slide
+  - moved conclusion to slide 20
+  - added a dedicated final `рахмет` slide block
+  - updated the commission Q&A answer about economic efficiency with concrete numbers
+- Files changed in repo:
+  - `PROJECT_CONTEXT.md`
+- Commands / checks run:
+  - re-read `AGENTS.md`, `PROJECT_CONTEXT.md`, and `git status --short`
+  - inspected current PPTX slide texts and current cheat sheet structure
+  - extracted economic figures from `Диплом FormBridge.docx`
+  - ran presentation template-following workflow:
+    - `inspect_template_deck.mjs`
+    - `validate_template_plan.mjs`
+    - `prepare_template_starter_deck.mjs`
+    - `check_template_fidelity.mjs`
+  - rendered and visually reviewed updated PPTX slides 19, 20, and 21
+  - rendered and visually reviewed all pages of the updated DOCX
+- Current risks / notes:
+  - the final gratitude slide uses a very large title by design; it is visually clean in rendered QA, but it is still worth opening once on the exact defense laptop
+  - the economics figures were taken from the thesis practical/economic section and intentionally kept short for oral defense clarity
+- Recommended next steps:
+  - open the PPTX once in PowerPoint/Keynote fullscreen and confirm final font rendering on the defense laptop
+  - rehearse the transition `өз форма конструкторы -> экономика -> қорытынды -> рақмет`
+
+Updated (2026-06-21 21:04 +0500):
+- Workspace settings status editor UX was refined after live feedback.
+- What changed:
+  - fixed status translation inputs so a field can be fully cleared and retyped without the last character being auto-restored
+  - switched the add/save/reset controls in workspace settings to real styled button classes already used in the project
+  - added small layout polish for the settings action buttons on desktop and mobile
+- Files changed:
+  - `frontend/src/components/WorkspaceSettingsTab.jsx`
+  - `frontend/src/shared/styles/global.css`
+  - `PROJECT_CONTEXT.md`
+- Commands / checks run:
+  - `git status --short`
+  - `npm run build` in `frontend`
+- Current risks / notes:
+  - fallback labels still apply after save/display for older or partially translated statuses, but no longer interfere while the user is typing
+- Recommended next steps:
+  - re-open the settings tab and verify the add/save/reset controls visually in both desktop and narrow mobile widths
+
+Updated (2026-06-22):
+- Added Google token expired banner in workspace (RequestsPage).
+- What changed:
+  - when `workspace.form.healthStatus === "broken"` and `lastSyncError` contains "expired" or "revoked", a yellow warning banner appears at the top of the workspace
+  - banner shows title + explanation text (reuses existing i18n keys: `googleTokenExpiredTitle`, `googleTokenExpiredText`, `reconnectGoogle`)
+  - "Переподключить Google" button calls `POST /api/google/oauth/start` and redirects user to Google re-auth
+  - after re-auth, healthStatus resets to "connected" on next successful sync
+- Files changed:
+  - `frontend/src/pages/RequestsPage.jsx`
+  - `frontend/src/shared/styles/global.css`
+  - `PROJECT_CONTEXT.md`
+- Current risks / notes:
+  - banner only appears inside the workspace page — not on /forms list; if user hasn't opened a workspace yet they won't see it
+- Recommended next steps:
+  - test by manually expiring a token or setting healthStatus="broken" and lastSyncError="Token has been expired" in DB

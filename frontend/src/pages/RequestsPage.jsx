@@ -1866,8 +1866,40 @@ export function RequestsPage() {
   const selectedAnswers = answersForView(selected?.item?.answers || [], t);
   const showScenarioBanner = !scenarioConfiguredAt;
 
+  const syncError = workspace?.form?.lastSyncError || "";
+  const googleTokenBroken =
+    workspace?.form?.healthStatus === "broken" &&
+    (syncError.includes("expired") || syncError.includes("revoked"));
+
+  async function reconnectGoogle() {
+    try {
+      const { data } = await api.post("/api/google/oauth/start");
+      window.location.href = data.url;
+    } catch {
+      // ignore — redirect anyway
+    }
+  }
+
   return (
     <section className="official-requests-page">
+
+      {/* ── Google token expired banner ── */}
+      {googleTokenBroken && (
+        <div className="ws-token-expired-banner">
+          <div className="ws-token-expired-content">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <div>
+              <strong>{t.googleTokenExpiredTitle}</strong>
+              <p>{t.googleTokenExpiredText}</p>
+            </div>
+          </div>
+          <button type="button" className="ws-token-expired-btn" onClick={reconnectGoogle}>
+            {t.reconnectGoogle}
+          </button>
+        </div>
+      )}
 
       {/* ── Workspace Header ── */}
       <div className="ws-header-card">
