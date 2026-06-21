@@ -10346,11 +10346,27 @@ select {
   margin-top: 0.25rem;
 }
 
+.status-editor-add-btn,
+.settings-action-btn {
+  min-height: 40px;
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+.status-editor-add-btn {
+  white-space: nowrap;
+}
+
 .settings-actions {
   display: flex;
   gap: 0.75rem;
   margin-top: 0.5rem;
   flex-wrap: wrap;
+}
+
+.settings-action-btn {
+  min-width: 180px;
+  justify-content: center;
 }
 
 .settings-error {
@@ -10377,5 +10393,10 @@ select {
 
   .status-editor-add-row {
     grid-template-columns: 1fr;
+  }
+
+  .settings-action-btn {
+    width: 100%;
+    min-width: 0;
   }
 }

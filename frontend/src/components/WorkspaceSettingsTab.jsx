@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { api } from "../api/client";
 import { createDefaultStatus, normalizeCustomStatus, resolveStatusLabel, STATUS_LANGS } from "../shared/statuses";
 
@@ -18,6 +18,23 @@ function slugify(text) {
   return base || `status_${Date.now()}`;
 }
 
+function editableTranslations(value) {
+  const next = {};
+  for (const locale of STATUS_LANGS) {
+    next[locale] = typeof value?.[locale] === "string" ? value[locale] : "";
+  }
+  return next;
+}
+
+function editableStatus(status) {
+  const normalized = normalizeCustomStatus(status);
+  return {
+    key: normalized.key,
+    label: normalized.label,
+    translations: editableTranslations(normalized.translations)
+  };
+}
+
 export function WorkspaceSettingsTab({
   integrationId,
   scenario,
@@ -28,13 +45,13 @@ export function WorkspaceSettingsTab({
   onStatusesUpdated
 }) {
   const defaultFlow = useMemo(
-    () => (scenarioMeta?.statusFlow || []).map((key) => createDefaultStatus(key)),
+    () => (scenarioMeta?.statusFlow || []).map((key) => editableStatus(createDefaultStatus(key))),
     [scenarioMeta]
   );
 
   const [statuses, setStatuses] = useState(() =>
     customStatuses && customStatuses.length > 0
-      ? customStatuses.map((status) => normalizeCustomStatus(status))
+      ? customStatuses.map((status) => editableStatus(status))
       : defaultFlow
   );
   const [newStatus, setNewStatus] = useState({ kk: "", ru: "", en: "" });
@@ -45,16 +62,24 @@ export function WorkspaceSettingsTab({
   const scenarioTitle =
     scenarioMeta?.title?.ru || scenarioMeta?.title?.kk || scenarioMeta?.title?.en || scenario;
 
+  useEffect(() => {
+    setStatuses(
+      customStatuses && customStatuses.length > 0
+        ? customStatuses.map((status) => editableStatus(status))
+        : defaultFlow
+    );
+  }, [customStatuses, defaultFlow]);
+
   const handleLabelChange = useCallback((idx, locale, value) => {
     setStatuses((prev) => {
       const next = [...prev];
-      next[idx] = normalizeCustomStatus({
+      next[idx] = {
         ...next[idx],
         translations: {
           ...next[idx]?.translations,
           [locale]: value
         }
-      });
+      };
       return next;
     });
     setSavedMsg(false);
@@ -70,10 +95,11 @@ export function WorkspaceSettingsTab({
     if (!baseLabel) return;
     setStatuses((prev) => [
       ...prev,
-      normalizeCustomStatus({
+      {
         key: slugify(baseLabel),
+        label: baseLabel,
         translations: newStatus
-      })
+      }
     ]);
     setNewStatus({ kk: "", ru: "", en: "" });
     setSavedMsg(false);
@@ -99,6 +125,7 @@ export function WorkspaceSettingsTab({
         `/api/integrations/forms/${integrationId}/statuses`,
         { statuses: cleaned }
       );
+      setStatuses((data.customStatuses || []).map((status) => editableStatus(status)));
       setSavedMsg(true);
       if (onStatusesUpdated) onStatusesUpdated(data.customStatuses);
     } catch (err) {
@@ -186,7 +213,7 @@ export function WorkspaceSettingsTab({
           </div>
           <button
             type="button"
-            className="official-btn secondary-btn"
+            className="ghost-btn compact-action-btn status-editor-add-btn"
             onClick={handleAdd}
             disabled={!resolveStatusLabel({ translations: newStatus }, lang).trim()}
           >
@@ -200,7 +227,7 @@ export function WorkspaceSettingsTab({
         <div className="settings-actions">
           <button
             type="button"
-            className="official-btn"
+            className="primary-btn compact-action-btn settings-action-btn"
             onClick={handleSave}
             disabled={saving}
           >
@@ -208,7 +235,7 @@ export function WorkspaceSettingsTab({
           </button>
           <button
             type="button"
-            className="official-btn secondary-btn"
+            className="ghost-btn compact-action-btn settings-action-btn"
             onClick={handleReset}
             disabled={saving}
           >
