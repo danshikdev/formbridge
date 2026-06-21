@@ -1,6 +1,28 @@
 import { useState, useCallback } from "react";
 import { api } from "../api/client";
 
+function defaultStatusLabel(key, t) {
+  const map = {
+    new: t.new,
+    in_progress: t.inProgress,
+    done: t.done,
+    contacted: t.statusContacted,
+    documents_needed: t.statusDocumentsNeeded,
+    accepted: t.statusAccepted,
+    rejected: t.statusRejected,
+    shortlisted: t.statusShortlisted,
+    interview: t.statusInterview,
+    hired: t.statusHired,
+    urgent: t.statusUrgent,
+    waiting_client: t.statusWaitingClient,
+    confirmed: t.statusConfirmed,
+    waiting_payment: t.statusWaitingPayment,
+    cancelled: t.statusCancelled,
+    attended: t.statusAttended
+  };
+  return map[key] || key;
+}
+
 function slugify(text) {
   const base = text
     .toLowerCase()
@@ -21,7 +43,7 @@ export function WorkspaceSettingsTab({
 }) {
   const defaultFlow = (scenarioMeta?.statusFlow || []).map((key) => ({
     key,
-    label: key
+    label: defaultStatusLabel(key, t)
   }));
 
   const [statuses, setStatuses] = useState(() =>

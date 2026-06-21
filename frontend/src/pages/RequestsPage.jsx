@@ -748,7 +748,7 @@ function FeedbackPanel({ formId, t }) {
 
 // ─── Report & Export Helpers ──────────────────────────────────────────────────
 
-function generateWordReport(formTitle, scenario, items, t, lang) {
+function generateWordReport(formTitle, scenario, items, t, lang, customStatuses) {
   const now = new Date();
   const todayCount = items.filter((item) => {
     const d = new Date(item.submittedAt || item.createdAt);
@@ -949,7 +949,7 @@ function generateWordReport(formTitle, scenario, items, t, lang) {
   `;
 }
 
-function ReportPreviewModal({ isOpen, onClose, reportType, items, formTitle, scenario, t, lang }) {
+function ReportPreviewModal({ isOpen, onClose, reportType, items, formTitle, scenario, t, lang, customStatuses }) {
   const now = new Date();
   const todayCount = useMemo(() => {
     return items.filter((item) => {
@@ -976,7 +976,7 @@ function ReportPreviewModal({ isOpen, onClose, reportType, items, formTitle, sce
     if (reportType === "pdf") {
       window.print();
     } else {
-      const docHtml = generateWordReport(formTitle, scenario, items, t, lang);
+      const docHtml = generateWordReport(formTitle, scenario, items, t, lang, customStatuses);
       const blob = new Blob(["\uFEFF" + docHtml], { type: "application/msword;charset=utf-8;" });
       const date = new Date().toISOString().slice(0, 10);
       downloadBlob(blob, `formbridge-report-${date}.doc`);
@@ -2252,6 +2252,7 @@ export function RequestsPage() {
           scenario={scenario}
           t={t}
           lang={lang}
+          customStatuses={customStatuses}
         />
       )}
     </section>
