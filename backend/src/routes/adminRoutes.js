@@ -10,6 +10,9 @@ import { FormFeedback } from "../models/formFeedback.js";
 import { GoogleAccount } from "../models/googleAccount.js";
 import { IntegrationEvent } from "../models/integrationEvent.js";
 import { NotificationSettings } from "../models/notificationSettings.js";
+import { FormMember } from "../models/formMember.js";
+import { FormChatHistory } from "../models/formChatHistory.js";
+import { AIChatJob } from "../models/aiChatJob.js";
 import { revokeGoogleToken } from "../services/googleService.js";
 import { env } from "../config/env.js";
 
@@ -255,6 +258,16 @@ adminRoutes.post("/users/clear-data", async (req, res) => {
             transaction
           })
         : 0;
+
+      // Remove shared-access rows (FK on both ownerId and memberId → users.id)
+      if (user) {
+        await FormMember.destroy({
+          where: { [Op.or]: [{ ownerId: user.id }, { memberId: user.id }] },
+          transaction
+        });
+        await FormChatHistory.destroy({ where: { userId: user.id }, transaction });
+        await AIChatJob.destroy({ where: { userId: user.id }, transaction });
+      }
 
       const users = user
         ? await User.destroy({
