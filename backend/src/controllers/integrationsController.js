@@ -371,13 +371,36 @@ export async function updateStatuses(req, res) {
   const { id } = req.params;
   const userId = req.userId;
   const { statuses } = req.body;
+  const statusLangs = ["kk", "ru", "en"];
 
   if (!Array.isArray(statuses)) {
     return res.status(400).json({ error: "statuses must be an array" });
   }
-  for (const s of statuses) {
-    if (!s || typeof s.key !== "string" || !s.key.trim() || typeof s.label !== "string" || !s.label.trim()) {
-      return res.status(400).json({ error: "Each status must have non-empty key and label strings" });
+
+  const normalizedStatuses = statuses.map((status) => {
+    const label = typeof status?.label === "string" ? status.label.trim() : "";
+    const translations = {};
+    for (const lang of statusLangs) {
+      translations[lang] = typeof status?.translations?.[lang] === "string"
+        ? status.translations[lang].trim()
+        : "";
+    }
+
+    const fallbackLabel = translations.ru || translations.kk || translations.en || label;
+    return {
+      key: typeof status?.key === "string" ? status.key.trim() : "",
+      label: fallbackLabel,
+      translations: {
+        kk: translations.kk || fallbackLabel,
+        ru: translations.ru || fallbackLabel,
+        en: translations.en || fallbackLabel
+      }
+    };
+  });
+
+  for (const status of normalizedStatuses) {
+    if (!status.key || !status.label) {
+      return res.status(400).json({ error: "Each status must have a non-empty key and at least one label" });
     }
   }
 
@@ -387,7 +410,7 @@ export async function updateStatuses(req, res) {
   }
 
   // null = reset to scenario defaults
-  const customStatuses = statuses.length > 0 ? statuses : null;
+  const customStatuses = normalizedStatuses.length > 0 ? normalizedStatuses : null;
   await integration.update({ customStatuses });
 
   return res.json({ ok: true, customStatuses });

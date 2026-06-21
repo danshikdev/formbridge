@@ -1,27 +1,12 @@
-import { useState, useCallback } from "react";
+import { useMemo, useState, useCallback } from "react";
 import { api } from "../api/client";
+import { createDefaultStatus, normalizeCustomStatus, resolveStatusLabel, STATUS_LANGS } from "../shared/statuses";
 
-function defaultStatusLabel(key, t) {
-  const map = {
-    new: t.new,
-    in_progress: t.inProgress,
-    done: t.done,
-    contacted: t.statusContacted,
-    documents_needed: t.statusDocumentsNeeded,
-    accepted: t.statusAccepted,
-    rejected: t.statusRejected,
-    shortlisted: t.statusShortlisted,
-    interview: t.statusInterview,
-    hired: t.statusHired,
-    urgent: t.statusUrgent,
-    waiting_client: t.statusWaitingClient,
-    confirmed: t.statusConfirmed,
-    waiting_payment: t.statusWaitingPayment,
-    cancelled: t.statusCancelled,
-    attended: t.statusAttended
-  };
-  return map[key] || key;
-}
+const STATUS_LANGUAGE_LABELS = {
+  kk: "KK",
+  ru: "RU",
+  en: "EN"
+};
 
 function slugify(text) {
   const base = text
@@ -39,17 +24,20 @@ export function WorkspaceSettingsTab({
   scenarioMeta,
   customStatuses,
   t,
+  lang,
   onStatusesUpdated
 }) {
-  const defaultFlow = (scenarioMeta?.statusFlow || []).map((key) => ({
-    key,
-    label: defaultStatusLabel(key, t)
-  }));
+  const defaultFlow = useMemo(
+    () => (scenarioMeta?.statusFlow || []).map((key) => createDefaultStatus(key)),
+    [scenarioMeta]
+  );
 
   const [statuses, setStatuses] = useState(() =>
-    customStatuses && customStatuses.length > 0 ? customStatuses : defaultFlow
+    customStatuses && customStatuses.length > 0
+      ? customStatuses.map((status) => normalizeCustomStatus(status))
+      : defaultFlow
   );
-  const [newLabel, setNewLabel] = useState("");
+  const [newStatus, setNewStatus] = useState({ kk: "", ru: "", en: "" });
   const [saving, setSaving] = useState(false);
   const [savedMsg, setSavedMsg] = useState(false);
   const [error, setError] = useState(null);
@@ -57,10 +45,16 @@ export function WorkspaceSettingsTab({
   const scenarioTitle =
     scenarioMeta?.title?.ru || scenarioMeta?.title?.kk || scenarioMeta?.title?.en || scenario;
 
-  const handleLabelChange = useCallback((idx, value) => {
+  const handleLabelChange = useCallback((idx, locale, value) => {
     setStatuses((prev) => {
       const next = [...prev];
-      next[idx] = { ...next[idx], label: value };
+      next[idx] = normalizeCustomStatus({
+        ...next[idx],
+        translations: {
+          ...next[idx]?.translations,
+          [locale]: value
+        }
+      });
       return next;
     });
     setSavedMsg(false);
@@ -72,15 +66,28 @@ export function WorkspaceSettingsTab({
   }, []);
 
   const handleAdd = useCallback(() => {
-    const label = newLabel.trim();
-    if (!label) return;
-    setStatuses((prev) => [...prev, { key: slugify(label), label }]);
-    setNewLabel("");
+    const baseLabel = resolveStatusLabel({ translations: newStatus }, lang).trim();
+    if (!baseLabel) return;
+    setStatuses((prev) => [
+      ...prev,
+      normalizeCustomStatus({
+        key: slugify(baseLabel),
+        translations: newStatus
+      })
+    ]);
+    setNewStatus({ kk: "", ru: "", en: "" });
     setSavedMsg(false);
-  }, [newLabel]);
+  }, [lang, newStatus]);
 
   const handleSave = useCallback(async () => {
-    const cleaned = statuses.filter((s) => s.label.trim());
+    const cleaned = statuses
+      .map((status) => normalizeCustomStatus(status))
+      .filter((status) => resolveStatusLabel(status, lang).trim())
+      .map((status) => ({
+        key: status.key,
+        label: resolveStatusLabel(status, "ru"),
+        translations: status.translations
+      }));
     if (cleaned.length === 0) {
       setError(t.settingsMinOneStatus);
       return;
@@ -99,7 +106,7 @@ export function WorkspaceSettingsTab({
     } finally {
       setSaving(false);
     }
-  }, [statuses, integrationId, onStatusesUpdated, t]);
+  }, [statuses, integrationId, lang, onStatusesUpdated, t]);
 
   const handleReset = useCallback(async () => {
     if (!window.confirm(t.settingsResetConfirm)) return;
@@ -133,13 +140,21 @@ export function WorkspaceSettingsTab({
           {statuses.map((s, idx) => (
             <li key={s.key} className="status-editor-row">
               <span className={`official-badge status-${s.key}`} aria-hidden="true" />
-              <input
-                className="status-editor-input"
-                value={s.label}
-                onChange={(e) => handleLabelChange(idx, e.target.value)}
-                placeholder={t.settingsStatusPlaceholder}
-                maxLength={60}
-              />
+              <div className="status-editor-fields">
+                {STATUS_LANGS.map((locale) => (
+                  <label key={locale} className="status-translation-field">
+                    <span title={locale}>{STATUS_LANGUAGE_LABELS[locale]}</span>
+                    <input
+                      className="status-editor-input"
+                      value={s.translations?.[locale] || ""}
+                      onChange={(e) => handleLabelChange(idx, locale, e.target.value)}
+                      placeholder={t.settingsStatusPlaceholder}
+                      aria-label={`${t.settingsStatusPlaceholder} (${STATUS_LANGUAGE_LABELS[locale]})`}
+                      maxLength={60}
+                    />
+                  </label>
+                ))}
+              </div>
               <button
                 type="button"
                 className="status-editor-remove"
@@ -153,19 +168,27 @@ export function WorkspaceSettingsTab({
         </ul>
 
         <div className="status-editor-add-row">
-          <input
-            className="status-editor-input"
-            value={newLabel}
-            onChange={(e) => setNewLabel(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-            placeholder={t.settingsStatusPlaceholder}
-            maxLength={60}
-          />
+          <div className="status-editor-add-fields">
+            {STATUS_LANGS.map((locale) => (
+              <label key={locale} className="status-translation-field">
+                <span title={locale}>{STATUS_LANGUAGE_LABELS[locale]}</span>
+                <input
+                  className="status-editor-input"
+                  value={newStatus[locale]}
+                  onChange={(e) => setNewStatus((prev) => ({ ...prev, [locale]: e.target.value }))}
+                  onKeyDown={(e) => e.key === "Enter" && handleAdd()}
+                  placeholder={t.settingsStatusPlaceholder}
+                  aria-label={`${t.settingsStatusPlaceholder} (${STATUS_LANGUAGE_LABELS[locale]})`}
+                  maxLength={60}
+                />
+              </label>
+            ))}
+          </div>
           <button
             type="button"
             className="official-btn secondary-btn"
             onClick={handleAdd}
-            disabled={!newLabel.trim()}
+            disabled={!resolveStatusLabel({ translations: newStatus }, lang).trim()}
           >
             + {t.settingsAddStatus}
           </button>

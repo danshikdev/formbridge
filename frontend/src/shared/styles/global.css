@@ -10267,13 +10267,37 @@ select {
 
 .status-editor-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 0.6rem;
 }
 
 .status-editor-row .official-badge {
   flex-shrink: 0;
   min-width: 8px;
+  margin-top: 2rem;
+}
+
+.status-editor-fields,
+.status-editor-add-fields {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+}
+
+.status-translation-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.status-translation-field span {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 
 .status-editor-input {
@@ -10315,13 +10339,11 @@ select {
 }
 
 .status-editor-add-row {
-  display: flex;
-  gap: 0.6rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 0.75rem;
   margin-top: 0.25rem;
-}
-
-.status-editor-add-row .status-editor-input {
-  max-width: 260px;
 }
 
 .settings-actions {
@@ -10341,4 +10363,19 @@ select {
   font-size: 0.83rem;
   color: var(--success);
   margin: 0;
+}
+
+@media (max-width: 820px) {
+  .status-editor-fields,
+  .status-editor-add-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .status-editor-row .official-badge {
+    margin-top: 1.85rem;
+  }
+
+  .status-editor-add-row {
+    grid-template-columns: 1fr;
+  }
 }

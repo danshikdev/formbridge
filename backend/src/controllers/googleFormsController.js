@@ -187,19 +187,31 @@ export async function getRequest(req, res) {
 
 export async function updateRequestStatus(req, res) {
   const { status } = req.body;
-  const allowed = [
+  const builtInAllowed = [
     "new", "in_progress", "done", "test",
     "contacted", "documents_needed", "accepted", "rejected",
     "shortlisted", "interview", "hired",
     "urgent", "waiting_client",
     "confirmed", "waiting_payment", "cancelled", "attended"
   ];
-  if (!allowed.includes(status)) {
-    return res.status(400).json({ error: `status must be one of: ${allowed.join(", ")}` });
-  }
 
   const record = await Request.findByPk(req.params.id);
   if (!record) return res.status(404).json({ error: "Request not found" });
+
+  const integration = await FormIntegration.findOne({
+    where: { formId: record.formId },
+    attributes: ["customStatuses"]
+  });
+  const customAllowed = Array.isArray(integration?.customStatuses)
+    ? integration.customStatuses
+        .map((item) => (typeof item?.key === "string" ? item.key.trim() : ""))
+        .filter(Boolean)
+    : [];
+  const allowed = Array.from(new Set([...builtInAllowed, ...customAllowed]));
+
+  if (!allowed.includes(status)) {
+    return res.status(400).json({ error: `status must be one of: ${allowed.join(", ")}` });
+  }
 
   record.status = status;
   await record.save();
