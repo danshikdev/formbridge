@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { api } from "../api/client";
 
 function slugify(text) {
   const base = text
@@ -16,8 +17,7 @@ export function WorkspaceSettingsTab({
   scenarioMeta,
   customStatuses,
   t,
-  onStatusesUpdated,
-  apiBase = ""
+  onStatusesUpdated
 }) {
   const defaultFlow = (scenarioMeta?.statusFlow || []).map((key) => ({
     key,
@@ -60,54 +60,41 @@ export function WorkspaceSettingsTab({
   const handleSave = useCallback(async () => {
     const cleaned = statuses.filter((s) => s.label.trim());
     if (cleaned.length === 0) {
-      setError("Добавьте хотя бы один статус");
+      setError(t.settingsMinOneStatus);
       return;
     }
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`${apiBase}/api/integrations/forms/${integrationId}/statuses`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ statuses: cleaned })
-      });
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Save failed");
-      }
-      const data = await res.json();
+      const { data } = await api.patch(
+        `/api/integrations/forms/${integrationId}/statuses`,
+        { statuses: cleaned }
+      );
       setSavedMsg(true);
       if (onStatusesUpdated) onStatusesUpdated(data.customStatuses);
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.error || t.settingsSaveError);
     } finally {
       setSaving(false);
     }
-  }, [statuses, integrationId, apiBase, onStatusesUpdated]);
+  }, [statuses, integrationId, onStatusesUpdated, t]);
 
   const handleReset = useCallback(async () => {
     if (!window.confirm(t.settingsResetConfirm)) return;
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch(`${apiBase}/api/integrations/forms/${integrationId}/statuses`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ statuses: [] })
-      });
-      if (!res.ok) throw new Error("Reset failed");
+      await api.patch(`/api/integrations/forms/${integrationId}/statuses`, { statuses: [] });
       setStatuses(defaultFlow);
       setSavedMsg(true);
       if (onStatusesUpdated) onStatusesUpdated(null);
     } catch (err) {
-      setError(err.message);
+      setError(err.response?.data?.error || t.settingsSaveError);
     } finally {
       setSaving(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [integrationId, apiBase, onStatusesUpdated, defaultFlow.length]);
+  }, [integrationId, onStatusesUpdated, t, defaultFlow.length]);
 
   return (
     <div className="workspace-settings-tab">
