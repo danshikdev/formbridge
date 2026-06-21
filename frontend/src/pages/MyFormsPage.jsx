@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 import { useLocale } from "../shared/useLocale";
 import { GuidedSetupModal } from "../components/GuidedSetupModal";
@@ -89,6 +89,7 @@ function FormsPageSkeleton() {
 
 export function MyFormsPage() {
   const { t, lang } = useLocale();
+  const navigate = useNavigate();
   const [googleStatus, setGoogleStatus] = useState(null);
   const [forms, setForms] = useState([]);
   const [integrations, setIntegrations] = useState([]);
@@ -101,6 +102,14 @@ export function MyFormsPage() {
   const [filterType, setFilterType] = useState("all");
   const [setupModal, setSetupModal] = useState(null); // { formId, formTitle, integration, googleEmail }
   const [shareModal, setShareModal] = useState(null); // { formId, formTitle }
+
+  useEffect(() => {
+    const returnTo = sessionStorage.getItem("formbridge.oauth.returnTo");
+    if (returnTo) {
+      sessionStorage.removeItem("formbridge.oauth.returnTo");
+      navigate(returnTo, { replace: true });
+    }
+  }, [navigate]);
 
   async function loadIntegrations() {
     const { data } = await api.get("/api/integrations/forms");

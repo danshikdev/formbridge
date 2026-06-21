@@ -25,7 +25,8 @@ function StepIcon({ status, fallback }) {
   return <span className="setup-progress-num">{fallback}</span>;
 }
 
-function setupErrorText(t) {
+function setupErrorText(t, apiMessage) {
+  if (apiMessage && apiMessage !== "Forbidden") return apiMessage;
   return t.pollingSetupError || "Не удалось подключить форму. Проверьте, что у аккаунта есть доступ к этой Google Form.";
 }
 
@@ -90,7 +91,7 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
       } catch (_err) {
         if (!alive) return;
         setStepKey((current) => current || "access");
-        setError(setupErrorText(t));
+        setError(setupErrorText(t, _err?.response?.data?.error));
         setBusy(false);
       }
     }
@@ -133,8 +134,8 @@ export function GuidedSetupModal({ formId, formTitle, integration: initialIntegr
         setStepKey("done");
         onRefresh?.();
       })
-      .catch(() => {
-        setError(setupErrorText(t));
+      .catch((err) => {
+        setError(setupErrorText(t, err?.response?.data?.error));
         setStepKey("access");
       })
       .finally(() => setBusy(false));

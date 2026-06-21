@@ -1873,6 +1873,7 @@ export function RequestsPage() {
 
   async function reconnectGoogle() {
     try {
+      sessionStorage.setItem("formbridge.oauth.returnTo", window.location.pathname + window.location.search);
       const { data } = await api.post("/api/google/oauth/start");
       window.location.href = data.url;
     } catch {

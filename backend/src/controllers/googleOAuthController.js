@@ -1,6 +1,8 @@
 import jwt from "jsonwebtoken";
+import { Op } from "sequelize";
 import { env } from "../config/env.js";
 import { GoogleAccount } from "../models/googleAccount.js";
+import { FormIntegration } from "../models/formIntegration.js";
 import {
   buildGoogleAuthUrl,
   exchangeCodeForTokens,
@@ -94,6 +96,19 @@ export async function googleOAuthCallback(req, res) {
     } else {
       await GoogleAccount.create(payload);
     }
+
+    // Clear broken health status on all integrations for this user so the
+    // reconnect banner disappears immediately after OAuth succeeds.
+    await FormIntegration.update(
+      { healthStatus: "needs_sync", lastSyncError: null },
+      {
+        where: {
+          userId,
+          healthStatus: "broken",
+          lastSyncError: { [Op.or]: [{ [Op.like]: "%expired%" }, { [Op.like]: "%revoked%" }] }
+        }
+      }
+    );
 
     return res.redirect(env.google.oauthSuccessUrl);
   } catch (err) {
